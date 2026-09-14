@@ -130,7 +130,19 @@ interface FileMeta {
   bom: boolean
   encoding: 'utf8'
 }
+
+interface FilePayload { content: string; meta: FileMeta }
+interface FolderEntry { path: string; name: string; isDir: boolean }
+interface SearchHit { path: string; line: number; text: string }
+interface WatchEvent { type: 'change' | 'add' | 'unlink'; path: string }
+interface Session {
+  tabs: { path: string; cursor: number; scroll: number }[]
+  activeIndex: number
+}
 ```
+
+The API is exposed on `window.scratchpost`. The source of truth for these
+types is `src/preload/api.ts`.
 
 `FileMeta` travels with the file from read to write. This is how line endings
 and BOMs survive a round trip between Linux and Windows — see `DESIGN.md`
