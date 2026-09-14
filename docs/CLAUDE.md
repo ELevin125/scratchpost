@@ -54,17 +54,10 @@ to this project. If something seems obviously missing, raise it; do not build it
 
 ## Testing
 
-Two categories, both required before a task is done:
+Deferred for now. Do not write tests or add a test harness unless asked;
+acceptance criteria that call for tests are checked by hand instead.
 
-- **Pure logic** — display-name derivation, list continuation, tag regex,
-  filename generation and collisions, EOL and BOM round-trips.
-- **Decorations** — build an `EditorState`, apply a document and a selection,
-  assert on the resulting `DecorationSet`. Runs headlessly.
-
-Every fixture in `docs/MARKDOWN_SPEC.md` has a test. Live preview is the most
-regression-prone code in the project and is not testable by eye.
-
-Run `npm run lint` and `npm run test` before ticking any box.
+Run `npm run lint` (once it exists) before ticking any box.
 
 ## Conventions
 
@@ -72,7 +65,8 @@ Run `npm run lint` and `npm run test` before ticking any box.
 - Functional React components and hooks. No class components.
 - Prefer pure functions in `state/` modules; keep React components thin.
 - Filenames: `camelCase.ts` for modules, `PascalCase.tsx` for components.
-- Commits reference the task number: `1.5 autosave scheduler`.
+- Do not commit. The author commits; when a task is ready, hand over a commit
+  message as short `- ` bullet lines describing what changed.
 - Keep modules small. If `livePreview.ts` exceeds ~200 lines, split it.
 
 ## The part most likely to go wrong

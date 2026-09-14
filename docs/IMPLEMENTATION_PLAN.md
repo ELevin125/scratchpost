@@ -4,7 +4,8 @@ Work top to bottom. Tick boxes as tasks land. Each milestone is a shippable
 state — stop and use the app at the end of each one before continuing.
 
 Every task lists acceptance criteria. A task is not done until they pass and
-`npm run lint` and `npm run test` are clean.
+`npm run lint` is clean. Tests are deferred for now; criteria that mention
+tests are checked by hand.
 
 ---
 
@@ -38,7 +39,7 @@ Getting this right costs an hour and saves a week.
   Weights 400 and 500, local files, no network fetch.
   *Accept:* app renders in Plex Mono with the network disabled.
 
-- [ ] **0.6 Test harness**
+- [ ] **0.6 Test harness** *(deferred — skip for now)*
   Vitest configured, one passing decoration test against a bare
   `EditorState` to prove the headless path works.
   *Accept:* `npm run test` runs and passes without a display server.
