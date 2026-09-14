@@ -1,0 +1,8 @@
+html,
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--body);
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 13px;
+}
