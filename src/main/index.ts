@@ -30,7 +30,9 @@ function createWindow(): void {
   })
 
   trackWindowState(win)
-  win.once('ready-to-show', () => {
+  // Not 'ready-to-show': it waits for a first paint, and on Wayland a hidden
+  // window never paints, so the window would never appear.
+  win.webContents.once('did-finish-load', () => {
     if (state.maximized) win.maximize()
     win.show()
   })
