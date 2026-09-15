@@ -3,7 +3,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { FileMeta } from '../../preload/api'
 import type { EditorStats } from '../editor/createEditor'
 import { Editor, type Buffers } from './Editor'
+import { EmptyState } from './EmptyState'
 import { Autosave, errorMessage, type SaveEvent } from './state/autosave'
+import { SESSION_SAVE_DELAY_MS, snapshotSession } from './state/session'
 import {
   activateTab,
   closeTab,
@@ -36,14 +38,15 @@ function without<T>(record: Record<string, T>, key: string): Record<string, T> {
 }
 
 export function App() {
-  const [tabsState, setTabsState] = useState<TabsState>(() => openTab(emptyTabs, newNoteTab()))
+  const [tabsState, setTabsState] = useState<TabsState>(emptyTabs)
+  const [restoring, setRestoring] = useState(true)
   const [firstLines, setFirstLines] = useState<Record<string, string | null>>({})
   const [stats, setStats] = useState<EditorStats>({ line: 1, column: 1, words: 0 })
   // Only tabs with something to report: a slow write or a failed one.
   const [saveStates, setSaveStates] = useState<Record<string, SaveEvent>>({})
   const [notice, setNotice] = useState<string | null>(null)
 
-  const buffers = useRef<Buffers>({ states: new Map(), initial: new Map() }).current
+  const buffers = useRef<Buffers>({ states: new Map(), initial: new Map(), scroll: new Map() }).current
   const metas = useRef(new Map<string, FileMeta>()).current
 
   const scratchDir = useMemo(() => {
@@ -59,6 +62,77 @@ export function App() {
     tabsRef.current = change(tabsRef.current)
     setTabsState(tabsRef.current)
   }, [])
+
+  // --- Session ---
+
+  const sessionReady = useRef(false) // never save before restore finishes
+  const sessionTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const sessionWrites = useRef<Promise<void>>(Promise.resolve())
+
+  const saveSessionNow = useCallback((): Promise<void> => {
+    clearTimeout(sessionTimer.current)
+    if (!sessionReady.current) return sessionWrites.current
+    const session = snapshotSession(tabsRef.current, (id) => ({
+      cursor: buffers.states.get(id)?.selection.main.head ?? buffers.initial.get(id)?.cursor ?? 0,
+      scroll: buffers.scroll.get(id) ?? 0
+    }))
+    // Serialised so two writes never race on the same tmp file. Failures are
+    // silent: a stale session costs tab positions, never note content.
+    sessionWrites.current = sessionWrites.current.then(() => api.setSession(session)).catch(() => {})
+    return sessionWrites.current
+  }, [buffers])
+
+  const scheduleSession = useCallback(() => {
+    clearTimeout(sessionTimer.current)
+    sessionTimer.current = setTimeout(() => void saveSessionNow(), SESSION_SAVE_DELAY_MS)
+  }, [saveSessionNow])
+
+  useEffect(() => {
+    scheduleSession()
+  }, [tabsState, scheduleSession])
+
+  const restoreStarted = useRef(false)
+  useEffect(() => {
+    if (restoreStarted.current) return
+    restoreStarted.current = true
+
+    void (async () => {
+      try {
+        const [session, dir] = await Promise.all([api.getSession(), scratchDir.catch(() => null)])
+        const results = await Promise.allSettled(session.tabs.map((saved) => api.readFile(saved.path)))
+
+        const restored: Tab[] = []
+        const lines: Record<string, string | null> = {}
+        let activeRestored: string | null = null
+        for (const [index, result] of results.entries()) {
+          // A file that's gone or unreadable is dropped silently.
+          if (result.status !== 'fulfilled') continue
+          const saved = session.tabs[index]
+          const { content, meta } = result.value
+          const id = crypto.randomUUID()
+          buffers.initial.set(id, { doc: content, cursor: Math.min(saved.cursor, content.length) })
+          buffers.scroll.set(id, Math.min(saved.scroll, content.length))
+          metas.set(id, meta)
+          lines[id] = firstContentLine(content.split('\n'))
+          restored.push({ id, path: saved.path, scratch: dir !== null && isInside(saved.path, dir) })
+          if (index === session.activeIndex) activeRestored = id
+        }
+
+        setFirstLines((prev) => ({ ...prev, ...lines }))
+        updateTabs((s) => ({
+          tabs: [...restored, ...s.tabs],
+          activeId: s.activeId ?? activeRestored ?? restored.at(-1)?.id ?? null
+        }))
+      } catch {
+        // No session is the same as an empty one.
+      } finally {
+        sessionReady.current = true
+        setRestoring(false)
+      }
+    })()
+  }, [buffers, metas, scratchDir, updateTabs])
+
+  // --- Autosave ---
 
   const autosave = useMemo(
     () =>
@@ -94,16 +168,22 @@ export function App() {
   )
 
   useEffect(() => {
-    const onBlur = () => void autosave.flushAll()
+    const onBlur = () => {
+      void autosave.flushAll()
+      void saveSessionNow()
+    }
     window.addEventListener('blur', onBlur)
     const offBeforeClose = api.onBeforeClose(async () => {
       await autosave.flushAll()
+      await saveSessionNow()
     })
     return () => {
       window.removeEventListener('blur', onBlur)
       offBeforeClose()
     }
-  }, [autosave])
+  }, [autosave, saveSessionNow])
+
+  // --- Tab actions ---
 
   const flushActive = () => {
     const active = tabsRef.current.activeId
@@ -143,7 +223,7 @@ export function App() {
       const { content, meta } = await api.readFile(path)
       const dir = await scratchDir.catch(() => null)
       const id = crypto.randomUUID()
-      buffers.initial.set(id, content)
+      buffers.initial.set(id, { doc: content, cursor: 0 })
       metas.set(id, meta)
       setFirstLines((prev) => ({ ...prev, [id]: firstContentLine(content.split('\n')) }))
       flushActive()
@@ -152,6 +232,8 @@ export function App() {
       setNotice(`couldn't open ${fileName(path)}: ${errorMessage(err)}`)
     }
   }
+
+  // --- Render ---
 
   const { tabs, activeId } = tabsState
   const nameOf = (tab: Tab) => displayName(tab, firstLines[tab.id] ?? null)
@@ -191,9 +273,10 @@ export function App() {
         buffers={buffers}
         onStats={setStats}
         onDocChange={onDocChange}
+        onViewChange={scheduleSession}
       />
-      {/* The no-tabs empty state replaces this in 1.12. */}
-      {!activeId && <div className="editor-blank" />}
+      {/* Blank while the session loads, so the empty state never flashes. */}
+      {!activeId && (restoring ? <div className="editor-blank" /> : <EmptyState onNewNote={newNote} />)}
       <StatusBar folderName="Scratchpost" stats={stats} message={statusMessage} />
     </div>
   )

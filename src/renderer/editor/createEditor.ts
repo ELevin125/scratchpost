@@ -1,6 +1,6 @@
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
 import { markdown } from '@codemirror/lang-markdown'
-import { EditorState, type Extension } from '@codemirror/state'
+import { EditorSelection, EditorState, type Extension } from '@codemirror/state'
 import { drawSelection, EditorView, keymap, type ViewUpdate } from '@codemirror/view'
 import { TaskList } from '@lezer/markdown'
 import { listKeymap } from './lists'
@@ -39,6 +39,10 @@ export function editorExtensions(onUpdate: (update: ViewUpdate) => void): Extens
   ]
 }
 
-export function createEditorState(doc: string, extensions: Extension[]): EditorState {
-  return EditorState.create({ doc, extensions })
+export function createEditorState(doc: string, extensions: Extension[], cursor = 0): EditorState {
+  return EditorState.create({
+    doc,
+    selection: EditorSelection.cursor(Math.min(cursor, doc.length)),
+    extensions
+  })
 }

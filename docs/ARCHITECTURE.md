@@ -54,6 +54,7 @@ src/
     index.ts              app lifecycle, window creation
     window.ts             window state persistence (size, position, maximised)
     ipc.ts                handler registration, one place
+    session.ts            session.json read, validation and atomic write
     fs/
       read.ts             readFile with encoding + EOL + BOM detection
       write.ts            atomic write, preserving EOL and BOM
@@ -143,8 +144,10 @@ interface FolderEntry { path: string; name: string; isDir: boolean }
 interface SearchHit { path: string; line: number; text: string }
 interface WatchEvent { type: 'change' | 'add' | 'unlink'; path: string }
 interface Session {
+  // cursor and scroll are document positions; scroll is the start of the top
+  // visible line, so it survives a different window size.
   tabs: { path: string; cursor: number; scroll: number }[]
-  activeIndex: number
+  activeIndex: number // -1 when the active tab wasn't saved
 }
 ```
 

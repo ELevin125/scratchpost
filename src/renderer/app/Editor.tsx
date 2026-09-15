@@ -10,7 +10,8 @@ import {
 
 export interface Buffers {
   states: Map<string, EditorState> // per tab, kept current on every update
-  initial: Map<string, string> // file content for tabs not yet shown
+  initial: Map<string, { doc: string; cursor: number }> // tabs not yet shown
+  scroll: Map<string, number> // per tab: document position of the top visible line
 }
 
 interface EditorProps {
@@ -19,18 +20,24 @@ interface EditorProps {
   buffers: Buffers
   onStats: (stats: EditorStats) => void
   onDocChange: (id: string, state: EditorState) => void
+  onViewChange: () => void // cursor moved or scrolled; the session needs saving
 }
 
-// One EditorView; each tab keeps its own EditorState (doc, undo, selection),
-// swapped in when the tab is activated.
-export function Editor({ activeId, openIds, buffers, onStats, onDocChange }: EditorProps) {
+function topVisiblePos(view: EditorView): number {
+  const scrolled = view.scrollDOM.getBoundingClientRect().top - view.documentTop
+  return view.lineBlockAtHeight(Math.max(0, scrolled)).from
+}
+
+// One EditorView; each tab keeps its own EditorState (doc, undo, selection)
+// and scroll position, swapped in when the tab is activated.
+export function Editor({ activeId, openIds, buffers, onStats, onDocChange, onViewChange }: EditorProps) {
   const host = useRef<HTMLDivElement>(null)
   const view = useRef<EditorView | null>(null)
   const shownId = useRef<string | null>(null)
-  const callbacks = useRef({ onStats, onDocChange })
+  const callbacks = useRef({ onStats, onDocChange, onViewChange })
 
   useEffect(() => {
-    callbacks.current = { onStats, onDocChange }
+    callbacks.current = { onStats, onDocChange, onViewChange }
   })
 
   const extensions = useMemo(
@@ -41,6 +48,7 @@ export function Editor({ activeId, openIds, buffers, onStats, onDocChange }: Edi
         buffers.states.set(id, update.state)
         if (update.docChanged || update.selectionSet) callbacks.current.onStats(statsFor(update.state))
         if (update.docChanged) callbacks.current.onDocChange(id, update.state)
+        if (update.selectionSet) callbacks.current.onViewChange()
       }),
     [buffers]
   )
@@ -48,12 +56,22 @@ export function Editor({ activeId, openIds, buffers, onStats, onDocChange }: Edi
   useEffect(() => {
     const v = new EditorView({ parent: host.current! })
     view.current = v
+
+    const onScroll = () => {
+      const id = shownId.current
+      if (!id) return
+      buffers.scroll.set(id, topVisiblePos(v))
+      callbacks.current.onViewChange()
+    }
+    v.scrollDOM.addEventListener('scroll', onScroll, { passive: true })
+
     return () => {
+      v.scrollDOM.removeEventListener('scroll', onScroll)
       v.destroy()
       view.current = null
       shownId.current = null
     }
-  }, [])
+  }, [buffers])
 
   // A string key, so a new openIds array with the same ids doesn't re-run this.
   const openKey = openIds.join('\n')
@@ -66,21 +84,33 @@ export function Editor({ activeId, openIds, buffers, onStats, onDocChange }: Edi
     for (const id of buffers.states.keys()) {
       if (!open.has(id)) buffers.states.delete(id)
     }
+    for (const id of buffers.scroll.keys()) {
+      if (!open.has(id)) buffers.scroll.delete(id)
+    }
 
     if (!activeId) {
       shownId.current = null
       return
     }
     if (shownId.current === activeId) return
+    if (shownId.current && open.has(shownId.current)) {
+      buffers.scroll.set(shownId.current, topVisiblePos(v))
+    }
 
     let next = buffers.states.get(activeId)
     if (!next) {
-      next = createEditorState(buffers.initial.get(activeId) ?? '', extensions)
+      const initial = buffers.initial.get(activeId)
+      next = createEditorState(initial?.doc ?? '', extensions, initial?.cursor ?? 0)
       buffers.states.set(activeId, next)
       buffers.initial.delete(activeId)
     }
     v.setState(next)
     shownId.current = activeId
+
+    const top = buffers.scroll.get(activeId)
+    if (top !== undefined && top > 0) {
+      v.dispatch({ effects: EditorView.scrollIntoView(Math.min(top, next.doc.length), { y: 'start' }) })
+    }
     callbacks.current.onStats(statsFor(next))
     v.focus()
   }, [activeId, openKey, buffers, extensions])

@@ -5,6 +5,7 @@ import type { FileMeta } from '../preload/api'
 import { createNote } from './fs/note'
 import { readTextFile } from './fs/read'
 import { writeTextFile } from './fs/write'
+import { loadSession, saveSession } from './session'
 
 function assertString(value: unknown, name: string): asserts value is string {
   if (typeof value !== 'string') throw new TypeError(`${name} must be a string`)
@@ -51,6 +52,10 @@ export function registerIpc(): void {
     const result = win ? await dialog.showOpenDialog(win, options) : await dialog.showOpenDialog(options)
     return result.canceled ? null : (result.filePaths[0] ?? null)
   })
+
+  ipcMain.handle('getSession', () => loadSession())
+
+  ipcMain.handle('setSession', (_event, session: unknown) => saveSession(session))
 }
 
 // Holds the window open until the renderer has flushed pending saves. Covers

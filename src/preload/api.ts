@@ -28,9 +28,12 @@ export interface WatchEvent {
   path: string
 }
 
+// Stored as session.json in userData. Never holds note content.
 export interface Session {
+  // cursor and scroll are document positions; scroll is the start of the top
+  // visible line, so it survives a different window size.
   tabs: { path: string; cursor: number; scroll: number }[]
-  activeIndex: number
+  activeIndex: number // -1 when the active tab wasn't saved
 }
 
 export interface ScratchpostAPI {

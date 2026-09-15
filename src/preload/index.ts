@@ -20,8 +20,8 @@ const api: ScratchpostAPI = {
   watchFolder: () => {
     throw new Error('not implemented: watchFolder')
   },
-  getSession: notImplemented('getSession'),
-  setSession: notImplemented('setSession'),
+  getSession: () => ipcRenderer.invoke('getSession'),
+  setSession: (session) => ipcRenderer.invoke('setSession', session),
   openExternal: notImplemented('openExternal'),
   onBeforeClose: (flush) => {
     const listener = async () => {

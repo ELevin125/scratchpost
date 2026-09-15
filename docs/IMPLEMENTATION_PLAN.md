@@ -108,7 +108,8 @@ At the end of M1 the app replaces Notepad. Nothing in M1 is optional.
   *Accept:* quit with four tabs and a scrolled position; relaunch matches.
 
 - [ ] **1.12 Empty states**
-  No tabs, and no folder. Per `DESIGN.md`.
+  No tabs, and no folder. Per `DESIGN.md`. The no-folder state belongs to the
+  file tree, so it lands with the tree in 2.5.
   *Accept:* a fresh profile with no session shows the no-tabs state with a
   working button.
 
