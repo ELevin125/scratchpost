@@ -235,14 +235,24 @@ numeric hue set on the pill, so no colour literal appears outside `themes/`.
 
 ---
 
+## D17 — Native window frame on Windows
+
+**Chosen:** keep the native title bar; the tab strip sits directly below it.
+
+**Rejected:** a custom title bar holding the tab strip. It looks tighter and
+matches across platforms, but needs more Electron configuration, app-drawn
+window controls, and breaks Windows snap conventions. The native frame has fewer
+surprises and can be revisited later without touching the tab model. The
+default application menu bar is auto-hidden so the native frame carries no
+content beyond the title.
+
+---
+
 ## Open questions
 
 Not yet decided. Do not guess; raise them.
 
-- **Custom window frame on Windows.** Whether the tab strip sits in a custom
-  title bar (consistent, more Electron config, breaks Windows snap conventions)
-  or below the native one (less pretty, fewer surprises). Linux draws its own
-  either way. Decide during task 1.1.
+- **Custom window frame on Windows.** Resolved by D17: native frame.
 - **Tag colour palette size.** Resolved by D16: there is no fixed palette.
 - **Texture opacity default.** Tuned by eye in a mockup; needs checking on the
   author's actual displays.

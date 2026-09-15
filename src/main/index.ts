@@ -1,5 +1,6 @@
 import { app, BrowserWindow, session } from 'electron'
 import { join } from 'node:path'
+import { loadWindowState, trackWindowState } from './window'
 
 const devUrl = process.env.ELECTRON_RENDERER_URL
 
@@ -10,15 +11,28 @@ const csp = devUrl
   : "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
 
 function createWindow(): void {
+  const state = loadWindowState()
   const win = new BrowserWindow({
-    width: 900,
-    height: 670,
+    x: state.x,
+    y: state.y,
+    width: state.width,
+    height: state.height,
+    minWidth: 480,
+    minHeight: 320,
+    show: false,
+    autoHideMenuBar: true,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true
     }
+  })
+
+  trackWindowState(win)
+  win.once('ready-to-show', () => {
+    if (state.maximized) win.maximize()
+    win.show()
   })
 
   win.webContents.on('will-navigate', (event) => event.preventDefault())

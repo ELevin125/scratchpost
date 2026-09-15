@@ -73,6 +73,8 @@ src/
       QuickSwitcher.tsx
       SearchPanel.tsx
       EmptyState.tsx
+      App.tsx             layout: tab strip, editor, status bar
+      Editor.tsx          mounts the EditorView into React
       state/
         tabs.ts           tab model, open/close/reorder/activate
         session.ts        session.json load and persist
@@ -87,7 +89,7 @@ src/
       keymap.ts           bindings, sourced from the command registry
       theme.ts            CM6 theme built from theme tokens
     themes/
-      tokens.ts           the Theme type
+      types.ts            the Theme type
       nocturne.ts
       newsprint.ts
       index.ts            registry, active theme, CSS var application

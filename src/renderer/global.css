@@ -1,8 +1,121 @@
+/* CSS custom properties only; no colour literals. See docs/THEMING.md. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  border-radius: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
 html,
 body {
   margin: 0;
+  overflow: hidden;
   background: var(--paper);
   color: var(--body);
   font-family: 'IBM Plex Mono', ui-monospace, monospace;
   font-size: 13px;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: default;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Tab strip */
+
+.tab-bar {
+  display: flex;
+  flex-shrink: 0;
+  height: 34px;
+  overflow-x: auto;
+  background: var(--paper-2);
+  border-bottom: 1px solid var(--rule);
+}
+
+.tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  white-space: nowrap;
+  color: var(--ink-soft);
+  border-right: 1px solid var(--rule);
+}
+
+.tab.active {
+  color: var(--ink);
+  background: var(--paper);
+  /* Covers the strip's bottom hairline so the tab joins the editor. */
+  margin-bottom: -1px;
+  border-bottom: 1px solid var(--paper);
+}
+
+.tab.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--spot);
+}
+
+.tab-close {
+  color: var(--ink-soft);
+}
+
+.tab-close:hover {
+  color: var(--ink);
+}
+
+/* Editor */
+
+.editor {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Status bar */
+
+.status-bar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 16px;
+  height: 26px;
+  padding: 0 12px;
+  font-size: 11px;
+  color: var(--ink-soft);
+  background: var(--paper-2);
+  border-top: 1px solid var(--rule);
+}
+
+.status-folder {
+  color: var(--spot);
+}
+
+.status-spacer {
+  flex: 1;
 }
