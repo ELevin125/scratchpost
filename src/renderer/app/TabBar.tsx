@@ -13,8 +13,11 @@ interface TabBarProps {
   onClose: (id: string) => void
   onMove: (id: string, toIndex: number) => void
   // The buttons run registry commands; hints carry the label and shortcut.
+  treeOpen: boolean
+  onToggleTree: () => void
   onNew: () => void
   onOpen: () => void
+  treeHint: string
   newHint: string
   openHint: string
 }
@@ -25,8 +28,11 @@ export function TabBar({
   onActivate,
   onClose,
   onMove,
+  treeOpen,
+  onToggleTree,
   onNew,
   onOpen,
+  treeHint,
   newHint,
   openHint
 }: TabBarProps) {
@@ -34,6 +40,15 @@ export function TabBar({
 
   return (
     <div className="tab-bar">
+      <button
+        className={treeOpen ? 'tab-action tree-toggle open' : 'tab-action tree-toggle'}
+        title={treeHint}
+        aria-label={treeHint}
+        aria-pressed={treeOpen}
+        onClick={onToggleTree}
+      >
+        ≡
+      </button>
       <div className="tabs" role="tablist">
         {tabs.map((tab, index) => {
           const active = tab.id === activeId

@@ -9,17 +9,21 @@ interface StatusBarProps {
   folderName: string
   stats: EditorStats
   message: StatusMessage | null
+  onFolder: () => void
   onPalette: () => void
+  folderHint: string
   paletteHint: string
 }
 
-// The message slot is information, never a prompt, and is empty while all is
-// well. See DESIGN.md principle 3. Folder switching (2.4) will wire up the
-// folder name.
-export function StatusBar({ folderName, stats, message, onPalette, paletteHint }: StatusBarProps) {
+// Left to right: folder name, message, spacer, line and column, word count,
+// palette button. The message slot is information, never a prompt, and is
+// empty while all is well. See DESIGN.md, "Status bar".
+export function StatusBar({ folderName, stats, message, onFolder, onPalette, folderHint, paletteHint }: StatusBarProps) {
   return (
     <div className="status-bar">
-      <span className="status-folder">{folderName}</span>
+      <button className="status-folder" title={folderHint} onClick={onFolder}>
+        {folderName}
+      </button>
       <span className={message?.error ? 'status-message status-error' : 'status-message'}>
         {message?.text}
       </span>

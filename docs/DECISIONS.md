@@ -413,6 +413,39 @@ same list.
 
 ---
 
+## D25 — Folder context, file tree and quick switcher details
+
+**Chosen:**
+
+- **Settings API.** `getSettings` and `setSettings` read and write
+  `settings.json` in userData. For now it holds the folder context (`null`
+  meaning the scratch folder) and up to eight recent folders; 3.4 adds the
+  rest. A remembered folder that no longer exists falls back to the scratch
+  folder with a status bar notice.
+- **Switching.** From the folder name in the status bar or the palette. There
+  is no overflow menu anywhere in the plan, so the palette stands in for the
+  "menu" in DESIGN.md.
+- **One recursive walk.** `listFolder` returns every `.md` and `.txt` under the
+  folder in one call, folders first, natural sort. It skips hidden entries,
+  `node_modules` and symlinks, drops folders with no notes inside, and stops at
+  5,000 entries and ten levels so pointing it at a large repo can't stall the
+  app. Each file carries its first non-blank line (read from the first 1 KB),
+  so the tree and switcher show the same display names as tabs without
+  opening every file.
+- **Tree.** Hidden at launch. Folders start collapsed; expansion lasts until
+  the folder changes. A single click opens a file.
+- **Refresh without watching.** Until 3.1 the listing is re-read when the tree
+  opens, the switcher opens, the window regains focus, the folder changes, and
+  an open file is created, renamed or closed.
+- **Shared picker.** The command palette, quick switcher and folder menu are one
+  `Picker` component, showing at most 100 matches.
+
+**Rejected:** a lazy per-folder `listFolder` (the quick switcher needs every
+file anyway), and reading whole files for display names (slow on large
+folders for a single line of text).
+
+---
+
 ## Open questions
 
 Not yet decided. Do not guess; raise them.

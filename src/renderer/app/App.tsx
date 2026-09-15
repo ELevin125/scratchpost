@@ -1,11 +1,14 @@
 import type { EditorState } from '@codemirror/state'
 import type { EditorView } from '@codemirror/view'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { FileMeta } from '../../preload/api'
+import type { FileMeta, FolderEntry } from '../../preload/api'
 import type { EditorStats } from '../editor/createEditor'
 import { CommandPalette } from './CommandPalette'
 import { Editor, type Buffers } from './Editor'
 import { EmptyState } from './EmptyState'
+import { FileTree } from './FileTree'
+import { FolderMenu } from './FolderMenu'
+import { QuickSwitcher } from './QuickSwitcher'
 import { RenameDialog } from './RenameDialog'
 import { Autosave, errorMessage, type SaveEvent } from './state/autosave'
 import {
@@ -17,6 +20,8 @@ import {
   type Command,
   type CommandContext
 } from './state/commands'
+import { relativePath } from './state/fileTree'
+import { folderName } from './state/folderContext'
 import { SESSION_SAVE_DELAY_MS, snapshotSession } from './state/session'
 import {
   activateTab,
@@ -34,6 +39,7 @@ import {
 } from './state/tabs'
 import { StatusBar, type StatusMessage } from './StatusBar'
 import { TabBar } from './TabBar'
+import { useFolderContext } from './useFolderContext'
 
 const api = window.scratchpost
 
@@ -42,6 +48,8 @@ const NEW_NOTE_META: FileMeta = { eol: '\n', bom: false, encoding: 'utf8' }
 
 // A rename that drops the extension keeps the original one.
 const NOTE_EXTENSION = /\.(md|markdown|txt)$/i
+
+type Overlay = 'palette' | 'switcher' | 'folders' | 'rename'
 
 const newNoteTab = (): Tab => ({ id: crypto.randomUUID(), path: null, scratch: true })
 
@@ -60,7 +68,8 @@ export function App() {
   // Only tabs with something to report: a slow write or a failed one.
   const [saveStates, setSaveStates] = useState<Record<string, SaveEvent>>({})
   const [notice, setNotice] = useState<string | null>(null)
-  const [overlay, setOverlay] = useState<'palette' | 'rename' | null>(null)
+  const [overlay, setOverlay] = useState<Overlay | null>(null)
+  const [treeOpen, setTreeOpen] = useState(false) // hidden by default
 
   const buffers = useRef<Buffers>({ states: new Map(), initial: new Map(), scroll: new Map() }).current
   const metas = useRef(new Map<string, FileMeta>()).current
@@ -71,6 +80,8 @@ export function App() {
     dir.catch(() => {}) // failures surface where it's awaited
     return dir
   }, [])
+
+  const folder = useFolderContext(scratchDir, setNotice)
 
   // Saves read tabs from this ref, not render state, so a path set by
   // createNote is visible to the very next save.
@@ -205,6 +216,23 @@ export function App() {
     }
   }, [autosave, saveSessionNow])
 
+  // --- Folder listing refresh ---
+  // No watching until 3.1, so the tree and switcher re-read the folder when
+  // the window regains focus and whenever an open file is created, renamed or
+  // closed.
+
+  const { refresh: refreshFolder } = folder
+  useEffect(() => {
+    const onFocus = () => void refreshFolder()
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [refreshFolder])
+
+  const pathsKey = tabsState.tabs.map((tab) => tab.path ?? '').join('\n')
+  useEffect(() => {
+    if (treeOpen) void refreshFolder()
+  }, [pathsKey, treeOpen, refreshFolder])
+
   // --- Tab actions ---
 
   const flushActive = () => {
@@ -233,7 +261,7 @@ export function App() {
     // An empty scratch note leaves nothing behind (D23). Main re-checks the
     // file on disk and refuses anything outside the scratch folder.
     if (tab?.path && tab.scratch && text !== undefined && text.trim() === '') {
-      api.deleteIfEmpty(tab.path).catch(() => {})
+      api.deleteIfEmpty(tab.path).then(() => refreshFolder(), () => {})
     }
   }
 
@@ -243,10 +271,8 @@ export function App() {
     updateTabs((s) => openTab(s, newNoteTab()))
   }
 
-  const openFile = async () => {
+  const openPath = async (path: string) => {
     setNotice(null)
-    const path = await api.pickFile()
-    if (!path) return
     const existing = tabsRef.current.tabs.find((t) => t.path === path)
     if (existing) return activate(existing.id)
 
@@ -262,6 +288,16 @@ export function App() {
     } catch (err) {
       setNotice(`couldn't open ${fileName(path)}: ${errorMessage(err)}`)
     }
+  }
+
+  const openFile = async () => {
+    const path = await api.pickFile()
+    if (path) await openPath(path)
+  }
+
+  const openFolder = async () => {
+    const path = await api.pickFolder()
+    if (path) folder.switchTo(path)
   }
 
   const rename = async (input: string) => {
@@ -292,12 +328,25 @@ export function App() {
 
   // --- Commands ---
 
+  const closeOverlay = () => {
+    setOverlay(null)
+    viewRef.current?.focus()
+  }
+
   const actionsRef = useRef<AppActions | null>(null)
   useEffect(() => {
     actionsRef.current = {
       openPalette: () => setOverlay('palette'),
+      openSwitcher: () => {
+        void refreshFolder()
+        setOverlay('switcher')
+      },
+      openFolderMenu: () => setOverlay('folders'),
       newNote,
       openFile: () => void openFile(),
+      openFolder: () => void openFolder(),
+      useScratchFolder: () => folder.switchTo(null),
+      toggleTree: () => setTreeOpen((open) => !open),
       renameActive: () => {
         if (activeTab()?.path) setOverlay('rename')
       },
@@ -308,10 +357,16 @@ export function App() {
     }
   })
 
+  const isScratchContext = folder.isScratch
   const commandContext = useCallback((): CommandContext => {
     const tab = activeTab()
-    return { view: tab ? viewRef.current : null, activePath: tab?.path ?? null, actions: actionsRef.current! }
-  }, [activeTab])
+    return {
+      view: tab ? viewRef.current : null,
+      activePath: tab?.path ?? null,
+      isScratchContext,
+      actions: actionsRef.current!
+    }
+  }, [activeTab, isScratchContext])
 
   const runCommand = (command: Command) => {
     setOverlay(null)
@@ -321,11 +376,6 @@ export function App() {
   const runById = (id: string) => {
     const command = commands.find((c) => c.id === id)
     if (command) runCommand(command)
-  }
-
-  const closeOverlay = () => {
-    setOverlay(null)
-    viewRef.current?.focus()
   }
 
   // Every shortcut in the app goes through here. Capture phase, so registry
@@ -352,6 +402,13 @@ export function App() {
   const active = tabs.find((t) => t.id === activeId) ?? null
   const nameOf = (tab: Tab) => displayName(tab, firstLines[tab.id] ?? null)
 
+  // Folder entries use the same display-name rules as tabs.
+  const entryName = (entry: FolderEntry) =>
+    displayName(
+      { id: entry.path, path: entry.path, scratch: folder.scratchDir !== null && isInside(entry.path, folder.scratchDir) },
+      entry.firstLine
+    )
+
   // Silent while saves succeed. Failures win, the active tab's first.
   const failures = tabs.flatMap((tab) => {
     const state = saveStates[tab.id]
@@ -366,6 +423,8 @@ export function App() {
         ? { text: 'saving', error: false }
         : null
 
+  const contextName = folder.root ? folderName(folder.root) : ''
+
   return (
     <div className="app">
       <TabBar
@@ -378,27 +437,48 @@ export function App() {
         onActivate={activate}
         onClose={(id) => void close(id)}
         onMove={(id, toIndex) => updateTabs((s) => moveTab(s, id, toIndex))}
+        treeOpen={treeOpen}
+        onToggleTree={() => runById('tree.toggle')}
         onNew={() => runById('note.new')}
         onOpen={() => runById('file.open')}
+        treeHint={commandHint('tree.toggle')}
         newHint={commandHint('note.new')}
         openHint={commandHint('file.open')}
       />
-      <Editor
-        activeId={activeId}
-        openIds={tabs.map((tab) => tab.id)}
-        buffers={buffers}
-        viewRef={viewRef}
-        onStats={setStats}
-        onDocChange={onDocChange}
-        onViewChange={scheduleSession}
-      />
-      {/* Blank while the session loads, so the empty state never flashes. */}
-      {!activeId && (restoring ? <div className="editor-blank" /> : <EmptyState onNewNote={() => runById('note.new')} />)}
+      <div className="workspace">
+        {treeOpen && (
+          <FileTree
+            folderName={contextName}
+            isScratch={folder.isScratch}
+            listing={folder.listing}
+            activePath={active?.path ?? null}
+            nameOf={entryName}
+            onOpen={(path) => void openPath(path)}
+            onOpenFolder={() => runById('folder.open')}
+          />
+        )}
+        <div className="main-column">
+          <Editor
+            activeId={activeId}
+            openIds={tabs.map((tab) => tab.id)}
+            buffers={buffers}
+            viewRef={viewRef}
+            onStats={setStats}
+            onDocChange={onDocChange}
+            onViewChange={scheduleSession}
+          />
+          {/* Blank while the session loads, so the empty state never flashes. */}
+          {!activeId &&
+            (restoring ? <div className="editor-blank" /> : <EmptyState onNewNote={() => runById('note.new')} />)}
+        </div>
+      </div>
       <StatusBar
-        folderName="Scratchpost"
+        folderName={contextName}
         stats={stats}
         message={statusMessage}
+        onFolder={() => runById('folder.switch')}
         onPalette={() => runById('palette.open')}
+        folderHint={commandHint('folder.switch')}
         paletteHint={commandHint('palette.open')}
       />
 
@@ -406,6 +486,34 @@ export function App() {
         <CommandPalette
           commands={availableCommands(commands, commandContext())}
           onRun={runCommand}
+          onClose={closeOverlay}
+        />
+      )}
+      {overlay === 'switcher' && folder.root && (
+        <QuickSwitcher
+          files={(folder.listing?.entries ?? [])
+            .filter((entry) => !entry.isDir)
+            .map((entry) => ({ path: entry.path, label: entryName(entry), detail: relativePath(entry.path, folder.root!) }))}
+          onOpen={(path) => {
+            setOverlay(null)
+            void openPath(path)
+          }}
+          onClose={closeOverlay}
+        />
+      )}
+      {overlay === 'folders' && (
+        <FolderMenu
+          scratchDir={folder.scratchDir}
+          recentFolders={folder.recentFolders}
+          current={folder.isScratch ? null : folder.root}
+          onSwitch={(path) => {
+            closeOverlay()
+            folder.switchTo(path)
+          }}
+          onOpenFolder={() => {
+            closeOverlay()
+            void openFolder()
+          }}
           onClose={closeOverlay}
         />
       )}

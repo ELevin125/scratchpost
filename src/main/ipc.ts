@@ -1,11 +1,21 @@
-import { app, BrowserWindow, dialog, ipcMain, shell, type OpenDialogOptions } from 'electron'
+import {
+  app,
+  BrowserWindow,
+  dialog,
+  ipcMain,
+  shell,
+  type IpcMainInvokeEvent,
+  type OpenDialogOptions
+} from 'electron'
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { FileMeta } from '../preload/api'
+import { listFolder } from './fs/list'
 import { createNote, deleteIfEmpty, renameNote } from './fs/note'
 import { readTextFile } from './fs/read'
 import { writeTextFile } from './fs/write'
 import { loadSession, saveSession } from './session'
+import { loadSettings, saveSettings } from './settings'
 
 function assertString(value: unknown, name: string): asserts value is string {
   if (typeof value !== 'string') throw new TypeError(`${name} must be a string`)
@@ -16,6 +26,12 @@ async function getScratchDir(): Promise<string> {
   const dir = join(app.getPath('documents'), 'Scratchpost')
   await mkdir(dir, { recursive: true })
   return dir
+}
+
+async function pickPath(event: IpcMainInvokeEvent, options: OpenDialogOptions): Promise<string | null> {
+  const win = BrowserWindow.fromWebContents(event.sender)
+  const result = win ? await dialog.showOpenDialog(win, options) : await dialog.showOpenDialog(options)
+  return result.canceled ? null : (result.filePaths[0] ?? null)
 }
 
 const EXTERNAL_PROTOCOLS = new Set(['http:', 'https:', 'mailto:'])
@@ -63,8 +79,13 @@ export function registerIpc(): void {
     return deleteIfEmpty(path, await getScratchDir())
   })
 
-  ipcMain.handle('pickFile', async (event) => {
-    const options: OpenDialogOptions = {
+  ipcMain.handle('listFolder', (_event, path: unknown) => {
+    assertString(path, 'path')
+    return listFolder(path)
+  })
+
+  ipcMain.handle('pickFile', async (event) =>
+    pickPath(event, {
       // Start where closed notes live; any folder is still one click away.
       defaultPath: await getScratchDir(),
       properties: ['openFile'],
@@ -72,15 +93,18 @@ export function registerIpc(): void {
         { name: 'Text', extensions: ['md', 'txt'] },
         { name: 'All files', extensions: ['*'] }
       ]
-    }
-    const win = BrowserWindow.fromWebContents(event.sender)
-    const result = win ? await dialog.showOpenDialog(win, options) : await dialog.showOpenDialog(options)
-    return result.canceled ? null : (result.filePaths[0] ?? null)
-  })
+    })
+  )
+
+  ipcMain.handle('pickFolder', (event) => pickPath(event, { properties: ['openDirectory'] }))
 
   ipcMain.handle('getSession', () => loadSession())
 
   ipcMain.handle('setSession', (_event, session: unknown) => saveSession(session))
+
+  ipcMain.handle('getSettings', () => loadSettings())
+
+  ipcMain.handle('setSettings', (_event, settings: unknown) => saveSettings(settings))
 
   ipcMain.handle('openExternal', (_event, url: unknown) => {
     assertString(url, 'url')

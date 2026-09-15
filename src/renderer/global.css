@@ -262,3 +262,134 @@ button:disabled {
   color: var(--ink-soft);
   border-top: 1px solid var(--rule);
 }
+
+.overlay-text {
+  display: flex;
+  gap: 12px;
+  min-width: 0;
+  align-items: baseline;
+}
+
+.overlay-label-text {
+  flex-shrink: 0;
+}
+
+.overlay-detail,
+.overlay-label-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.overlay-detail {
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+/* Workspace: file tree beside the editor */
+
+.workspace {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.main-column {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.tree-toggle {
+  border-right: 1px solid var(--rule);
+}
+
+.tree-toggle.open {
+  color: var(--ink);
+}
+
+.status-folder:hover {
+  text-decoration: underline;
+}
+
+/* File tree. No texture behind it, ever. */
+
+.file-tree {
+  flex-shrink: 0;
+  width: 240px;
+  overflow-y: auto;
+  background: var(--paper-2);
+  border-right: 1px solid var(--rule);
+}
+
+.tree-section {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 12px 6px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.tree-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tree-row {
+  display: flex;
+  width: 100%;
+  padding-top: 3px;
+  padding-right: 12px;
+  padding-bottom: 3px;
+  text-align: left;
+  color: var(--body);
+}
+
+.tree-row:hover {
+  background: var(--bar);
+}
+
+/* The active file's left marker: one of the few places the accent appears. */
+.tree-row.active {
+  color: var(--ink);
+  box-shadow: inset 2px 0 0 var(--spot);
+}
+
+.tree-caret {
+  flex-shrink: 0;
+  width: 2ch;
+  color: var(--ink-soft);
+}
+
+.tree-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tree-empty {
+  padding: 12px;
+  color: var(--ink-soft);
+}
+
+.tree-empty p {
+  margin: 6px 0 12px;
+}
+
+.tree-folder {
+  color: var(--ink);
+}
+
+.tree-button {
+  padding: 4px 10px;
+  color: var(--ink);
+  border: 1px solid var(--rule);
+}
+
+.tree-button:hover {
+  background: var(--bar);
+}

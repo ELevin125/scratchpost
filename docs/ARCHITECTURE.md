@@ -55,6 +55,7 @@ src/
     window.ts             window state persistence (size, position, maximised)
     ipc.ts                handler registration, one place
     session.ts            session.json read, validation and atomic write
+    settings.ts           settings.json read, validation and atomic write
     fs/
       read.ts             readFile with encoding + EOL + BOM detection
       write.ts            atomic write, preserving EOL and BOM
@@ -72,16 +73,20 @@ src/
       FileTree.tsx
       CommandPalette.tsx
       QuickSwitcher.tsx
+      FolderMenu.tsx      scratch folder, recents, open folder
+      Picker.tsx          shared overlay behind palette, switcher, folder menu
       SearchPanel.tsx
       EmptyState.tsx
       RenameDialog.tsx    F2 rename input
       App.tsx             layout, shortcut listener, overlays
       Editor.tsx          mounts the EditorView into React
+      useFolderContext.ts folder context, settings and listing state
       state/
         tabs.ts           tab model, open/close/reorder/activate
         session.ts        session.json load and persist
         autosave.ts       the debounce + flush scheduler
-        folderContext.ts  active folder, recents
+        folderContext.ts  recents and folder names
+        fileTree.ts       nests the folder walk into a tree
         commands.ts       command registry (id, label, shortcut, run, when)
         shortcuts.ts      shortcut matching and display
         fuzzy.ts          fuzzy filter for the palette and quick switcher
@@ -128,13 +133,15 @@ interface ScratchpostAPI {
   createNote(scratchDir: string): Promise<string>
   renameFile(from: string, to: string): Promise<void> // same folder, never overwrites
   deleteIfEmpty(path: string): Promise<boolean> // scratch folder only; see D23
-  listFolder(path: string): Promise<FolderEntry[]>
+  listFolder(path: string): Promise<FolderEntry[]> // recursive walk; see D25
   searchFolder(path: string, query: string): Promise<SearchHit[]>
   pickFolder(): Promise<string | null>
   pickFile(): Promise<string | null>
   watchFolder(path: string, cb: (e: WatchEvent) => void): () => void
   getSession(): Promise<Session>
   setSession(s: Session): Promise<void>
+  getSettings(): Promise<Settings>
+  setSettings(s: Settings): Promise<void>
   openExternal(url: string): Promise<void>
   // Main waits for flush to settle (max 2s) before closing the window or quitting.
   onBeforeClose(flush: () => Promise<void>): () => void
@@ -147,7 +154,16 @@ interface FileMeta {
 }
 
 interface FilePayload { content: string; meta: FileMeta }
-interface FolderEntry { path: string; name: string; isDir: boolean }
+interface FolderEntry {
+  path: string
+  name: string
+  isDir: boolean
+  firstLine: string | null // first non-blank line of a note, for display names
+}
+interface Settings {
+  folderContext: string | null // null means the scratch folder
+  recentFolders: string[] // most recent first, at most 8
+}
 interface SearchHit { path: string; line: number; text: string }
 interface WatchEvent { type: 'change' | 'add' | 'unlink'; path: string }
 interface Session {

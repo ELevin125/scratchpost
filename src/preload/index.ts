@@ -13,9 +13,9 @@ const api: ScratchpostAPI = {
   createNote: (scratchDir) => ipcRenderer.invoke('createNote', scratchDir),
   renameFile: (from, to) => ipcRenderer.invoke('renameFile', from, to),
   deleteIfEmpty: (path) => ipcRenderer.invoke('deleteIfEmpty', path),
-  listFolder: notImplemented('listFolder'),
+  listFolder: (path) => ipcRenderer.invoke('listFolder', path),
   searchFolder: notImplemented('searchFolder'),
-  pickFolder: notImplemented('pickFolder'),
+  pickFolder: () => ipcRenderer.invoke('pickFolder'),
   pickFile: () => ipcRenderer.invoke('pickFile'),
   // Synchronous in the interface, so it throws rather than rejects.
   watchFolder: () => {
@@ -23,6 +23,8 @@ const api: ScratchpostAPI = {
   },
   getSession: () => ipcRenderer.invoke('getSession'),
   setSession: (session) => ipcRenderer.invoke('setSession', session),
+  getSettings: () => ipcRenderer.invoke('getSettings'),
+  setSettings: (settings) => ipcRenderer.invoke('setSettings', settings),
   openExternal: (url) => ipcRenderer.invoke('openExternal', url),
   onBeforeClose: (flush) => {
     const listener = async () => {

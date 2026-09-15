@@ -20,8 +20,13 @@ import { formatShortcut, matchesShortcut, type KeyEventLike } from './shortcuts'
 
 export interface AppActions {
   openPalette(): void
+  openSwitcher(): void
+  openFolderMenu(): void
   newNote(): void
   openFile(): void
+  openFolder(): void
+  useScratchFolder(): void
+  toggleTree(): void
   renameActive(): void
   closeActive(): void
 }
@@ -29,6 +34,7 @@ export interface AppActions {
 export interface CommandContext {
   view: EditorView | null // null when no tab is open
   activePath: string | null // null for a new note that has no file yet
+  isScratchContext: boolean // the folder context is the scratch folder
   actions: AppActions
 }
 
@@ -69,6 +75,16 @@ export const commands: readonly Command[] = [
   { id: 'palette.open', label: 'Command palette', shortcut: 'Ctrl+Shift+P', run: (ctx) => ctx.actions.openPalette() },
   { id: 'note.new', label: 'New note', shortcut: 'Ctrl+N', run: (ctx) => ctx.actions.newNote() },
   { id: 'file.open', label: 'Open file…', shortcut: 'Ctrl+O', run: (ctx) => ctx.actions.openFile() },
+  { id: 'switcher.open', label: 'Quick switcher', shortcut: 'Ctrl+P', run: (ctx) => ctx.actions.openSwitcher() },
+  { id: 'tree.toggle', label: 'Toggle file tree', shortcut: 'Ctrl+B', run: (ctx) => ctx.actions.toggleTree() },
+  { id: 'folder.switch', label: 'Switch folder…', run: (ctx) => ctx.actions.openFolderMenu() },
+  { id: 'folder.open', label: 'Open folder…', run: (ctx) => ctx.actions.openFolder() },
+  {
+    id: 'folder.scratch',
+    label: 'Use scratch folder',
+    run: (ctx) => ctx.actions.useScratchFolder(),
+    when: (ctx) => !ctx.isScratchContext
+  },
   {
     id: 'file.rename',
     label: 'Rename file…',
