@@ -12,6 +12,7 @@ interface TabBarProps {
   onActivate: (id: string) => void
   onClose: (id: string) => void
   onMove: (id: string, toIndex: number) => void
+  onTabMenu: (id: string, at: { x: number; y: number }) => void
   // The buttons run registry commands; hints carry the label and shortcut.
   treeOpen: boolean
   onToggleTree: () => void
@@ -28,6 +29,7 @@ export function TabBar({
   onActivate,
   onClose,
   onMove,
+  onTabMenu,
   treeOpen,
   onToggleTree,
   onNew,
@@ -68,6 +70,10 @@ export function TabBar({
               title={tab.failed ? 'Last save failed' : undefined}
               draggable
               onClick={() => onActivate(tab.id)}
+              onContextMenu={(e) => {
+                e.preventDefault()
+                onTabMenu(tab.id, { x: e.clientX, y: e.clientY })
+              }}
               // Middle-click closes; preventing mousedown stops autoscroll.
               onMouseDown={(e) => e.button === 1 && e.preventDefault()}
               onAuxClick={(e) => e.button === 1 && onClose(tab.id)}
@@ -98,6 +104,7 @@ export function TabBar({
           )
         })}
       </div>
+      {/* Pinned to the right edge so the buttons never move as tabs change. */}
       <div className="tab-actions">
         <button className="tab-action" title={newHint} aria-label={newHint} onClick={onNew}>
           +

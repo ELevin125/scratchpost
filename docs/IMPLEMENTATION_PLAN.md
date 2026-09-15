@@ -174,6 +174,67 @@ render and neither depends on 2.1–2.8.
   *Accept:* every block-construct fixture passes; a heading inside a quote or a
   code fence stays plain text; a pasted table still round-trips unchanged.
 
+### Added after the M2 review (D28)
+
+Batches, in order: 2.12–2.17; then 2.11 with 3.4 and 3.8; then 2.22; then
+2.18–2.21; then 3.1, 3.2 and 3.6; then 3.3, 3.7 and 3.5.
+
+- [ ] **2.12 Find in note**
+  `Ctrl+F` opens CodeMirror's find and replace bar, styled with theme tokens.
+  `F3` / `Shift+F3` for next and previous; `Escape` closes.
+  *Accept:* finds and replaces within the note; the bar matches both themes.
+
+- [ ] **2.13 Tab shortcuts**
+  `Ctrl+Tab` / `Ctrl+Shift+Tab` cycle tabs, `Ctrl+W` closes, `Ctrl+Shift+T`
+  reopens the last closed tab, `Ctrl+Y` also redoes. Remove Electron's default
+  application menu.
+  *Accept:* every shortcut works; no Electron menu accelerator remains.
+
+- [ ] **2.14 Folder navigation**
+  Tree header shows the folder and opens the folder menu; `← Scratch` when in
+  another folder; "Parent folder" in the folder menu; the status bar shows the
+  end of the folder path.
+  *Accept:* from any folder, the scratch folder is one visible click away.
+
+- [ ] **2.15 Tab strip layout and window title**
+  `+` and `Open` pinned to the right of the tab strip. The window title shows
+  the active note.
+  *Accept:* buttons stay put as tabs open and close; Alt+Tab shows the note.
+
+- [ ] **2.16 Delete, reveal and context menus**
+  Delete note (to the OS trash), show in file manager, copy path. Right-click
+  menus on tabs and tree rows, with labels and shortcuts from the registry.
+  *Accept:* a deleted note is recoverable from the trash.
+
+- [ ] **2.17 Recent-first scratch folder**
+  The scratch folder's tree sorts newest first with a faint relative modified
+  time per note. Other folders keep name order.
+  *Accept:* the note just edited is at the top of the tree.
+
+- [ ] **2.18 Open from outside the app**
+  Command-line paths, "open with" from the file manager, drag and drop onto
+  the window, single instance.
+  *Accept:* double-clicking a `.md` file opens it in the running window.
+
+- [ ] **2.19 Daily note**
+  A "Today" command opens or creates the day's note in the scratch folder.
+  *Accept:* running it twice in a day opens the same file.
+
+- [ ] **2.20 Typing helpers**
+  Auto-closing pairs for `` ` ``, `**`, `(`, `[`; pasting a URL onto a selection
+  makes a link. Update `MARKDOWN_SPEC.md`, "Copy and paste".
+  *Accept:* pasting a URL with no selection still inserts it verbatim.
+
+- [ ] **2.21 Code highlighting**
+  Syntax highlighting in fenced code blocks for a small, bundled set of
+  languages, coloured from theme tokens.
+  *Accept:* an unknown language renders exactly as before.
+
+- [ ] **2.22 Design review**
+  Audit both themes against `DESIGN.md` and `THEMING.md`: layout, empty
+  states, overlays, menus, accent discipline, texture. Fix what fails.
+  *Accept:* a written list of findings, each fixed or recorded as a decision.
+
 - [ ] **2.11 Texture and visual polish**
   The dot field per `THEMING.md`. Accent discipline audited.
   *Accept:* texture never appears behind body text; disabling it in settings
@@ -208,12 +269,35 @@ render and neither depends on 2.1–2.8.
   pinned, build steps in the README.
   *Accept:* a clean checkout builds on both platforms.
 
+- [ ] **3.6 Local version history**
+  Quiet snapshots of each note in userData, on close and at most every few
+  minutes while editing, pruned over time. A "History" command lists a note's
+  snapshots and restores one.
+  *Accept:* a paragraph deleted and saved yesterday can be restored today.
+
+- [ ] **3.7 Global capture shortcut**
+  A system-wide shortcut shows the window with a new note. Needs the tray
+  (3.3) keeping the app alive. Reverses D14; see D28.
+  *Accept:* the shortcut works with the window hidden in the tray.
+
+- [ ] **3.8 Reading width and system theme**
+  An optional capped, centred text column (off by default), and a theme option
+  that follows the system light or dark setting. Built with 3.4.
+  *Accept:* with both off, the app looks exactly as before.
+
+---
+
+## Parked ideas
+
+Liked, not scheduled. Each needs a decision before it becomes a task:
+`[[note]]` links opened through the quick switcher, tabs in the title bar
+(D17), and a mascot or desktop toy as a useless easter egg.
+
 ---
 
 ## Deliberately excluded
 
 Do not implement without an explicit decision recorded in `DECISIONS.md`:
-tables, images, indented code blocks, syntax highlighting, backlinks, graph
-view, plugins,
-mobile, sync, export, collaboration, spell check, global OS hotkey, typewriter
-or focus mode.
+tables, images, indented code blocks, syntax highlighting beyond the 2.21
+language set, backlinks, graph view, plugins, mobile, sync, export,
+collaboration, spell check, split screen, typewriter or focus mode.

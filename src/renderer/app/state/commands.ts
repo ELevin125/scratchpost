@@ -7,16 +7,16 @@ import {
   redo,
   undo
 } from '@codemirror/commands'
-import { selectNextOccurrence } from '@codemirror/search'
+import { findNext, findPrevious, openSearchPanel, selectNextOccurrence } from '@codemirror/search'
 import type { StateCommand } from '@codemirror/state'
 import type { EditorView } from '@codemirror/view'
 import { toggleTasksAtSelection } from '../../editor/checkbox'
 import { formatShortcut, matchesShortcut, type KeyEventLike } from './shortcuts'
 
 // The command registry. Every user action is registered here once; the
-// shortcut listener, the palette, the tab strip and the status bar all read
-// from this list. Adding a command here is the only edit needed for it to
-// appear in the palette. See ARCHITECTURE.md and D24.
+// shortcut listener, the palette, context menus, the tab strip and the status
+// bar all read from this list. Adding a command here is the only edit needed
+// for it to appear in the palette. See ARCHITECTURE.md, D24 and D29.
 
 export interface AppActions {
   openPalette(): void
@@ -26,10 +26,17 @@ export interface AppActions {
   newNote(): void
   openFile(): void
   openFolder(): void
+  openParentFolder(): void
   useScratchFolder(): void
   toggleTree(): void
   renameActive(): void
+  deleteActive(): void
+  revealActive(): void
+  copyActivePath(): void
   closeActive(): void
+  reopenClosed(): void
+  nextTab(): void
+  previousTab(): void
 }
 
 export interface CommandContext {
@@ -42,7 +49,8 @@ export interface CommandContext {
 export interface Command {
   id: string
   label: string
-  shortcut?: string // e.g. "Ctrl+Shift+P"; see shortcuts.ts
+  shortcut?: string // shown beside the command, e.g. "Ctrl+Shift+P"; see shortcuts.ts
+  extraShortcuts?: string[] // also matched, never shown
   run: (ctx: CommandContext) => void
   when?: (ctx: CommandContext) => boolean
 }
@@ -72,6 +80,9 @@ function editorCommand(command: (view: EditorView) => boolean): Pick<Command, 'r
   }
 }
 
+const hasFile = (ctx: CommandContext) => ctx.activePath !== null
+const hasTab = (ctx: CommandContext) => ctx.view !== null
+
 export const commands: readonly Command[] = [
   { id: 'palette.open', label: 'Command palette', shortcut: 'Ctrl+Shift+P', run: (ctx) => ctx.actions.openPalette() },
   { id: 'note.new', label: 'New note', shortcut: 'Ctrl+N', run: (ctx) => ctx.actions.newNote() },
@@ -81,23 +92,36 @@ export const commands: readonly Command[] = [
   { id: 'tree.toggle', label: 'Toggle file tree', shortcut: 'Ctrl+B', run: (ctx) => ctx.actions.toggleTree() },
   { id: 'folder.switch', label: 'Switch folder…', run: (ctx) => ctx.actions.openFolderMenu() },
   { id: 'folder.open', label: 'Open folder…', run: (ctx) => ctx.actions.openFolder() },
+  { id: 'folder.parent', label: 'Open parent folder', run: (ctx) => ctx.actions.openParentFolder() },
   {
     id: 'folder.scratch',
-    label: 'Use scratch folder',
+    label: 'Back to scratch folder',
     run: (ctx) => ctx.actions.useScratchFolder(),
     when: (ctx) => !ctx.isScratchContext
   },
+
+  { id: 'file.rename', label: 'Rename file…', shortcut: 'F2', run: (ctx) => ctx.actions.renameActive(), when: hasFile },
+  { id: 'file.reveal', label: 'Show in file manager', run: (ctx) => ctx.actions.revealActive(), when: hasFile },
+  { id: 'file.copyPath', label: 'Copy path', run: (ctx) => ctx.actions.copyActivePath(), when: hasFile },
+  { id: 'file.delete', label: 'Delete note', run: (ctx) => ctx.actions.deleteActive(), when: hasFile },
+
+  { id: 'tab.next', label: 'Next tab', shortcut: 'Ctrl+Tab', run: (ctx) => ctx.actions.nextTab(), when: hasTab },
   {
-    id: 'file.rename',
-    label: 'Rename file…',
-    shortcut: 'F2',
-    run: (ctx) => ctx.actions.renameActive(),
-    when: (ctx) => ctx.activePath !== null
+    id: 'tab.previous',
+    label: 'Previous tab',
+    shortcut: 'Ctrl+Shift+Tab',
+    run: (ctx) => ctx.actions.previousTab(),
+    when: hasTab
   },
-  { id: 'tab.close', label: 'Close tab', run: (ctx) => ctx.actions.closeActive(), when: (ctx) => ctx.view !== null },
+  { id: 'tab.close', label: 'Close tab', shortcut: 'Ctrl+W', run: (ctx) => ctx.actions.closeActive(), when: hasTab },
+  { id: 'tab.reopen', label: 'Reopen closed tab', shortcut: 'Ctrl+Shift+T', run: (ctx) => ctx.actions.reopenClosed() },
+
+  { id: 'find.open', label: 'Find in note', shortcut: 'Ctrl+F', ...editorCommand(openSearchPanel) },
+  { id: 'find.next', label: 'Find next', shortcut: 'F3', ...editorCommand(findNext) },
+  { id: 'find.previous', label: 'Find previous', shortcut: 'Shift+F3', ...editorCommand(findPrevious) },
 
   { id: 'edit.undo', label: 'Undo', shortcut: 'Ctrl+Z', ...editorCommand(undo) },
-  { id: 'edit.redo', label: 'Redo', shortcut: 'Ctrl+Shift+Z', ...editorCommand(redo) },
+  { id: 'edit.redo', label: 'Redo', shortcut: 'Ctrl+Shift+Z', extraShortcuts: ['Ctrl+Y'], ...editorCommand(redo) },
   { id: 'line.moveUp', label: 'Move line up', shortcut: 'Alt+ArrowUp', ...editorCommand(moveLineUp) },
   { id: 'line.moveDown', label: 'Move line down', shortcut: 'Alt+ArrowDown', ...editorCommand(moveLineDown) },
   { id: 'line.duplicate', label: 'Duplicate line', shortcut: 'Ctrl+Shift+D', ...editorCommand(copyLineDown) },
@@ -117,12 +141,15 @@ export function availableCommands(list: readonly Command[], ctx: CommandContext)
   return list.filter((command) => !command.when || command.when(ctx))
 }
 
+export function allShortcuts(command: Command): string[] {
+  return [...(command.shortcut ? [command.shortcut] : []), ...(command.extraShortcuts ?? [])]
+}
+
 export function commandForEvent(list: readonly Command[], event: KeyEventLike, ctx: CommandContext): Command | null {
   return (
     list.find(
       (command) =>
-        command.shortcut !== undefined &&
-        matchesShortcut(command.shortcut, event) &&
+        allShortcuts(command).some((shortcut) => matchesShortcut(shortcut, event)) &&
         (!command.when || command.when(ctx))
     ) ?? null
   )

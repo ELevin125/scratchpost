@@ -1,4 +1,4 @@
-import { app, BrowserWindow, session } from 'electron'
+import { app, BrowserWindow, Menu, session } from 'electron'
 import { join } from 'node:path'
 import { flushBeforeClose, registerIpc } from './ipc'
 import { loadWindowState, trackWindowState } from './window'
@@ -21,7 +21,6 @@ function createWindow(): void {
     minWidth: 480,
     minHeight: 320,
     show: false,
-    autoHideMenuBar: true,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
@@ -39,6 +38,17 @@ function createWindow(): void {
     win.show()
   })
 
+  // Dev only: devtools on Ctrl+Shift+I, since there is no application menu to
+  // provide it. Never in production.
+  if (devUrl) {
+    win.webContents.on('before-input-event', (event, input) => {
+      if (input.type === 'keyDown' && input.control && input.shift && input.key.toLowerCase() === 'i') {
+        win.webContents.toggleDevTools()
+        event.preventDefault()
+      }
+    })
+  }
+
   win.webContents.on('will-navigate', (event, url) => {
     // Dev only: Vite reloads the page after re-optimising dependencies. Blocking
     // that reload left the window stuck on a half-loaded, white page.
@@ -55,6 +65,9 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
+  // No application menu: its accelerators bypassed the command registry. See D29.
+  Menu.setApplicationMenu(null)
+
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({
       responseHeaders: { ...details.responseHeaders, 'Content-Security-Policy': [csp] }

@@ -11,7 +11,7 @@ import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { FileMeta } from '../preload/api'
 import { listFolder } from './fs/list'
-import { createNote, deleteIfEmpty, renameNote } from './fs/note'
+import { createNote, deleteIfEmpty, isNoteFile, renameNote } from './fs/note'
 import { readTextFile } from './fs/read'
 import { searchFolder } from './fs/search'
 import { indexTags } from './fs/tags'
@@ -79,6 +79,17 @@ export function registerIpc(): void {
   ipcMain.handle('deleteIfEmpty', async (_event, path: unknown) => {
     assertString(path, 'path')
     return deleteIfEmpty(path, await getScratchDir())
+  })
+
+  ipcMain.handle('trashFile', async (_event, path: unknown) => {
+    assertString(path, 'path')
+    if (!(await isNoteFile(path))) throw new Error('only .md and .txt files can be deleted')
+    await shell.trashItem(path)
+  })
+
+  ipcMain.handle('showInFolder', (_event, path: unknown) => {
+    assertString(path, 'path')
+    shell.showItemInFolder(path)
   })
 
   ipcMain.handle('listFolder', (_event, path: unknown) => {

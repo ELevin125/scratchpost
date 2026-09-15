@@ -494,6 +494,68 @@ renaming automatically from the first line (D5), and storing a "renamed" flag
 
 ---
 
+## D28 — Scope added after the M2 review
+
+After using M1 and M2, the author asked for a round of additions, including
+some the docs had ruled out. This entry records each reversal; the tasks are
+2.12–2.22 and 3.6–3.8 in `IMPLEMENTATION_PLAN.md`. `DESIGN.md` and
+`MARKDOWN_SPEC.md` are updated as each task lands.
+
+**Reversed:**
+
+- **Global capture shortcut** (D14): back, as task 3.7, once the tray (3.3)
+  keeps the app running so a system-wide key has something to show.
+- **Syntax highlighting** (D20): allowed for a small bundled set of languages
+  (2.21). Still no highlighting for anything else.
+- **Centred text column** (rejected visual idea): allowed as an optional
+  reading-width setting, off by default (3.8). The default look is unchanged.
+- **Smart paste** (`MARKDOWN_SPEC.md`, "Copy and paste"): one exception, pasting
+  a URL onto a selection makes a link (2.20). No other paste transforms.
+
+**Added, not previously considered:** find in note, tab shortcuts, folder
+navigation, delete to trash, context menus, recent-first scratch folder, open
+from outside the app, daily note, auto-closing pairs, local version history
+(3.6), following the system theme (3.8), and a design review (2.22).
+
+**Parked, not scheduled:** `[[note]]` links (still a `DESIGN.md` non-goal),
+tabs in the title bar (D17 stands for now), and a mascot or desktop toy as an
+easter egg.
+
+**Still rejected:** spell check (Electron downloads dictionaries from Google,
+breaking the no-network rule), split screen, tables, images, plugins, export
+and sync.
+
+---
+
+## D29 — Find, tab shortcuts, menus, delete and recent-first
+
+**Chosen:**
+
+- **Find bar.** CodeMirror's find and replace panel at the top of the editor,
+  restyled with theme tokens. `Ctrl+F`, `F3` and `Shift+F3` are registry
+  commands; `Escape` inside the bar is the bar's own key.
+- **No application menu.** Electron's default menu is removed. Its accelerators
+  took `Ctrl+W` and bypassed the registry. Clipboard keys still work natively
+  on Linux and Windows. Dev builds keep `Ctrl+Shift+I` for devtools, handled
+  in main and absent from production. This closes D24's gaps: `Ctrl+W` closes
+  a tab, and a command may carry extra, undisplayed shortcuts (redo also takes
+  `Ctrl+Y`).
+- **Delete goes to the OS trash, without a confirmation.** The trash is the
+  undo, and DESIGN.md principle 3 rules out prompts. A new `trashFile` call
+  only accepts existing `.md` and `.txt` files. `showInFolder` reveals a file.
+- **Context menus are drawn by the app,** not native, so they match the square
+  hairlined look and take their labels and shortcuts from the registry.
+- **Recent-first scratch folder.** Folders first by name, then notes newest
+  first by modified time, each with a faint relative time. Other folders keep
+  name order. `listFolder` now returns each file's modified time; saves made
+  in this session update times and order without re-reading the folder.
+- **Folder navigation.** The tree header names the folder and opens the folder
+  menu, with `← Scratch` when elsewhere; the folder menu offers the parent
+  folder; the status bar shows the last two segments of the path.
+- **Window title** follows the active note.
+
+---
+
 ## Open questions
 
 Not yet decided. Do not guess; raise them.

@@ -1,5 +1,6 @@
-import { access, mkdir, open, readFile, rename, unlink } from 'node:fs/promises'
+import { access, lstat, mkdir, open, readFile, rename, unlink } from 'node:fs/promises'
 import { basename, dirname, isAbsolute, join, relative, sep } from 'node:path'
+import { NOTE_FILE } from './list'
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
@@ -54,4 +55,15 @@ export async function deleteIfEmpty(path: string, scratchDir: string): Promise<b
   if (content === null || content.replace(/^﻿/, '').trim() !== '') return false
   await unlink(path)
   return true
+}
+
+// Only an existing regular .md or .txt file can go to the trash: never a
+// folder, a symlink or anything else the renderer names. See D29.
+export async function isNoteFile(path: string): Promise<boolean> {
+  if (!NOTE_FILE.test(path)) return false
+  try {
+    return (await lstat(path)).isFile()
+  } catch {
+    return false
+  }
 }

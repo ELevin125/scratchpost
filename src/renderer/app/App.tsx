@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { FileMeta, FolderEntry, SearchHit } from '../../preload/api'
 import type { EditorStats } from '../editor/createEditor'
 import { CommandPalette } from './CommandPalette'
+import { ContextMenu, type MenuItem, type MenuState } from './ContextMenu'
 import { Editor, type Buffers } from './Editor'
 import { EmptyState } from './EmptyState'
 import { FileTree } from './FileTree'
@@ -22,9 +23,10 @@ import {
   type CommandContext
 } from './state/commands'
 import { relativePath } from './state/fileTree'
-import { folderName } from './state/folderContext'
+import { folderName, parentFolder, shortPath } from './state/folderContext'
 import { selectionForHit } from './state/searchHits'
 import { SESSION_SAVE_DELAY_MS, snapshotSession } from './state/session'
+import { formatShortcut } from './state/shortcuts'
 import {
   activateTab,
   AUTO_NOTE_NAME,
@@ -53,6 +55,9 @@ const NEW_NOTE_META: FileMeta = { eol: '\n', bom: false, encoding: 'utf8' }
 // A rename that drops the extension keeps the original one.
 const NOTE_EXTENSION = /\.(md|markdown|txt)$/i
 
+// Ctrl+Shift+T remembers this many closed tabs.
+const MAX_CLOSED = 20
+
 type Overlay = 'palette' | 'switcher' | 'search' | 'folders' | 'rename'
 
 // Where to land when opening a file from a search result.
@@ -70,6 +75,16 @@ function without<T>(record: Record<string, T>, key: string): Record<string, T> {
   return next
 }
 
+// A context menu item that takes its label and shortcut from the registry.
+function menuItem(id: string, run: () => void): MenuItem {
+  const command = commands.find((c) => c.id === id)
+  return {
+    label: command?.label ?? id,
+    hint: command?.shortcut ? formatShortcut(command.shortcut) : undefined,
+    run
+  }
+}
+
 export function App() {
   const [tabsState, setTabsState] = useState<TabsState>(emptyTabs)
   const [restoring, setRestoring] = useState(true)
@@ -79,11 +94,16 @@ export function App() {
   const [saveStates, setSaveStates] = useState<Record<string, SaveEvent>>({})
   const [notice, setNotice] = useState<string | null>(null)
   const [overlay, setOverlay] = useState<Overlay | null>(null)
+  const [menu, setMenu] = useState<MenuState | null>(null)
   const [treeOpen, setTreeOpen] = useState(false) // hidden by default
+  // When each file was last saved this session, so the tree's times and
+  // recent-first order are current without re-reading the folder.
+  const [savedAt, setSavedAt] = useState<Record<string, number>>({})
 
   const buffers = useRef<Buffers>({ states: new Map(), initial: new Map(), scroll: new Map() }).current
   const metas = useRef(new Map<string, FileMeta>()).current
   const viewRef = useRef<EditorView | null>(null)
+  const closedPaths = useRef<string[]>([])
 
   const scratchDir = useMemo(() => {
     const dir = api.getScratchDir()
@@ -193,6 +213,8 @@ export function App() {
           const state = buffers.states.get(id)
           if (!state) return
           await api.writeFile(path, state.doc.toString(), metas.get(id) ?? NEW_NOTE_META)
+          const written = path
+          setSavedAt((prev) => ({ ...prev, [written]: Date.now() }))
         },
         (id, event) =>
           setSaveStates((prev) => (event.kind === 'ok' ? without(prev, id) : { ...prev, [id]: event }))
@@ -255,23 +277,37 @@ export function App() {
     updateTabs((s) => activateTab(s, id))
   }
 
+  const cycleTab = (step: 1 | -1) => {
+    const { tabs, activeId } = tabsRef.current
+    if (tabs.length < 2) return
+    const index = tabs.findIndex((t) => t.id === activeId)
+    activate(tabs[(index + step + tabs.length) % tabs.length].id)
+  }
+
+  // Removes a tab and everything held for it, without saving.
+  const discardTab = (id: string) => {
+    autosave.forget(id)
+    updateTabs((s) => closeTab(s, id))
+    buffers.initial.delete(id)
+    metas.delete(id)
+    setSaveStates((prev) => without(prev, id))
+  }
+
   // Closing never prompts; pending edits are written first. If that write
   // fails the tab stays open, so edits that aren't on disk are never dropped.
   const close = async (id: string) => {
     if (!(await autosave.flush(id))) return
     const tab = tabsRef.current.tabs.find((t) => t.id === id)
     const text = buffers.states.get(id)?.doc.toString() ?? buffers.initial.get(id)?.doc
-
-    autosave.forget(id)
-    updateTabs((s) => closeTab(s, id))
-    buffers.initial.delete(id)
-    metas.delete(id)
-    setSaveStates((prev) => without(prev, id))
+    discardTab(id)
+    if (!tab?.path) return
 
     // An empty scratch note leaves nothing behind (D23). Main re-checks the
     // file on disk and refuses anything outside the scratch folder.
-    if (tab?.path && tab.scratch && text !== undefined && text.trim() === '') {
+    if (tab.scratch && text !== undefined && text.trim() === '') {
       api.deleteIfEmpty(tab.path).then(() => refreshFolder(), () => {})
+    } else {
+      closedPaths.current = [...closedPaths.current.filter((p) => p !== tab.path), tab.path].slice(-MAX_CLOSED)
     }
   }
 
@@ -332,6 +368,46 @@ export function App() {
     }
   }
 
+  const reopenClosed = () => {
+    const open = new Set(tabsRef.current.tabs.map((t) => t.path))
+    while (closedPaths.current.length > 0) {
+      const path = closedPaths.current.pop()!
+      if (!open.has(path)) {
+        void openPath(path)
+        return
+      }
+    }
+  }
+
+  // To the OS trash, without a prompt: the trash is the undo (D29).
+  const deleteNote = async (path: string) => {
+    const tab = tabsRef.current.tabs.find((t) => t.path === path)
+    if (tab) {
+      // Let an in-flight save land first, so it can't recreate the file afterwards.
+      await autosave.flush(tab.id)
+      discardTab(tab.id)
+    }
+    closedPaths.current = closedPaths.current.filter((p) => p !== path)
+    try {
+      await api.trashFile(path)
+      setNotice(`moved ${fileName(path)} to the trash`)
+    } catch (err) {
+      setNotice(`couldn't delete ${fileName(path)}: ${errorMessage(err)}`)
+    }
+    void refreshFolder()
+  }
+
+  const revealPath = (path: string) => {
+    api.showInFolder(path).catch(() => {})
+  }
+
+  const copyPath = (path: string) => {
+    navigator.clipboard.writeText(path).then(
+      () => setNotice(`copied ${path}`),
+      () => setNotice("couldn't copy the path")
+    )
+  }
+
   const openFile = async () => {
     const path = await api.pickFile()
     if (path) await openPath(path)
@@ -368,11 +444,55 @@ export function App() {
     if (!(await autosave.flush(tab.id))) return
     try {
       await api.renameFile(tab.path, to)
+      closedPaths.current = closedPaths.current.filter((p) => p !== tab.path)
       updateTabs((s) => setTabPath(s, tab.id, to))
     } catch (err) {
       setNotice(`couldn't rename ${oldName}: ${errorMessage(err)}`)
     }
   }
+
+  // --- Context menus ---
+
+  const pathItems = (path: string): MenuItem[] => [
+    menuItem('file.reveal', () => revealPath(path)),
+    menuItem('file.copyPath', () => copyPath(path)),
+    menuItem('file.delete', () => void deleteNote(path))
+  ]
+
+  const openTabMenu = (id: string, at: { x: number; y: number }) => {
+    const tab = tabsRef.current.tabs.find((t) => t.id === id)
+    if (!tab) return
+    const items: MenuItem[] = [
+      ...(tab.path
+        ? [
+            menuItem('file.rename', () => {
+              activate(tab.id)
+              setOverlay('rename')
+            })
+          ]
+        : []),
+      menuItem('tab.close', () => void close(tab.id)),
+      ...(tab.path ? pathItems(tab.path) : [])
+    ]
+    setMenu({ ...at, items })
+  }
+
+  const openEntryMenu = (entry: FolderEntry, at: { x: number; y: number }) => {
+    const items: MenuItem[] = entry.isDir
+      ? [
+          { label: 'Use as folder', run: () => folder.switchTo(entry.path) },
+          menuItem('file.reveal', () => revealPath(entry.path)),
+          menuItem('file.copyPath', () => copyPath(entry.path))
+        ]
+      : [
+          { label: 'Open', run: () => void openPath(entry.path) },
+          menuItem('file.rename', () => void openPath(entry.path).then(() => setOverlay('rename'))),
+          ...pathItems(entry.path)
+        ]
+    setMenu({ ...at, items })
+  }
+
+  const closeMenu = useCallback(() => setMenu(null), [])
 
   // --- Commands ---
 
@@ -397,15 +517,34 @@ export function App() {
       newNote,
       openFile: () => void openFile(),
       openFolder: () => void openFolder(),
+      openParentFolder: () => {
+        const parent = folder.root ? parentFolder(folder.root) : null
+        if (parent) folder.switchTo(parent)
+      },
       useScratchFolder: () => folder.switchTo(null),
       toggleTree: () => setTreeOpen((open) => !open),
       renameActive: () => {
         if (activeTab()?.path) setOverlay('rename')
       },
+      deleteActive: () => {
+        const path = activeTab()?.path
+        if (path) void deleteNote(path)
+      },
+      revealActive: () => {
+        const path = activeTab()?.path
+        if (path) revealPath(path)
+      },
+      copyActivePath: () => {
+        const path = activeTab()?.path
+        if (path) copyPath(path)
+      },
       closeActive: () => {
         const id = tabsRef.current.activeId
         if (id) void close(id)
-      }
+      },
+      reopenClosed,
+      nextTab: () => cycleTab(1),
+      previousTab: () => cycleTab(-1)
     }
   })
 
@@ -431,8 +570,8 @@ export function App() {
   }
 
   // Every shortcut in the app goes through here. Capture phase, so registry
-  // shortcuts win over CodeMirror's keys. Text inputs (palette, rename) are
-  // left alone so typing there never triggers a command. See D24.
+  // shortcuts win over CodeMirror's keys. Text inputs (palette, rename, find
+  // bar) are left alone so typing there never triggers a command. See D24.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.defaultPrevented || event.isComposing) return
@@ -453,6 +592,12 @@ export function App() {
   const { tabs, activeId } = tabsState
   const active = tabs.find((t) => t.id === activeId) ?? null
   const nameOf = (tab: Tab) => displayName(tab, firstLines[tab.id] ?? null)
+
+  // The window title follows the active note, for Alt+Tab and the taskbar.
+  const titleName = active ? nameOf(active) : null
+  useEffect(() => {
+    document.title = titleName ? `${titleName} — Scratchpost` : 'Scratchpost'
+  }, [titleName])
 
   // Folder entries use the same display-name rules as tabs. For a note that is
   // open, its live first line wins over the listing, which is only as fresh as
@@ -509,6 +654,7 @@ export function App() {
         onActivate={activate}
         onClose={(id) => void close(id)}
         onMove={(id, toIndex) => updateTabs((s) => moveTab(s, id, toIndex))}
+        onTabMenu={openTabMenu}
         treeOpen={treeOpen}
         onToggleTree={() => runById('tree.toggle')}
         onNew={() => runById('note.new')}
@@ -525,9 +671,13 @@ export function App() {
             isScratch={folder.isScratch}
             listing={folder.listing}
             activePath={active?.path ?? null}
+            savedAt={savedAt}
             nameOf={entryName}
             onOpen={(path) => void openPath(path)}
             onOpenFolder={() => runById('folder.open')}
+            onFolderMenu={() => runById('folder.switch')}
+            onUseScratch={() => runById('folder.scratch')}
+            onEntryMenu={openEntryMenu}
           />
         )}
         <div className="main-column">
@@ -546,12 +696,12 @@ export function App() {
         </div>
       </div>
       <StatusBar
-        folderName={contextName}
+        folderLabel={folder.root ? shortPath(folder.root) : ''}
+        folderPath={folder.root ?? ''}
         stats={stats}
         message={statusMessage}
         onFolder={() => runById('folder.switch')}
         onPalette={() => runById('palette.open')}
-        folderHint={commandHint('folder.switch')}
         paletteHint={commandHint('palette.open')}
       />
 
@@ -591,6 +741,7 @@ export function App() {
           scratchDir={folder.scratchDir}
           recentFolders={folder.recentFolders}
           current={folder.isScratch ? null : folder.root}
+          parent={folder.root ? parentFolder(folder.root) : null}
           onSwitch={(path) => {
             closeOverlay()
             folder.switchTo(path)
@@ -609,6 +760,7 @@ export function App() {
           onClose={closeOverlay}
         />
       )}
+      {menu && <ContextMenu {...menu} onClose={closeMenu} />}
     </div>
   )
 }

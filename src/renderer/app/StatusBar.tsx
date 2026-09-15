@@ -6,23 +6,23 @@ export interface StatusMessage {
 }
 
 interface StatusBarProps {
-  folderName: string
+  folderLabel: string // the end of the folder path, e.g. "Documents/Scratchpost"
+  folderPath: string // the full path, as a tooltip
   stats: EditorStats
   message: StatusMessage | null
   onFolder: () => void
   onPalette: () => void
-  folderHint: string
   paletteHint: string
 }
 
-// Left to right: folder name, message, spacer, line and column, word count,
-// palette button. The message slot is information, never a prompt, and is
-// empty while all is well. See DESIGN.md, "Status bar".
-export function StatusBar({ folderName, stats, message, onFolder, onPalette, folderHint, paletteHint }: StatusBarProps) {
+// Left to right: folder, message, spacer, line and column, word count, palette
+// button. The message slot is information, never a prompt, and is empty while
+// all is well. See DESIGN.md, "Status bar".
+export function StatusBar({ folderLabel, folderPath, stats, message, onFolder, onPalette, paletteHint }: StatusBarProps) {
   return (
     <div className="status-bar">
-      <button className="status-folder" title={folderHint} onClick={onFolder}>
-        {folderName}
+      <button className="status-folder" title={folderPath} onClick={onFolder}>
+        {folderLabel}
       </button>
       <span className={message?.error ? 'status-message status-error' : 'status-message'}>
         {message?.text}

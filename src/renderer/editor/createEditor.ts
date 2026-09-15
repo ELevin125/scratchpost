@@ -1,5 +1,6 @@
 import { history, standardKeymap } from '@codemirror/commands'
 import { markdown } from '@codemirror/lang-markdown'
+import { closeSearchPanel, search } from '@codemirror/search'
 import { EditorSelection, EditorState, type Extension } from '@codemirror/state'
 import { drawSelection, EditorView, keymap, type ViewUpdate } from '@codemirror/view'
 import { Strikethrough, TaskList } from '@lezer/markdown'
@@ -33,6 +34,10 @@ export function editorExtensions(onUpdate: (update: ViewUpdate) => void): Extens
     livePreview,
     renumberLists,
     listKeymap,
+    // The find bar (2.12). Opening it is a registry command; Escape, scoped to
+    // the bar, is the bar's own key. See D29.
+    search({ top: true }),
+    keymap.of([{ key: 'Escape', run: closeSearchPanel, scope: 'editor search-panel' }]),
     // Only cursor motion, selection and deletion. Every other binding is a
     // command in app/state/commands.ts. See D24.
     keymap.of(standardKeymap),

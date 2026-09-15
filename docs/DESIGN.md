@@ -182,9 +182,13 @@ Standard CodeMirror 6 keymap plus:
 | New note | `Ctrl+N` |
 | Open file | `Ctrl+O` |
 | Rename | `F2` |
-| Undo / redo | `Ctrl+Z` / `Ctrl+Shift+Z` |
+| Undo / redo | `Ctrl+Z` / `Ctrl+Shift+Z` (also `Ctrl+Y`) |
+| Find in note | `Ctrl+F`, then `F3` / `Shift+F3` |
+| Next / previous tab | `Ctrl+Tab` / `Ctrl+Shift+Tab` |
+| Close tab | `Ctrl+W` |
+| Reopen closed tab | `Ctrl+Shift+T` |
 | Insert date (`YYYY-MM-DD`) | palette only |
-| Close tab | palette only (`Ctrl+W` belongs to Electron's menu) |
+| Delete note, show in file manager, copy path | palette and right-click menus |
 
 Every binding above is a command in the registry and appears in the palette
 with its shortcut (D24). `Enter` and `Tab` are editor keys (D21).

@@ -488,3 +488,88 @@ button:disabled {
   background: transparent;
   text-decoration: underline;
 }
+
+/* Tab strip: tabs take the room they need; the buttons sit at the right edge. */
+
+.tabs {
+  flex: 0 1 auto;
+}
+
+.tab-actions {
+  margin-left: auto;
+  border-left: 1px solid var(--rule);
+}
+
+.tab-actions .tab-action:last-child {
+  border-right: 0;
+}
+
+/* Tree header: the folder, the way to switch, and the way home. */
+
+.tree-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.tree-folder-button {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink);
+}
+
+.tree-home {
+  flex-shrink: 0;
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.tree-folder-button:hover,
+.tree-home:hover {
+  text-decoration: underline;
+}
+
+.tree-time {
+  flex-shrink: 0;
+  margin-left: auto;
+  padding-left: 8px;
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+/* Context menus */
+
+.menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+}
+
+.menu {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  padding: 4px 0;
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+  outline: none;
+}
+
+.menu-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 5px 12px;
+  text-align: left;
+  color: var(--body);
+}
+
+.menu-item.selected {
+  color: var(--ink);
+  background: var(--bar);
+}

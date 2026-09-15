@@ -82,6 +82,7 @@ src/
       SearchPanel.tsx
       EmptyState.tsx
       RenameDialog.tsx    F2 rename input
+      ContextMenu.tsx     right-click menus for tabs and tree rows
       App.tsx             layout, shortcut listener, overlays
       Editor.tsx          mounts the EditorView into React
       useFolderContext.ts folder context, settings and listing state
@@ -138,6 +139,8 @@ interface ScratchpostAPI {
   createNote(scratchDir: string): Promise<string>
   renameFile(from: string, to: string): Promise<void> // same folder, never overwrites
   deleteIfEmpty(path: string): Promise<boolean> // scratch folder only; see D23
+  trashFile(path: string): Promise<void> // .md and .txt files only, to the OS trash; see D29
+  showInFolder(path: string): Promise<void> // reveal in the file manager
   listFolder(path: string): Promise<FolderEntry[]> // recursive walk; see D25
   searchFolder(path: string, query: string): Promise<SearchHit[]> // see D27
   listTags(path: string): Promise<TagSummary[]> // tag index; see D27
@@ -165,6 +168,7 @@ interface FolderEntry {
   name: string
   isDir: boolean
   firstLine: string | null // first non-blank line of a note, for display names
+  modified: number | null // mtime in ms, for recent-first order and tree times
 }
 interface Settings {
   folderContext: string | null // null means the scratch folder

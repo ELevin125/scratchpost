@@ -18,6 +18,7 @@ export interface FolderEntry {
   // First non-blank line of a .md or .txt file, for display names. Null for
   // folders and unreadable files.
   firstLine: string | null
+  modified: number | null // mtime in ms; null for folders and unreadable files
 }
 
 export interface SearchHit {
@@ -58,6 +59,8 @@ export interface ScratchpostAPI {
   createNote(scratchDir: string): Promise<string>
   renameFile(from: string, to: string): Promise<void> // same folder, never overwrites
   deleteIfEmpty(path: string): Promise<boolean> // scratch folder only; see D23
+  trashFile(path: string): Promise<void> // .md and .txt files only, to the OS trash; see D29
+  showInFolder(path: string): Promise<void> // reveal in the file manager
   listFolder(path: string): Promise<FolderEntry[]> // recursive walk; see D25
   searchFolder(path: string, query: string): Promise<SearchHit[]> // see D27
   listTags(path: string): Promise<TagSummary[]> // tag index; see D27

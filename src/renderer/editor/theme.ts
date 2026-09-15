@@ -33,6 +33,51 @@ export const editorTheme = EditorView.theme({
   '.cm-inline-code': { backgroundColor: 'var(--bar)' },
   '.cm-link': { color: 'var(--spot)', textDecoration: 'underline', cursor: 'pointer' },
 
+  // Find bar (2.12). Selectors carry extra classes to outrank CodeMirror's
+  // base theme, which styles these for its own light and dark modes.
+  '.cm-panels': { backgroundColor: 'var(--paper-2)', color: 'var(--body)' },
+  '.cm-panels.cm-panels-top': { borderBottom: '1px solid var(--rule)' },
+  '& .cm-panel.cm-search': {
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: '6px 8px',
+    padding: '6px 12px 6px 24px',
+    fontSize: '12px'
+  },
+  '& .cm-panel.cm-search br': { flexBasis: '100%', height: '0' },
+  '& .cm-panel.cm-search .cm-textfield': {
+    font: 'inherit',
+    color: 'var(--ink)',
+    backgroundColor: 'var(--paper)',
+    border: '1px solid var(--rule)',
+    borderRadius: '0',
+    padding: '2px 6px',
+    margin: '0'
+  },
+  '& .cm-panel.cm-search .cm-button': {
+    font: 'inherit',
+    color: 'var(--body)',
+    backgroundColor: 'var(--paper)',
+    backgroundImage: 'none',
+    border: '1px solid var(--rule)',
+    borderRadius: '0',
+    padding: '2px 8px',
+    margin: '0'
+  },
+  '& .cm-panel.cm-search .cm-button:hover': { backgroundColor: 'var(--bar)' },
+  '& .cm-panel.cm-search label': { display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--ink-soft)' },
+  '& .cm-panel.cm-search button[name=close]': {
+    position: 'static',
+    marginLeft: 'auto',
+    color: 'var(--ink-soft)',
+    backgroundColor: 'transparent',
+    border: 'none',
+    fontSize: '14px'
+  },
+  '& .cm-content .cm-line .cm-searchMatch': { backgroundColor: 'var(--bar)' },
+  '& .cm-content .cm-line .cm-searchMatch-selected': { outline: '1px solid var(--ink-soft)' },
+
   // Block constructs
   '.cm-quote': { borderLeft: '1px solid var(--rule)', paddingLeft: '12px' },
   '.cm-code-block': { backgroundColor: 'var(--bar)' },
