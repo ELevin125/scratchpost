@@ -22,8 +22,14 @@ export interface FolderEntry {
 
 export interface SearchHit {
   path: string
-  line: number
-  text: string
+  line: number // 1-based
+  text: string // the whole line, capped at 300 characters
+}
+
+export interface TagSummary {
+  tag: string // lowercased; tags are case-insensitive
+  count: number // occurrences, not files
+  paths: string[] // files containing it
 }
 
 export interface WatchEvent {
@@ -53,7 +59,8 @@ export interface ScratchpostAPI {
   renameFile(from: string, to: string): Promise<void> // same folder, never overwrites
   deleteIfEmpty(path: string): Promise<boolean> // scratch folder only; see D23
   listFolder(path: string): Promise<FolderEntry[]> // recursive walk; see D25
-  searchFolder(path: string, query: string): Promise<SearchHit[]>
+  searchFolder(path: string, query: string): Promise<SearchHit[]> // see D27
+  listTags(path: string): Promise<TagSummary[]> // tag index; see D27
   pickFolder(): Promise<string | null>
   pickFile(): Promise<string | null>
   watchFolder(path: string, cb: (e: WatchEvent) => void): () => void

@@ -1,7 +1,7 @@
-import type { EditorState } from '@codemirror/state'
-import type { EditorView } from '@codemirror/view'
+import { EditorSelection, type EditorState } from '@codemirror/state'
+import { EditorView } from '@codemirror/view'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { FileMeta, FolderEntry } from '../../preload/api'
+import type { FileMeta, FolderEntry, SearchHit } from '../../preload/api'
 import type { EditorStats } from '../editor/createEditor'
 import { CommandPalette } from './CommandPalette'
 import { Editor, type Buffers } from './Editor'
@@ -10,6 +10,7 @@ import { FileTree } from './FileTree'
 import { FolderMenu } from './FolderMenu'
 import { QuickSwitcher } from './QuickSwitcher'
 import { RenameDialog } from './RenameDialog'
+import { SearchPanel } from './SearchPanel'
 import { Autosave, errorMessage, type SaveEvent } from './state/autosave'
 import {
   availableCommands,
@@ -22,9 +23,11 @@ import {
 } from './state/commands'
 import { relativePath } from './state/fileTree'
 import { folderName } from './state/folderContext'
+import { selectionForHit } from './state/searchHits'
 import { SESSION_SAVE_DELAY_MS, snapshotSession } from './state/session'
 import {
   activateTab,
+  AUTO_NOTE_NAME,
   closeTab,
   displayName,
   emptyTabs,
@@ -34,6 +37,7 @@ import {
   moveTab,
   openTab,
   setTabPath,
+  suggestedNoteName,
   type Tab,
   type TabsState
 } from './state/tabs'
@@ -49,7 +53,13 @@ const NEW_NOTE_META: FileMeta = { eol: '\n', bom: false, encoding: 'utf8' }
 // A rename that drops the extension keeps the original one.
 const NOTE_EXTENSION = /\.(md|markdown|txt)$/i
 
-type Overlay = 'palette' | 'switcher' | 'folders' | 'rename'
+type Overlay = 'palette' | 'switcher' | 'search' | 'folders' | 'rename'
+
+// Where to land when opening a file from a search result.
+interface HitTarget {
+  line: number
+  query: string
+}
 
 const newNoteTab = (): Tab => ({ id: crypto.randomUUID(), path: null, scratch: true })
 
@@ -217,9 +227,9 @@ export function App() {
   }, [autosave, saveSessionNow])
 
   // --- Folder listing refresh ---
-  // No watching until 3.1, so the tree and switcher re-read the folder when
-  // the window regains focus and whenever an open file is created, renamed or
-  // closed.
+  // No watching until 3.1, so the tree, switcher and tag index re-read the
+  // folder when the window regains focus and whenever an open file is created,
+  // renamed or closed.
 
   const { refresh: refreshFolder } = folder
   useEffect(() => {
@@ -271,16 +281,48 @@ export function App() {
     updateTabs((s) => openTab(s, newNoteTab()))
   }
 
-  const openPath = async (path: string) => {
+  // Put an already-open tab's selection on a search hit.
+  const revealInTab = (id: string, target: HitTarget, wasActive: boolean) => {
+    const state = buffers.states.get(id)
+    if (state) {
+      const hit = selectionForHit(state.doc.toString(), target.line, target.query)
+      const selection = EditorSelection.single(hit.anchor, hit.head)
+      const view = viewRef.current
+      if (wasActive && view) {
+        view.dispatch({ selection, effects: EditorView.scrollIntoView(hit.head, { y: 'center' }) })
+        view.focus()
+      } else {
+        buffers.states.set(id, state.update({ selection }).state)
+        buffers.scroll.set(id, hit.scrollTo)
+      }
+      return
+    }
+    // Restored but never shown yet.
+    const initial = buffers.initial.get(id)
+    if (initial) {
+      const hit = selectionForHit(initial.doc, target.line, target.query)
+      buffers.initial.set(id, { doc: initial.doc, cursor: hit.head, anchor: hit.anchor })
+      buffers.scroll.set(id, hit.scrollTo)
+    }
+  }
+
+  const openPath = async (path: string, target?: HitTarget) => {
     setNotice(null)
     const existing = tabsRef.current.tabs.find((t) => t.path === path)
-    if (existing) return activate(existing.id)
+    if (existing) {
+      const wasActive = tabsRef.current.activeId === existing.id
+      activate(existing.id)
+      if (target) revealInTab(existing.id, target, wasActive)
+      return
+    }
 
     try {
       const { content, meta } = await api.readFile(path)
       const dir = await scratchDir.catch(() => null)
       const id = crypto.randomUUID()
-      buffers.initial.set(id, { doc: content, cursor: 0 })
+      const hit = target ? selectionForHit(content, target.line, target.query) : null
+      buffers.initial.set(id, { doc: content, cursor: hit?.head ?? 0, anchor: hit?.anchor })
+      if (hit) buffers.scroll.set(id, hit.scrollTo)
       metas.set(id, meta)
       setFirstLines((prev) => ({ ...prev, [id]: firstContentLine(content.split('\n')) }))
       flushActive()
@@ -299,6 +341,12 @@ export function App() {
     const path = await api.pickFolder()
     if (path) folder.switchTo(path)
   }
+
+  const folderRoot = folder.root
+  const searchFolder = useCallback(
+    (query: string) => (folderRoot ? api.searchFolder(folderRoot, query) : Promise.resolve([])),
+    [folderRoot]
+  )
 
   const rename = async (input: string) => {
     setOverlay(null)
@@ -340,6 +388,10 @@ export function App() {
       openSwitcher: () => {
         void refreshFolder()
         setOverlay('switcher')
+      },
+      openSearch: () => {
+        void refreshFolder() // search results use the listing for display names
+        setOverlay('search')
       },
       openFolderMenu: () => setOverlay('folders'),
       newNote,
@@ -402,12 +454,32 @@ export function App() {
   const active = tabs.find((t) => t.id === activeId) ?? null
   const nameOf = (tab: Tab) => displayName(tab, firstLines[tab.id] ?? null)
 
-  // Folder entries use the same display-name rules as tabs.
+  // Folder entries use the same display-name rules as tabs. For a note that is
+  // open, its live first line wins over the listing, which is only as fresh as
+  // the last folder read (a new note's file is read while still empty).
+  const openFirstLines = new Map(
+    tabs.flatMap((tab) => (tab.path ? [[tab.path, firstLines[tab.id] ?? null] as const] : []))
+  )
   const entryName = (entry: FolderEntry) =>
     displayName(
       { id: entry.path, path: entry.path, scratch: folder.scratchDir !== null && isInside(entry.path, folder.scratchDir) },
-      entry.firstLine
+      openFirstLines.has(entry.path) ? openFirstLines.get(entry.path)! : entry.firstLine
     )
+  const entriesByPath = useMemo(
+    () => new Map((folder.listing?.entries ?? []).map((entry) => [entry.path, entry])),
+    [folder.listing]
+  )
+  const pathName = (path: string) => {
+    const entry = entriesByPath.get(path)
+    return entry ? entryName(entry) : fileName(path)
+  }
+
+  // F2 on a timestamp-named note suggests a name from its first line (D26).
+  const renameSuggestion = (tab: Tab & { path: string }) => {
+    const current = fileName(tab.path)
+    if (!tab.scratch || !AUTO_NOTE_NAME.test(current)) return current
+    return suggestedNoteName(firstLines[tab.id] ?? null) ?? current
+  }
 
   // Silent while saves succeed. Failures win, the active tab's first.
   const failures = tabs.flatMap((tab) => {
@@ -448,6 +520,7 @@ export function App() {
       <div className="workspace">
         {treeOpen && (
           <FileTree
+            key={folder.root ?? ''}
             folderName={contextName}
             isScratch={folder.isScratch}
             listing={folder.listing}
@@ -501,6 +574,18 @@ export function App() {
           onClose={closeOverlay}
         />
       )}
+      {overlay === 'search' && (
+        <SearchPanel
+          folderName={contextName}
+          nameOf={pathName}
+          search={searchFolder}
+          onOpen={(hit: SearchHit, query: string) => {
+            setOverlay(null)
+            void openPath(hit.path, { line: hit.line, query })
+          }}
+          onClose={closeOverlay}
+        />
+      )}
       {overlay === 'folders' && (
         <FolderMenu
           scratchDir={folder.scratchDir}
@@ -518,7 +603,11 @@ export function App() {
         />
       )}
       {overlay === 'rename' && active?.path && (
-        <RenameDialog name={fileName(active.path)} onSubmit={(name) => void rename(name)} onClose={closeOverlay} />
+        <RenameDialog
+          name={renameSuggestion({ ...active, path: active.path })}
+          onSubmit={(name) => void rename(name)}
+          onClose={closeOverlay}
+        />
       )}
     </div>
   )

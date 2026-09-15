@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { FolderEntry, Settings } from '../../preload/api'
+import type { FolderEntry, Settings, TagSummary } from '../../preload/api'
 import { errorMessage } from './state/autosave'
 import { folderName, withRecent } from './state/folderContext'
 
@@ -8,12 +8,13 @@ const api = window.scratchpost
 export interface Listing {
   root: string
   entries: FolderEntry[]
+  tags: TagSummary[]
   error: string | null // the folder couldn't be listed
 }
 
-// The folder context: which folder the file tree and quick switcher list.
-// Defaults to the scratch folder and never touches open tabs. See DESIGN.md,
-// "Folder context", and D25.
+// The folder context: which folder the file tree, quick switcher, search and
+// tag index cover. Defaults to the scratch folder and never touches open tabs.
+// See DESIGN.md, "Folder context", and D25.
 export function useFolderContext(scratchDirPromise: Promise<string>, onNotice: (message: string) => void) {
   const [scratchDir, setScratchDir] = useState<string | null>(null)
   const [settings, setSettings] = useState<Settings | null>(null)
@@ -58,8 +59,12 @@ export function useFolderContext(scratchDirPromise: Promise<string>, onNotice: (
   const refresh = useCallback(async () => {
     if (!root) return
     try {
-      const entries = await api.listFolder(root)
-      setListing({ root, entries, error: null })
+      const [entries, tags] = await Promise.all([
+        api.listFolder(root),
+        // The tag index is a nicety; a failure there never hides the files.
+        api.listTags(root).catch((): TagSummary[] => [])
+      ])
+      setListing({ root, entries, tags, error: null })
     } catch (err) {
       const current = settingsRef.current
       if (current?.folderContext === root) {
@@ -67,7 +72,7 @@ export function useFolderContext(scratchDirPromise: Promise<string>, onNotice: (
         noticeRef.current(`folder not found: ${folderName(root)}`)
         persist({ folderContext: null, recentFolders: current.recentFolders.filter((p) => p !== root) })
       } else {
-        setListing({ root, entries: [], error: errorMessage(err) })
+        setListing({ root, entries: [], tags: [], error: errorMessage(err) })
       }
     }
   }, [root, persist])

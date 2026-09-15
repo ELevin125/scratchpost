@@ -41,10 +41,13 @@ export function editorExtensions(onUpdate: (update: ViewUpdate) => void): Extens
   ]
 }
 
-export function createEditorState(doc: string, extensions: Extension[], cursor = 0): EditorState {
+// anchor defaults to cursor; pass both to start with a selection, as opening a
+// search result does.
+export function createEditorState(doc: string, extensions: Extension[], cursor = 0, anchor = cursor): EditorState {
+  const clamp = (pos: number) => Math.max(0, Math.min(pos, doc.length))
   return EditorState.create({
     doc,
-    selection: EditorSelection.cursor(Math.min(cursor, doc.length)),
+    selection: EditorSelection.single(clamp(anchor), clamp(cursor)),
     extensions
   })
 }

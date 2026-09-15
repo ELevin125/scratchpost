@@ -168,6 +168,14 @@ lightness, which keeps every hue readable against `--paper` in both themes. See
 The tag index scans `.md` and `.txt` files in the folder context using the same
 regex. Counts are occurrences, not files.
 
+- Tags are case-insensitive: `[Urgent]` and `[urgent]` are one tag, with one
+  colour, listed lowercase.
+- Tags inside fenced code, indented code, inline code and HTML are not tags,
+  in the editor or the index.
+- Clicking a tag in the tree filters the notes list to the files containing it.
+
+See D27.
+
 ## List continuation
 
 On `Enter`:

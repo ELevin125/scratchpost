@@ -1,11 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import type { ScratchpostAPI } from './api'
 
-// Stubs until each method's task lands. Errors lose their class crossing the
-// bridge, so the method name goes in the message.
-const notImplemented = (name: string) => () =>
-  Promise.reject(new Error(`not implemented: ${name}`))
-
 const api: ScratchpostAPI = {
   readFile: (path) => ipcRenderer.invoke('readFile', path),
   writeFile: (path, content, meta) => ipcRenderer.invoke('writeFile', path, content, meta),
@@ -14,10 +9,12 @@ const api: ScratchpostAPI = {
   renameFile: (from, to) => ipcRenderer.invoke('renameFile', from, to),
   deleteIfEmpty: (path) => ipcRenderer.invoke('deleteIfEmpty', path),
   listFolder: (path) => ipcRenderer.invoke('listFolder', path),
-  searchFolder: notImplemented('searchFolder'),
+  searchFolder: (path, query) => ipcRenderer.invoke('searchFolder', path, query),
+  listTags: (path) => ipcRenderer.invoke('listTags', path),
   pickFolder: () => ipcRenderer.invoke('pickFolder'),
   pickFile: () => ipcRenderer.invoke('pickFile'),
-  // Synchronous in the interface, so it throws rather than rejects.
+  // Lands with external change watching in 3.1. Synchronous in the interface,
+  // so it throws rather than rejects.
   watchFolder: () => {
     throw new Error('not implemented: watchFolder')
   },

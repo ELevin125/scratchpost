@@ -393,3 +393,98 @@ button:disabled {
 .tree-button:hover {
   background: var(--bar);
 }
+
+.tree-section {
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.tree-count {
+  margin-left: auto;
+}
+
+.tree-section-tags {
+  margin-top: 12px;
+  border-top: 1px solid var(--rule);
+}
+
+.tree-clear {
+  font-size: 11px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-soft);
+}
+
+.tree-clear:hover {
+  color: var(--ink);
+}
+
+.tree-row.selected {
+  color: var(--ink);
+  background: var(--bar);
+}
+
+.tree-tag-count {
+  margin-left: auto;
+  padding-left: 8px;
+  color: var(--ink-soft);
+}
+
+/* Tag pills: the only rounded shape on screen (DESIGN.md). The hue is seeded
+   from the tag text and set per pill as --tag-hue; saturation and lightness
+   come from the theme (D16). */
+
+.cm-tag,
+.tag-pill {
+  padding: 0 0.6ch;
+  border-radius: 999px;
+  color: hsl(var(--tag-hue) var(--tag-saturation) var(--tag-lightness));
+  background: hsl(var(--tag-hue) var(--tag-saturation) var(--tag-lightness) / 0.14);
+}
+
+/* Folder search */
+
+.overlay.search {
+  width: min(720px, calc(100% - 32px));
+}
+
+.search-group {
+  list-style: none;
+}
+
+.search-file {
+  padding: 8px 12px 2px;
+  font-size: 11px;
+  color: var(--ink);
+}
+
+.search-hits {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.search-hit {
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+.search-line {
+  flex-shrink: 0;
+  min-width: 4ch;
+  text-align: right;
+  color: var(--ink-soft);
+}
+
+.search-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-match {
+  font-weight: 500;
+  color: var(--ink);
+  background: transparent;
+  text-decoration: underline;
+}

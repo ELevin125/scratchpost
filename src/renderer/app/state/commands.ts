@@ -21,6 +21,7 @@ import { formatShortcut, matchesShortcut, type KeyEventLike } from './shortcuts'
 export interface AppActions {
   openPalette(): void
   openSwitcher(): void
+  openSearch(): void
   openFolderMenu(): void
   newNote(): void
   openFile(): void
@@ -76,6 +77,7 @@ export const commands: readonly Command[] = [
   { id: 'note.new', label: 'New note', shortcut: 'Ctrl+N', run: (ctx) => ctx.actions.newNote() },
   { id: 'file.open', label: 'Open file…', shortcut: 'Ctrl+O', run: (ctx) => ctx.actions.openFile() },
   { id: 'switcher.open', label: 'Quick switcher', shortcut: 'Ctrl+P', run: (ctx) => ctx.actions.openSwitcher() },
+  { id: 'search.open', label: 'Search in folder', shortcut: 'Ctrl+Shift+F', run: (ctx) => ctx.actions.openSearch() },
   { id: 'tree.toggle', label: 'Toggle file tree', shortcut: 'Ctrl+B', run: (ctx) => ctx.actions.toggleTree() },
   { id: 'folder.switch', label: 'Switch folder…', run: (ctx) => ctx.actions.openFolderMenu() },
   { id: 'folder.open', label: 'Open folder…', run: (ctx) => ctx.actions.openFolder() },

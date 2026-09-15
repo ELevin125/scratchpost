@@ -13,6 +13,8 @@ import type { FileMeta } from '../preload/api'
 import { listFolder } from './fs/list'
 import { createNote, deleteIfEmpty, renameNote } from './fs/note'
 import { readTextFile } from './fs/read'
+import { searchFolder } from './fs/search'
+import { indexTags } from './fs/tags'
 import { writeTextFile } from './fs/write'
 import { loadSession, saveSession } from './session'
 import { loadSettings, saveSettings } from './settings'
@@ -82,6 +84,17 @@ export function registerIpc(): void {
   ipcMain.handle('listFolder', (_event, path: unknown) => {
     assertString(path, 'path')
     return listFolder(path)
+  })
+
+  ipcMain.handle('searchFolder', (_event, path: unknown, query: unknown) => {
+    assertString(path, 'path')
+    assertString(query, 'query')
+    return searchFolder(path, query)
+  })
+
+  ipcMain.handle('listTags', (_event, path: unknown) => {
+    assertString(path, 'path')
+    return indexTags(path)
   })
 
   ipcMain.handle('pickFile', async (event) =>

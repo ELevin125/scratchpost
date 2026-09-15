@@ -446,6 +446,54 @@ folders for a single line of text).
 
 ---
 
+## D26 — Renamed scratch notes show their filename
+
+**Chosen:** the display name follows the filename.
+
+- A scratch note still named by timestamp (`YYYY-MM-DD-HHmm.md`, optionally
+  with a `-2` suffix) shows its first line, as before.
+- A scratch note you have renamed shows that filename, without `.md`.
+- Files from outside the scratch folder show their real filename, unchanged.
+
+It is derived from the filename alone. Nothing extra is stored, so it behaves
+the same on both synced machines and survives a rename in a file manager.
+`F2` on a timestamp-named note pre-fills a filename made from its first line
+(`# Grocery list` → `grocery-list.md`), so naming a note is `F2`, `Enter`.
+
+This refines D5 rather than reversing it: files still never rename themselves.
+
+**Rejected:** always showing the filename (timestamps everywhere until renamed),
+renaming automatically from the first line (D5), and storing a "renamed" flag
+(per machine, and lost when a file is renamed outside the app).
+
+---
+
+## D27 — Folder search and tags
+
+**Chosen:**
+
+- **Search is an overlay**, like the palette and switcher, rather than a side
+  panel, so the layout never changes. `Ctrl+Shift+F`. Case-insensitive
+  substring match, at least two characters, 200ms debounce, grouped by file,
+  first 500 matches, files over 1 MB skipped. Opening a result selects the
+  match and scrolls to it.
+- **Editor tags render in the live preview builder**, using the spec's regex,
+  rather than a CodeMirror `MatchDecorator`. `MatchDecorator` only re-decorates
+  on document and viewport changes, but tag brackets must reveal with the
+  cursor like all other syntax. Tags are skipped in fenced, indented and inline
+  code and in HTML.
+- **Tags are case-insensitive.** `[Urgent]` and `[urgent]` are one tag with one
+  colour; the index shows them lowercase. The hue is an FNV-1a hash of the
+  lowercased text.
+- **One pattern.** `src/shared/tags.ts` is used by both the editor and main.
+- **Tag index.** A new `listTags(path)` call scans the folder in main, skipping
+  fenced and inline code by text rules (main has no syntax tree) and files
+  over 1 MB, and counts occurrences. The tree's TAGS section lists them with
+  counts; clicking one filters notes to a flat list of files containing it,
+  and clicking again or `×` clears it.
+
+---
+
 ## Open questions
 
 Not yet decided. Do not guess; raise them.

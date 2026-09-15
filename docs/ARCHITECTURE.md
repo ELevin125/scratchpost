@@ -60,11 +60,15 @@ src/
       read.ts             readFile with encoding + EOL + BOM detection
       write.ts            atomic write, preserving EOL and BOM
       list.ts             directory walk for tree and switcher
+      scan.ts             batched text reads for search and the tag index
       search.ts           folder-wide content search
+      tags.ts             tag index for the file tree
       watch.ts            chokidar-based external change detection
   preload/
     index.ts              contextBridge exposure
     api.ts                the typed API shape, shared with renderer
+  shared/
+    tags.ts               tag regex and hue, used by editor and main
   renderer/
     main.tsx              mount
     app/
@@ -90,6 +94,7 @@ src/
         commands.ts       command registry (id, label, shortcut, run, when)
         shortcuts.ts      shortcut matching and display
         fuzzy.ts          fuzzy filter for the palette and quick switcher
+        searchHits.ts     groups search results, places the selection on a hit
     editor/
       createEditor.ts     assembles the EditorView
       livePreview.ts      ViewPlugin: walks visible ranges, dispatches to the two below
@@ -134,7 +139,8 @@ interface ScratchpostAPI {
   renameFile(from: string, to: string): Promise<void> // same folder, never overwrites
   deleteIfEmpty(path: string): Promise<boolean> // scratch folder only; see D23
   listFolder(path: string): Promise<FolderEntry[]> // recursive walk; see D25
-  searchFolder(path: string, query: string): Promise<SearchHit[]>
+  searchFolder(path: string, query: string): Promise<SearchHit[]> // see D27
+  listTags(path: string): Promise<TagSummary[]> // tag index; see D27
   pickFolder(): Promise<string | null>
   pickFile(): Promise<string | null>
   watchFolder(path: string, cb: (e: WatchEvent) => void): () => void
@@ -164,7 +170,8 @@ interface Settings {
   folderContext: string | null // null means the scratch folder
   recentFolders: string[] // most recent first, at most 8
 }
-interface SearchHit { path: string; line: number; text: string }
+interface SearchHit { path: string; line: number; text: string } // line is 1-based
+interface TagSummary { tag: string; count: number; paths: string[] } // tag lowercased
 interface WatchEvent { type: 'change' | 'add' | 'unlink'; path: string }
 interface Session {
   // cursor and scroll are document positions; scroll is the start of the top
@@ -199,9 +206,11 @@ A CodeMirror `ViewPlugin` that:
 Step 4 is the entire trick. Without it, live preview is unusable; with it, it is
 invisible. Test it directly.
 
-Tags do **not** use the markdown grammar. They are a `MatchDecorator` over a
-regex, applied independently — see `MARKDOWN_SPEC.md` for the pattern and its
-exclusions.
+Tags do **not** use the markdown grammar. They are matched by the regex in
+`src/shared/tags.ts` (shared with the main-process tag index) and decorated by
+the same builder, so their brackets reveal with the cursor like other syntax.
+A CodeMirror `MatchDecorator` was rejected because it doesn't re-decorate on
+selection changes. See `MARKDOWN_SPEC.md` for the pattern and D27.
 
 ## Persistence
 

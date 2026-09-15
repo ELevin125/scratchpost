@@ -18,10 +18,11 @@ import {
 import { toggleTaskAt } from './checkbox'
 import { revealedLines, type Context } from './decorations'
 import { decorateInline } from './inline'
+import { decorateTags } from './tags'
 
 // Live preview. Syntax is hidden except on lines holding a cursor or selection
 // endpoint; see MARKDOWN_SPEC.md, "Cursor reveal". Only visible ranges are
-// walked. The decorations themselves live in blocks.ts and inline.ts.
+// walked. The decorations themselves live in blocks.ts, inline.ts and tags.ts.
 
 // Rendered as plain text: nothing inside is decorated.
 const UNSUPPORTED_BLOCKS = new Set(['CodeBlock', 'HTMLBlock', 'Table'])
@@ -81,6 +82,7 @@ export function buildDecorations(
         if (node.name === 'Blockquote') quoteDepth--
       }
     })
+    decorateTags(ctx, from, to)
   }
   return Decoration.set(decorations, true)
 }

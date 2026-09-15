@@ -10,7 +10,8 @@ import {
 
 export interface Buffers {
   states: Map<string, EditorState> // per tab, kept current on every update
-  initial: Map<string, { doc: string; cursor: number }> // tabs not yet shown
+  // Tabs not yet shown. anchor is set when opening with a selection.
+  initial: Map<string, { doc: string; cursor: number; anchor?: number }>
   scroll: Map<string, number> // per tab: document position of the top visible line
 }
 
@@ -111,7 +112,7 @@ export function Editor({
     let next = buffers.states.get(activeId)
     if (!next) {
       const initial = buffers.initial.get(activeId)
-      next = createEditorState(initial?.doc ?? '', extensions, initial?.cursor ?? 0)
+      next = createEditorState(initial?.doc ?? '', extensions, initial?.cursor ?? 0, initial?.anchor)
       buffers.states.set(activeId, next)
       buffers.initial.delete(activeId)
     }

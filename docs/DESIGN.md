@@ -85,12 +85,15 @@ syntax degrades gracefully in other editors.
 ### Tabs
 
 - Tab strip runs across the top. No window title bar content beyond it.
-- **Display name** is not the filename:
-  - Files from the scratch folder show their **first line of content**, trimmed
-    of leading `#` and whitespace, truncated to 24 characters.
+- **Display name** follows the filename (D26):
+  - Scratch notes still named by timestamp (`YYYY-MM-DD-HHmm.md`, with any
+    `-2` suffix) show their **first line of content**, trimmed of leading `#`
+    and whitespace, truncated to 24 characters. An empty one shows `untitled`.
+  - Scratch notes you have renamed show **that name**, without `.md`,
+    truncated to 24 characters.
   - Files opened from elsewhere show their **actual filename**, including
     extension.
-  - An empty file shows `untitled`.
+  - The same names appear in the file tree and quick switcher.
 - Active tab is marked with a 2px accent line along its top edge.
 - Middle-click or the `×` closes. Closing does not prompt; the file is saved.
 - Tab order is user-reorderable by drag and persists across restarts.
@@ -104,6 +107,8 @@ syntax degrades gracefully in other editors.
 3. The filename **never changes automatically** after that. The display name
    tracks the first line; the file on disk stays timestamped and sortable.
 4. `F2`, or the rename command, renames the file. This is the only rename path.
+   For a timestamp-named note it suggests a name made from the first line.
+   Once renamed, the note shows its filename instead of its first line (D26).
 
 Never prompt for a filename. Never auto-rename on heading edits.
 

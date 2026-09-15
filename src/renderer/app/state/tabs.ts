@@ -67,11 +67,36 @@ export function firstContentLine(lines: Iterable<string>): string | null {
   return null
 }
 
-// Scratch notes show their first line of content without leading `#` and
-// whitespace; files from elsewhere show their real filename. See DESIGN.md.
+// YYYY-MM-DD-HHmm.md, with an optional -2, -3 collision suffix: the name a new
+// note is created with.
+export const AUTO_NOTE_NAME = /^\d{4}-\d{2}-\d{2}-\d{4}(-\d+)?\.md$/
+
+const truncate = (name: string) =>
+  name.length > DISPLAY_NAME_MAX ? name.slice(0, DISPLAY_NAME_MAX - 1) + '…' : name
+
+// See DESIGN.md, "Tabs", and D26:
+// - files from outside the scratch folder show their real filename;
+// - scratch notes you have renamed show that name, without .md;
+// - scratch notes still named by timestamp show their first line.
 export function displayName(tab: Tab, firstLine: string | null): string {
-  if (!tab.scratch && tab.path) return fileName(tab.path)
-  const name = (firstLine ?? '').replace(/^[#\s]+/, '').trimEnd()
-  if (name === '') return 'untitled'
-  return name.length > DISPLAY_NAME_MAX ? name.slice(0, DISPLAY_NAME_MAX - 1) + '…' : name
+  if (tab.path) {
+    const name = fileName(tab.path)
+    if (!tab.scratch) return name
+    if (!AUTO_NOTE_NAME.test(name)) return truncate(name.replace(/\.md$/i, ''))
+  }
+  const line = (firstLine ?? '').replace(/^[#\s]+/, '').trimEnd()
+  return line === '' ? 'untitled' : truncate(line)
+}
+
+// F2 on a timestamp-named note suggests a filename from its first line:
+// "# Grocery list" → "grocery-list.md". Null when there is nothing to use.
+export function suggestedNoteName(firstLine: string | null): string | null {
+  const slug = (firstLine ?? '')
+    .replace(/^[#\s]+/, '')
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, '-')
+    .replace(/^-+/, '')
+    .slice(0, 60)
+    .replace(/-+$/, '')
+  return slug === '' ? null : `${slug}.md`
 }
