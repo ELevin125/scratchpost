@@ -92,7 +92,12 @@ button:disabled {
 
 /* Editor */
 
-.editor {
+.tab.dragging {
+  opacity: 0.5;
+}
+
+.editor,
+.editor-blank {
   flex: 1;
   min-height: 0;
 }

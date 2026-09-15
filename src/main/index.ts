@@ -1,5 +1,6 @@
 import { app, BrowserWindow, session } from 'electron'
 import { join } from 'node:path'
+import { registerIpc } from './ipc'
 import { loadWindowState, trackWindowState } from './window'
 
 const devUrl = process.env.ELECTRON_RENDERER_URL
@@ -54,6 +55,7 @@ app.whenReady().then(() => {
     })
   })
 
+  registerIpc()
   createWindow()
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()

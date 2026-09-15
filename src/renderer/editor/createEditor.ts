@@ -1,7 +1,7 @@
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
 import { markdown } from '@codemirror/lang-markdown'
-import { EditorState } from '@codemirror/state'
-import { drawSelection, EditorView, keymap } from '@codemirror/view'
+import { EditorState, type Extension } from '@codemirror/state'
+import { drawSelection, EditorView, keymap, type ViewUpdate } from '@codemirror/view'
 import { editorTheme } from './theme'
 
 export interface EditorStats {
@@ -17,29 +17,19 @@ export function statsFor(state: EditorState): EditorStats {
   return { line: line.number, column: head - line.from + 1, words }
 }
 
-interface EditorOptions {
-  doc?: string
-  onStats?: (stats: EditorStats) => void
+// Shared by every tab's EditorState; one EditorView swaps between them.
+export function editorExtensions(onUpdate: (update: ViewUpdate) => void): Extension[] {
+  return [
+    history(),
+    drawSelection(),
+    EditorView.lineWrapping,
+    markdown(),
+    keymap.of([...defaultKeymap, ...historyKeymap]),
+    editorTheme,
+    EditorView.updateListener.of(onUpdate)
+  ]
 }
 
-export function createEditor(parent: HTMLElement, opts: EditorOptions = {}): EditorView {
-  const view = new EditorView({
-    parent,
-    state: EditorState.create({
-      doc: opts.doc ?? '',
-      extensions: [
-        history(),
-        drawSelection(),
-        EditorView.lineWrapping,
-        markdown(),
-        keymap.of([...defaultKeymap, ...historyKeymap]),
-        editorTheme,
-        EditorView.updateListener.of((update) => {
-          if (update.docChanged || update.selectionSet) opts.onStats?.(statsFor(update.state))
-        })
-      ]
-    })
-  })
-  opts.onStats?.(statsFor(view.state))
-  return view
+export function createEditorState(doc: string, extensions: Extension[]): EditorState {
+  return EditorState.create({ doc, extensions })
 }

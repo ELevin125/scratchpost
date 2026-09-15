@@ -1,4 +1,4 @@
-import { contextBridge } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
 import type { ScratchpostAPI } from './api'
 
 // Stubs until each method's task lands. Errors lose their class crossing the
@@ -7,8 +7,8 @@ const notImplemented = (name: string) => () =>
   Promise.reject(new Error(`not implemented: ${name}`))
 
 const api: ScratchpostAPI = {
-  readFile: notImplemented('readFile'),
-  writeFile: notImplemented('writeFile'),
+  readFile: (path) => ipcRenderer.invoke('readFile', path),
+  writeFile: (path, content, meta) => ipcRenderer.invoke('writeFile', path, content, meta),
   createNote: notImplemented('createNote'),
   renameFile: notImplemented('renameFile'),
   listFolder: notImplemented('listFolder'),
