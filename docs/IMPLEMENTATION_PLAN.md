@@ -98,7 +98,8 @@ At the end of M1 the app replaces Notepad. Nothing in M1 is optional.
   *Accept:* fixtures pass; click toggling leaves selection untouched.
 
 - [ ] **1.10 Auto-continue lists**
-  Full behaviour and every fixture in `MARKDOWN_SPEC.md`.
+  Full behaviour and every fixture in `MARKDOWN_SPEC.md`, including `Tab` and
+  `Shift+Tab` indentation (D21) and automatic list numbering (D22).
   *Accept:* all nine `Enter` fixtures pass as unit tests.
 
 - [ ] **1.11 Session restore**
@@ -130,6 +131,7 @@ annoys you before starting M2.
 
 - [ ] **2.3 Full editing keymap**
   Move line, duplicate line, indent, outdent, multi-cursor, insert date.
+  `Tab` and `Shift+Tab` already landed in 1.10 (D21).
   *Accept:* the binding table in `DESIGN.md` works end to end.
 
 - [ ] **2.4 Folder context**
@@ -161,7 +163,14 @@ annoys you before starting M2.
   cursor reveal.
   *Accept:* fixtures pass; links open externally on click, not in-app.
 
-- [ ] **2.10 Texture and visual polish**
+- [ ] **2.10 Block constructs**
+  Block quotes, fenced code blocks and horizontal rules per "Block constructs"
+  in `MARKDOWN_SPEC.md`, with cursor reveal. Remove the list nesting limit.
+  No syntax highlighting. See D20.
+  *Accept:* every block-construct fixture passes; a heading inside a quote or a
+  code fence stays plain text; a pasted table still round-trips unchanged.
+
+- [ ] **2.11 Texture and visual polish**
   The dot field per `THEMING.md`. Accent discipline audited.
   *Accept:* texture never appears behind body text; disabling it in settings
   removes it entirely.
@@ -200,6 +209,7 @@ annoys you before starting M2.
 ## Deliberately excluded
 
 Do not implement without an explicit decision recorded in `DECISIONS.md`:
-tables, images, block quotes, code blocks, backlinks, graph view, plugins,
+tables, images, indented code blocks, syntax highlighting, backlinks, graph
+view, plugins,
 mobile, sync, export, collaboration, spell check, global OS hotkey, typewriter
 or focus mode.

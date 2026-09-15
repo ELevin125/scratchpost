@@ -84,8 +84,10 @@ src/
     editor/
       createEditor.ts     assembles the EditorView
       livePreview.ts      headings, bullets, checkboxes
+      checkbox.ts         checkbox widget and toggle
       tags.ts             [tag] pill decoration
-      lists.ts            auto-continue and outdent behaviour
+      lists.ts            Enter continuation, Tab indent and outdent
+      renumber.ts         keeps numbered lists counting up after edits
       keymap.ts           bindings, sourced from the command registry
       theme.ts            CM6 theme built from theme tokens
     themes/

@@ -39,6 +39,8 @@ export function registerIpc(): void {
 
   ipcMain.handle('pickFile', async (event) => {
     const options: OpenDialogOptions = {
+      // Start where closed notes live; any folder is still one click away.
+      defaultPath: await getScratchDir(),
       properties: ['openFile'],
       filters: [
         { name: 'Text', extensions: ['md', 'txt'] },

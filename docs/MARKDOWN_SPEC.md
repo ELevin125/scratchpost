@@ -14,7 +14,7 @@ Every fixture below has a corresponding test.
 | Heading 2 | `## text` | 15px, weight 500, `--ink` |
 | Heading 3 | `### text` | 13px, weight 500, `--ink` |
 | Bullet | `- text` / `* text` | `•` glyph in `--ink-soft`, hanging indent |
-| Numbered | `1. text` | number retained, hanging indent |
+| Numbered | `1. text` | number shown, counts up automatically (see "List numbering"), hanging indent |
 | Checkbox, open | `- [ ] text` | empty square icon |
 | Checkbox, done | `- [x] text` | filled check icon in `--spot`, text struck through in `--ink-soft` |
 | Tag | `[word]` | rounded pill (see below) |
@@ -23,8 +23,57 @@ Every fixture below has a corresponding test.
 | Strikethrough | `~~text~~` | struck through, markers hidden |
 | Inline code | `` `text` `` | `--bar` background, markers hidden |
 | Link | `[label](url)` | label in `--spot`, underlined; URL and brackets hidden |
+| Block quote | `> text` | `>` markers hidden, hairline `--rule` left border |
+| Fenced code block | ` ``` ` … ` ``` ` | `--bar` background, fences hidden, contents verbatim |
+| Horizontal rule | `---` / `***` / `___` | hairline `--rule` across the line, characters hidden |
 
 Headings 4 to 6 parse but render at the same size as h3. Do not add more sizes.
+
+Lists render at any nesting depth. See D20 in `DECISIONS.md` for why block
+quotes, fenced code blocks and horizontal rules moved into this table.
+
+## Block constructs
+
+### Block quotes
+
+- Every line of the quote, including lazy continuation lines without `>`, gets
+  a single hairline left border. Nested quotes (`>>`) still draw one hairline.
+- The `>` markers and the space after them are hidden unless the line is
+  revealed.
+- Inline formatting and tags render inside quotes. Headings, lists and
+  checkboxes inside quotes do **not** render; they stay plain text.
+
+### Fenced code blocks
+
+- Every line from the opening fence to the closing fence gets the `--bar`
+  background, edge to edge.
+- The fence markers and info string (` ```js `) are hidden unless that fence
+  line is revealed. The fence lines keep their height; nothing collapses.
+- Contents are verbatim: no markdown, no tags, no inline formatting, and **no
+  syntax highlighting**.
+- An unclosed fence runs to the end of the document, as CommonMark parses it.
+
+### Horizontal rules
+
+- `---`, `***` or `___` on its own line, preceded by a blank line, renders as a
+  hairline in `--rule` spanning the line. The characters are hidden unless the
+  line is revealed.
+- `---` directly under a line of text is a setext heading in CommonMark, not a
+  rule. Setext headings are unsupported and render as plain text.
+
+### Fixtures
+
+```
+> quoted              → hairline border, "> " hidden
+> quo|ted             → hairline border, "> " VISIBLE
+> # heading           → hairline border, "# heading" plain text
+```js                 → tinted line, "```js" hidden
+const a = 1           → tinted line, verbatim
+```|                  → tinted line, "```" VISIBLE
+---                   → hairline across the line, "---" hidden
+text\n---             → plain text (setext heading, unsupported)
+- a / - b / - c / - d → four nesting levels, all rendered as bullets
+```
 
 ## Explicitly unsupported
 
@@ -32,13 +81,11 @@ Parsed as plain text, rendered with no decoration, never transformed:
 
 - Tables
 - Images (`![alt](src)`)
-- Block quotes
-- Fenced and indented code blocks
-- Horizontal rules
+- Indented code blocks
+- Setext headings
 - Reference-style link definitions
 - HTML blocks and inline HTML
 - Footnotes
-- Nested lists beyond three levels of indentation
 
 These must not throw, must not corrupt on save, and must round-trip unchanged.
 A user pasting a table into a note should get a table back out of the file.
@@ -135,8 +182,37 @@ On `Enter`:
    marker, leaving an empty line, and do not insert a newline.
 3. Otherwise, insert a plain newline.
 
-On `Tab` and `Shift+Tab` within a list item, indent or outdent by one level.
-Numbered lists renumber within their level on indent change.
+On `Tab` and `Shift+Tab` within a list item, indent or outdent by one level:
+
+- One level deeper puts the marker under the previous sibling's text
+  (`- a` → children at 2 spaces, `1. a` → children at 3). The first item of a
+  list has nothing to nest under and stays put.
+- Outdent moves the item to its parent's indent, or to column 0.
+- A numbered item indented into a new sub-list becomes `1.` of that sub-list.
+
+Outside list items, `Tab` inserts two spaces at the start of each selected
+line and `Shift+Tab` removes up to two. `Tab` never moves focus out of the
+editor. See D21.
+
+### List numbering
+
+After any edit that touches a numbered list, its items renumber to count up
+from the list's start. See D22.
+
+- Moving, duplicating or deleting lines, pasting, and `Enter` mid-list all
+  renumber.
+- The start number survives structural edits. Typing on the first item's
+  number changes it.
+- Undo and redo restore exactly what was there, without renumbering.
+- Items inside code fences are never renumbered.
+
+```
+"1. a|\n2. b\n3. c"  + move line down  →  "1. b\n2. a|\n3. c"
+"1. a|\n2. b"        + duplicate line  →  "1. a\n2. a|\n3. b"
+"1. a|\n2. b"        + Enter           →  "1. a\n2. |\n3. b"
+"1. a\n2. b|\n3. c"  + Tab             →  "1. a\n   1. b|\n2. c"
+"5|. a\n6. b"        + type "0"        →  "50. a\n51. b"
+```
 
 ### Fixtures
 

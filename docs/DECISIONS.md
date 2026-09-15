@@ -272,6 +272,96 @@ are bound through the registry then, so no key is ever bound outside it.
 
 ---
 
+## D19 — Checkbox `Ctrl+Enter` arrives with the command registry
+
+**Chosen:** in task 1.9, checkboxes render and toggle by click. `Ctrl+Enter`
+and the toggle command are registered in 2.1, reusing `toggleTaskAt` from
+`editor/checkbox.ts`.
+
+**Rejected:** binding `Ctrl+Enter` directly in 1.9. It would be the first key
+bound outside the registry, which `CLAUDE.md` forbids; same reasoning as D18.
+
+Checkboxes render only in bullet lists, matching the spec's `- [ ]` syntax.
+`1. [ ] text` keeps its number and shows its brackets as text.
+
+---
+
+## D20 — Block quotes, fenced code and horizontal rules are supported
+
+**Chosen:** render block quotes, fenced code blocks and horizontal rules, and
+drop the three-level limit on list nesting. See `MARKDOWN_SPEC.md`, "Block
+constructs".
+
+The original unsupported list recorded no reason for these items, and each one
+turned out cheap and consistent with the rest of live preview:
+
+- **Block quotes** are a hidden marker plus a hairline border, the same pattern
+  as headings, and hairlines are already the visual language (D10).
+- **Fenced code blocks** are a `--bar` tint with hidden fences. Everything is
+  already monospace, so the tint does the work. Syntax highlighting is
+  explicitly excluded; it would be real scope creep.
+- **Horizontal rules** are a single hairline.
+- **The nesting limit** was an arbitrary constant, and deep items dropping to
+  plain text read as a bug.
+
+**Still rejected:**
+
+- **Tables.** Rendering a grid needs block widgets, and cursor movement and
+  editing inside cells is where live-preview editors reliably break. Pipe
+  tables are readable as-is in monospace.
+- **Indented code blocks.** A list item indented one level too far would
+  silently become code. Fenced blocks cover the need.
+- **Images.** Remote image URLs conflict with the no-remote-content rule, and
+  local images would need file handling the app doesn't otherwise have.
+- **HTML, footnotes, reference-style links, setext headings.** Rare in scratch
+  notes; not worth the surface area.
+
+Implemented as task 2.10 in `IMPLEMENTATION_PLAN.md`, after inline formatting,
+because inline code and code blocks share the `--bar` treatment.
+
+---
+
+## D21 — Enter, Tab and Shift+Tab belong to the editor, not the registry
+
+**Chosen:** list continuation on `Enter`, and indent and outdent on `Tab` and
+`Shift+Tab`, live in `editor/lists.ts` as an editor keymap. `Tab` indents
+everywhere, not only in lists, and never moves focus out of the editor.
+
+The registry exists so that every *action* has a visible affordance (DESIGN.md
+principle 2). These keys are not actions; they are how typing works, the same
+as Backspace. Giving "press Enter" a palette entry would be noise.
+`CLAUDE.md` rule 3 carries this as its one exception.
+
+**Rejected:** routing them through the registry (no meaningful palette entry),
+and leaving `Tab` unbound outside lists (focus jumping to a toolbar button
+mid-note is jarring). CodeMirror's markdown `Enter` handling is disabled: it
+continues items even with the cursor mid-line, which the spec's
+`"- foo|bar"` fixture forbids.
+
+---
+
+## D22 — Numbered lists renumber automatically
+
+**Chosen:** after any edit that touches a numbered list, its items are
+renumbered to count up from the list's start. This extends the spec's original
+"renumber on indent change" to moving, duplicating and deleting lines, pasting,
+and `Enter` mid-list.
+
+- The start number is kept across structural edits, so moving the first item
+  down doesn't shift the list. Typing on the first item's number sets it.
+- Renumbering joins the edit's own transaction, so one undo reverts both.
+  Undo and redo are never renumbered themselves.
+- Items inside code fences are never touched.
+
+**Rejected:** numbers exactly as typed, which is what most editors do. Moving
+lines then leaves lists out of order, which was the reported annoyance.
+
+**Trade-off:** numbers other than the first are managed. A deliberately lazy
+list (`1.` on every line) becomes sequential the first time it is edited, and
+the file on disk changes to match.
+
+---
+
 ## Open questions
 
 Not yet decided. Do not guess; raise them.

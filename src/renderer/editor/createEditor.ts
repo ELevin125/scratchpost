@@ -2,6 +2,10 @@ import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
 import { markdown } from '@codemirror/lang-markdown'
 import { EditorState, type Extension } from '@codemirror/state'
 import { drawSelection, EditorView, keymap, type ViewUpdate } from '@codemirror/view'
+import { TaskList } from '@lezer/markdown'
+import { listKeymap } from './lists'
+import { livePreview } from './livePreview'
+import { renumberLists } from './renumber'
 import { editorTheme } from './theme'
 
 export interface EditorStats {
@@ -23,7 +27,12 @@ export function editorExtensions(onUpdate: (update: ViewUpdate) => void): Extens
     history(),
     drawSelection(),
     EditorView.lineWrapping,
-    markdown(),
+    // CommonMark plus GFM task lists for `- [ ]`; see MARKDOWN_SPEC.md. The
+    // package's own Enter handling is off: lists.ts implements the spec's.
+    markdown({ extensions: [TaskList], addKeymap: false }),
+    livePreview,
+    renumberLists,
+    listKeymap,
     keymap.of([...defaultKeymap, ...historyKeymap]),
     editorTheme,
     EditorView.updateListener.of(onUpdate)
