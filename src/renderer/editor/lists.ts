@@ -9,7 +9,7 @@ import {
 } from '@codemirror/state'
 import { keymap } from '@codemirror/view'
 import type { SyntaxNode } from '@lezer/common'
-import { PLAIN_BLOCKS } from './livePreview'
+import { PLAIN_BLOCKS } from './decorations'
 
 // Enter continues lists; Tab and Shift+Tab indent. See MARKDOWN_SPEC.md,
 // "List continuation", and D21 for why these keys live here rather than in

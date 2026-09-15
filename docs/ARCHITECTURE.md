@@ -84,7 +84,10 @@ src/
         commands.ts       command registry (id, label, shortcut, run)
     editor/
       createEditor.ts     assembles the EditorView
-      livePreview.ts      headings, bullets, checkboxes
+      livePreview.ts      ViewPlugin: walks visible ranges, dispatches to the two below
+      blocks.ts           headings, lists, block quotes, fenced code, rules
+      inline.ts           emphasis, strong, strikethrough, inline code, links
+      decorations.ts      shared reveal logic and helpers
       checkbox.ts         checkbox widget and toggle
       tags.ts             [tag] pill decoration
       lists.ts            Enter continuation, Tab indent and outdent

@@ -22,7 +22,7 @@ const api: ScratchpostAPI = {
   },
   getSession: () => ipcRenderer.invoke('getSession'),
   setSession: (session) => ipcRenderer.invoke('setSession', session),
-  openExternal: notImplemented('openExternal'),
+  openExternal: (url) => ipcRenderer.invoke('openExternal', url),
   onBeforeClose: (flush) => {
     const listener = async () => {
       try {

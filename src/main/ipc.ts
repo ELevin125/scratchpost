@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain, type OpenDialogOptions } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, shell, type OpenDialogOptions } from 'electron'
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { FileMeta } from '../preload/api'
@@ -16,6 +16,18 @@ async function getScratchDir(): Promise<string> {
   const dir = join(app.getPath('documents'), 'Scratchpost')
   await mkdir(dir, { recursive: true })
   return dir
+}
+
+const EXTERNAL_PROTOCOLS = new Set(['http:', 'https:', 'mailto:'])
+
+// Links in notes are untrusted text. Only web and mail links reach the OS;
+// file:, javascript: and custom schemes never do.
+export function isExternalUrl(url: string): boolean {
+  try {
+    return EXTERNAL_PROTOCOLS.has(new URL(url).protocol)
+  } catch {
+    return false
+  }
 }
 
 // Every handler lives here. Channel names match ScratchpostAPI method names.
@@ -56,6 +68,12 @@ export function registerIpc(): void {
   ipcMain.handle('getSession', () => loadSession())
 
   ipcMain.handle('setSession', (_event, session: unknown) => saveSession(session))
+
+  ipcMain.handle('openExternal', (_event, url: unknown) => {
+    assertString(url, 'url')
+    if (!isExternalUrl(url)) throw new Error(`not an http, https or mailto link: ${url}`)
+    return shell.openExternal(url)
+  })
 }
 
 // Holds the window open until the renderer has flushed pending saves. Covers

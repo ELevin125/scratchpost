@@ -26,6 +26,23 @@ export const editorTheme = EditorView.theme({
   '.cm-bullet': { color: 'var(--ink-soft)' },
   '.cm-task-done': { color: 'var(--ink-soft)', textDecoration: 'line-through' },
 
+  // Inline formatting
+  '.cm-em': { fontStyle: 'italic' },
+  '.cm-strong': { fontWeight: '500' },
+  '.cm-strike': { textDecoration: 'line-through' },
+  '.cm-inline-code': { backgroundColor: 'var(--bar)' },
+  '.cm-link': { color: 'var(--spot)', textDecoration: 'underline', cursor: 'pointer' },
+
+  // Block constructs
+  '.cm-quote': { borderLeft: '1px solid var(--rule)', paddingLeft: '12px' },
+  '.cm-code-block': { backgroundColor: 'var(--bar)' },
+  '.cm-hr': {
+    backgroundImage: 'linear-gradient(var(--rule), var(--rule))',
+    backgroundSize: '100% 1px',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat'
+  },
+
   // 2ch wide, matching CHECKBOX_COLS in checkbox.ts. Square corners.
   '.cm-checkbox': {
     position: 'relative',

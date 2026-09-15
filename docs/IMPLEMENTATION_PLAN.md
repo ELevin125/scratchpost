@@ -120,6 +120,9 @@ annoys you before starting M2.
 
 ## M2 — Good
 
+2.9 and 2.10 are built first, straight after M1, because both change how notes
+render and neither depends on 2.1–2.8.
+
 - [ ] **2.1 Command registry**
   `{ id, label, shortcut, run, when }`. Keymap, toolbar and menus all read from
   it. No key bound outside the registry.

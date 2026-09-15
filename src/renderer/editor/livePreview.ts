@@ -1,116 +1,30 @@
 import { syntaxTree } from '@codemirror/language'
-import { countColumn, type EditorState, type Range } from '@codemirror/state'
+import type { EditorState, Range } from '@codemirror/state'
 import {
   Decoration,
   ViewPlugin,
-  WidgetType,
   type DecorationSet,
   type EditorView,
   type ViewUpdate
 } from '@codemirror/view'
-import type { SyntaxNode } from '@lezer/common'
-import { CHECKBOX_COLS, CheckboxWidget, toggleTaskAt } from './checkbox'
+import {
+  decorateFencedCode,
+  decorateHeading,
+  decorateListItem,
+  decorateQuote,
+  decorateRule,
+  hideQuoteMark
+} from './blocks'
+import { toggleTaskAt } from './checkbox'
+import { revealedLines, type Context } from './decorations'
+import { decorateInline } from './inline'
 
-// Live preview for headings, bullets, numbered items and checkboxes.
-// Syntax is hidden except on lines holding a cursor or selection endpoint;
-// see MARKDOWN_SPEC.md, "Cursor reveal". Only visible ranges are walked.
+// Live preview. Syntax is hidden except on lines holding a cursor or selection
+// endpoint; see MARKDOWN_SPEC.md, "Cursor reveal". Only visible ranges are
+// walked. The decorations themselves live in blocks.ts and inline.ts.
 
-const MAX_LIST_DEPTH = 3
-
-// Blocks the spec treats as plain text; nothing inside them is decorated.
-export const PLAIN_BLOCKS = new Set(['Blockquote', 'FencedCode', 'CodeBlock', 'HTMLBlock', 'Table'])
-
-class BulletWidget extends WidgetType {
-  eq(): boolean {
-    return true
-  }
-
-  toDOM(): HTMLElement {
-    const span = document.createElement('span')
-    span.className = 'cm-bullet'
-    span.textContent = '•'
-    return span
-  }
-}
-
-const hidden = Decoration.replace({})
-const bullet = Decoration.replace({ widget: new BulletWidget() })
-const checkbox = {
-  open: Decoration.replace({ widget: new CheckboxWidget(false) }),
-  done: Decoration.replace({ widget: new CheckboxWidget(true) })
-}
-const doneText = Decoration.mark({ class: 'cm-task-done' })
-
-// h4 to h6 render at h3 size.
-const headingLines = [1, 2, 3, 4, 5, 6].map((level) =>
-  Decoration.line({ class: `cm-heading cm-h${Math.min(level, 3)}` })
-)
-
-// Wrapped lines of a list item align with its text, not its marker.
-const hangingIndent = (cols: number) =>
-  Decoration.line({ attributes: { style: `padding-left: ${cols}ch; text-indent: -${cols}ch` } })
-
-// Every line holding a cursor or a selection endpoint. A selection spanning
-// lines 3 to 7 reveals 3 and 7 only.
-export function revealedLines(state: EditorState): Set<number> {
-  const lines = new Set<number>()
-  for (const range of state.selection.ranges) {
-    lines.add(state.doc.lineAt(range.anchor).number)
-    lines.add(state.doc.lineAt(range.head).number)
-  }
-  return lines
-}
-
-type Add = (key: string, range: Range<Decoration>) => void
-
-function skipSpaces(state: EditorState, pos: number, end: number): number {
-  while (pos < end && /[ \t]/.test(state.sliceDoc(pos, pos + 1))) pos++
-  return pos
-}
-
-function listDepth(item: SyntaxNode): number {
-  let depth = 0
-  for (let node = item.parent; node; node = node.parent) {
-    if (node.name === 'BulletList' || node.name === 'OrderedList') depth++
-  }
-  return depth
-}
-
-function decorateHeading(state: EditorState, node: SyntaxNode, level: number, revealed: Set<number>, add: Add) {
-  const line = state.doc.lineAt(node.from)
-  add(`heading:${line.from}`, headingLines[level - 1].range(line.from))
-
-  const mark = node.firstChild
-  if (revealed.has(line.number) || mark?.name !== 'HeaderMark') return
-  add(`hide:${mark.from}`, hidden.range(mark.from, skipSpaces(state, mark.to, line.to)))
-}
-
-function decorateListItem(state: EditorState, item: SyntaxNode, revealed: Set<number>, add: Add) {
-  const mark = item.getChild('ListMark')
-  if (!mark || listDepth(item) > MAX_LIST_DEPTH) return
-
-  const line = state.doc.lineAt(mark.from)
-  const ordered = item.parent?.name === 'OrderedList'
-  const task = ordered ? null : item.getChild('Task')?.getChild('TaskMarker')
-  const taskMarker = task && task.to <= line.to ? task : null
-  const contentStart = skipSpaces(state, taskMarker ? taskMarker.to : mark.to, line.to)
-  const done = taskMarker !== null && state.sliceDoc(taskMarker.from, taskMarker.to) !== '[ ]'
-  const colsTo = (pos: number) => countColumn(state.sliceDoc(line.from, pos), state.tabSize)
-
-  // Styling stays on revealed lines; only the syntax reappears.
-  if (done && contentStart < line.to) add(`done:${contentStart}`, doneText.range(contentStart, line.to))
-
-  let prefixCols = colsTo(contentStart)
-  if (!revealed.has(line.number)) {
-    if (taskMarker) {
-      add(`hide:${mark.from}`, (done ? checkbox.done : checkbox.open).range(mark.from, contentStart))
-      prefixCols = colsTo(mark.from) + CHECKBOX_COLS
-    } else if (!ordered) {
-      add(`hide:${mark.from}`, bullet.range(mark.from, mark.to))
-    }
-  }
-  add(`indent:${line.from}`, hangingIndent(prefixCols).range(line.from))
-}
+// Rendered as plain text: nothing inside is decorated.
+const UNSUPPORTED_BLOCKS = new Set(['CodeBlock', 'HTMLBlock', 'Table'])
 
 export function buildDecorations(
   state: EditorState,
@@ -118,24 +32,53 @@ export function buildDecorations(
 ): DecorationSet {
   const revealed = revealedLines(state)
   const decorations: Range<Decoration>[] = []
-  // A node crossing two visible ranges is visited twice; decorate it once.
   const seen = new Set<string>()
-  const add: Add = (key, range) => {
-    if (seen.has(key)) return
-    seen.add(key)
-    decorations.push(range)
+  const ctx: Context = {
+    state,
+    revealedAt: (pos) => revealed.has(state.doc.lineAt(pos).number),
+    add: (key, range) => {
+      if (seen.has(key)) return
+      seen.add(key)
+      decorations.push(range)
+    }
   }
 
   const tree = syntaxTree(state)
   for (const { from, to } of ranges) {
+    let quoteDepth = 0
     tree.iterate({
       from,
       to,
       enter: (node) => {
-        if (PLAIN_BLOCKS.has(node.name)) return false
-        const heading = /^ATXHeading([1-6])$/.exec(node.name)
-        if (heading) decorateHeading(state, node.node, Number(heading[1]), revealed, add)
-        else if (node.name === 'ListItem') decorateListItem(state, node.node, revealed, add)
+        const { name } = node
+        if (UNSUPPORTED_BLOCKS.has(name)) return false
+        if (name === 'FencedCode') {
+          decorateFencedCode(ctx, node.node)
+          return false // contents are verbatim
+        }
+        if (name === 'HorizontalRule') {
+          decorateRule(ctx, node.node)
+          return false
+        }
+        if (name === 'Blockquote') {
+          if (quoteDepth++ === 0) decorateQuote(ctx, node.node)
+          return
+        }
+        if (name === 'QuoteMark') {
+          hideQuoteMark(ctx, node.node)
+          return
+        }
+        // Headings, lists and checkboxes inside quotes stay plain text;
+        // inline formatting still renders there.
+        if (quoteDepth === 0) {
+          const heading = /^ATXHeading([1-6])$/.exec(name)
+          if (heading) return decorateHeading(ctx, node.node, Number(heading[1]))
+          if (name === 'ListItem') return decorateListItem(ctx, node.node)
+        }
+        decorateInline(ctx, node.node)
+      },
+      leave: (node) => {
+        if (node.name === 'Blockquote') quoteDepth--
       }
     })
   }
@@ -164,16 +107,31 @@ export const livePreview = ViewPlugin.fromClass(
   {
     decorations: (plugin) => plugin.decorations,
     eventHandlers: {
-      // Handling mousedown stops CodeMirror placing the cursor, so a click
-      // toggles the checkbox without moving the selection.
+      // Handling mousedown stops CodeMirror placing the cursor, so these clicks
+      // never move the selection.
       mousedown(event, view) {
         const target = event.target
         if (event.button !== 0 || !(target instanceof HTMLElement)) return false
-        if (!target.classList.contains('cm-checkbox')) return false
-        const spec = toggleTaskAt(view.state, view.posAtDOM(target))
-        if (spec) view.dispatch(spec)
-        event.preventDefault()
-        return true
+
+        if (target.classList.contains('cm-checkbox')) {
+          const spec = toggleTaskAt(view.state, view.posAtDOM(target))
+          if (spec) view.dispatch(spec)
+          event.preventDefault()
+          return true
+        }
+
+        // A rendered link opens in the system browser. On a revealed line the
+        // syntax is showing, so a click edits instead.
+        const link = target.closest<HTMLElement>('.cm-link')
+        const href = link?.dataset.href
+        if (link && href) {
+          const line = view.state.doc.lineAt(view.posAtDOM(link))
+          if (revealedLines(view.state).has(line.number)) return false
+          event.preventDefault()
+          window.scratchpost.openExternal(href).catch(() => {})
+          return true
+        }
+        return false
       }
     }
   }

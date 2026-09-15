@@ -2,7 +2,7 @@ import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
 import { markdown } from '@codemirror/lang-markdown'
 import { EditorSelection, EditorState, type Extension } from '@codemirror/state'
 import { drawSelection, EditorView, keymap, type ViewUpdate } from '@codemirror/view'
-import { TaskList } from '@lezer/markdown'
+import { Strikethrough, TaskList } from '@lezer/markdown'
 import { listKeymap } from './lists'
 import { livePreview } from './livePreview'
 import { renumberLists } from './renumber'
@@ -27,9 +27,9 @@ export function editorExtensions(onUpdate: (update: ViewUpdate) => void): Extens
     history(),
     drawSelection(),
     EditorView.lineWrapping,
-    // CommonMark plus GFM task lists for `- [ ]`; see MARKDOWN_SPEC.md. The
-    // package's own Enter handling is off: lists.ts implements the spec's.
-    markdown({ extensions: [TaskList], addKeymap: false }),
+    // CommonMark plus GFM task lists and strikethrough; see MARKDOWN_SPEC.md.
+    // The package's own Enter handling is off: lists.ts implements the spec's.
+    markdown({ extensions: [TaskList, Strikethrough], addKeymap: false }),
     livePreview,
     renumberLists,
     listKeymap,

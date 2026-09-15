@@ -98,7 +98,8 @@ warm the greys; this was corrected once already.
 
 ## Typography
 
-`IBM Plex Mono`, weights 400 and 500, **bundled with the app**. It is not
+`IBM Plex Mono`, weights 400 and 500 plus 400 italic for emphasis, **bundled
+with the app**. It is not
 fetched from Google Fonts or any CDN — see the security posture in
 `ARCHITECTURE.md`. Fallback chain: `ui-monospace, monospace`.
 
