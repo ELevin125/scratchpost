@@ -115,6 +115,12 @@ Never prompt for a filename. Never auto-rename on heading edits.
 - Writes are atomic: write to `<name>.md.tmp` in the same directory, `fsync`,
   then rename over the target. A crash mid-write can never corrupt a note.
 - A failed write surfaces in the status bar and must not be silent.
+- The status bar's save slot is **empty while saves succeed**. `saving` appears
+  only when a write has taken longer than 500ms. A failure names the file
+  (`save failed: notes.txt: permission denied`), marks its tab with `!`, and
+  stays until a save of that file succeeds.
+- Closing a tab whose save fails leaves the tab open, so edits that aren't on
+  disk are never dropped.
 
 Because every buffer is always a current file on disk, there is no separate
 crash-recovery mechanism and none should be built.

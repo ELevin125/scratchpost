@@ -48,9 +48,35 @@ button:disabled {
   display: flex;
   flex-shrink: 0;
   height: 34px;
-  overflow-x: auto;
   background: var(--paper-2);
   border-bottom: 1px solid var(--rule);
+}
+
+.tabs {
+  display: flex;
+  min-width: 0;
+  /* Extends over the strip's bottom hairline so the active tab can cover it
+     without overflowing, which would otherwise show a vertical scrollbar. */
+  height: calc(100% + 1px);
+  margin-bottom: -1px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.tab-actions {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.tab-action {
+  padding: 0 12px;
+  color: var(--ink-soft);
+  border-right: 1px solid var(--rule);
+}
+
+.tab-action:hover {
+  color: var(--ink);
 }
 
 .tab {
@@ -68,7 +94,6 @@ button:disabled {
   color: var(--ink);
   background: var(--paper);
   /* Covers the strip's bottom hairline so the tab joins the editor. */
-  margin-bottom: -1px;
   border-bottom: 1px solid var(--paper);
 }
 
@@ -94,6 +119,16 @@ button:disabled {
 
 .tab.dragging {
   opacity: 0.5;
+}
+
+/* Neutral ramp, not the accent: see THEMING.md, "Accent discipline". */
+.tab.failed .tab-name::before {
+  content: '! ';
+  color: var(--ink);
+}
+
+.status-error {
+  color: var(--ink);
 }
 
 .editor,

@@ -248,6 +248,30 @@ content beyond the title.
 
 ---
 
+## D18 — Two API additions for M1: `getScratchDir` and `onBeforeClose`
+
+**Chosen:** add `getScratchDir(): Promise<string>` and
+`onBeforeClose(flush): () => void` to `ScratchpostAPI`.
+
+- `getScratchDir` — the renderer needs the scratch folder to call
+  `createNote(scratchDir)` and to decide whether an opened file is a scratch
+  note (display-name rules). Main owns the path: `~/Documents/Scratchpost` by
+  default, created on first call, read from `settings.json` once 3.4 lands.
+- `onBeforeClose` — autosave must flush on window close and app quit, but IPC
+  writes are async and a closing window drops them. Main holds the close,
+  asks the renderer to flush, and closes when it answers or after 2 seconds.
+
+**Rejected:** main choosing the scratch folder inside `createNote` (the
+renderer could no longer tell scratch notes from other files), and a
+synchronous `sendSync` flush on `beforeunload` (blocks the UI thread and needs
+a second, synchronous write path).
+
+**Also decided:** until the command registry lands in 2.1, New note and Open
+file are reachable only from buttons in the tab strip. `Ctrl+N` and `Ctrl+O`
+are bound through the registry then, so no key is ever bound outside it.
+
+---
+
 ## Open questions
 
 Not yet decided. Do not guess; raise them.

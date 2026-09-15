@@ -43,6 +43,17 @@ export function moveTab(state: TabsState, id: string, toIndex: number): TabsStat
   return { ...state, tabs }
 }
 
+export function setTabPath(state: TabsState, id: string, path: string): TabsState {
+  return { ...state, tabs: state.tabs.map((t) => (t.id === id ? { ...t, path } : t)) }
+}
+
+const normalisePath = (p: string) => p.replace(/\\/g, '/').replace(/\/+$/, '')
+
+// True for files anywhere under dir, including subfolders.
+export function isInside(path: string, dir: string): boolean {
+  return normalisePath(path).startsWith(normalisePath(dir) + '/')
+}
+
 export const DISPLAY_NAME_MAX = 24
 
 export function fileName(path: string): string {

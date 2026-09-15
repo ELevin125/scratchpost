@@ -9,19 +9,33 @@ const notImplemented = (name: string) => () =>
 const api: ScratchpostAPI = {
   readFile: (path) => ipcRenderer.invoke('readFile', path),
   writeFile: (path, content, meta) => ipcRenderer.invoke('writeFile', path, content, meta),
-  createNote: notImplemented('createNote'),
+  getScratchDir: () => ipcRenderer.invoke('getScratchDir'),
+  createNote: (scratchDir) => ipcRenderer.invoke('createNote', scratchDir),
   renameFile: notImplemented('renameFile'),
   listFolder: notImplemented('listFolder'),
   searchFolder: notImplemented('searchFolder'),
   pickFolder: notImplemented('pickFolder'),
-  pickFile: notImplemented('pickFile'),
+  pickFile: () => ipcRenderer.invoke('pickFile'),
   // Synchronous in the interface, so it throws rather than rejects.
   watchFolder: () => {
     throw new Error('not implemented: watchFolder')
   },
   getSession: notImplemented('getSession'),
   setSession: notImplemented('setSession'),
-  openExternal: notImplemented('openExternal')
+  openExternal: notImplemented('openExternal'),
+  onBeforeClose: (flush) => {
+    const listener = async () => {
+      try {
+        await flush()
+      } finally {
+        ipcRenderer.send('closeReady')
+      }
+    }
+    ipcRenderer.on('beforeClose', listener)
+    return () => {
+      ipcRenderer.removeListener('beforeClose', listener)
+    }
+  }
 }
 
 contextBridge.exposeInMainWorld('scratchpost', api)

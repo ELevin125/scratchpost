@@ -36,6 +36,7 @@ export interface Session {
 export interface ScratchpostAPI {
   readFile(path: string): Promise<FilePayload>
   writeFile(path: string, content: string, meta: FileMeta): Promise<void>
+  getScratchDir(): Promise<string>
   createNote(scratchDir: string): Promise<string>
   renameFile(from: string, to: string): Promise<void>
   listFolder(path: string): Promise<FolderEntry[]>
@@ -46,4 +47,6 @@ export interface ScratchpostAPI {
   getSession(): Promise<Session>
   setSession(s: Session): Promise<void>
   openExternal(url: string): Promise<void>
+  // Main waits for flush to settle (max 2s) before closing the window or quitting.
+  onBeforeClose(flush: () => Promise<void>): () => void
 }

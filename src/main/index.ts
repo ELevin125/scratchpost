@@ -1,6 +1,6 @@
 import { app, BrowserWindow, session } from 'electron'
 import { join } from 'node:path'
-import { registerIpc } from './ipc'
+import { flushBeforeClose, registerIpc } from './ipc'
 import { loadWindowState, trackWindowState } from './window'
 
 const devUrl = process.env.ELECTRON_RENDERER_URL
@@ -31,6 +31,7 @@ function createWindow(): void {
   })
 
   trackWindowState(win)
+  flushBeforeClose(win)
   // Not 'ready-to-show': it waits for a first paint, and on Wayland a hidden
   // window never paints, so the window would never appear.
   win.webContents.once('did-finish-load', () => {

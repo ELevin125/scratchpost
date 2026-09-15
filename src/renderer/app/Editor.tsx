@@ -7,37 +7,42 @@ import {
   statsFor,
   type EditorStats
 } from '../editor/createEditor'
-import { firstContentLine } from './state/tabs'
+
+export interface Buffers {
+  states: Map<string, EditorState> // per tab, kept current on every update
+  initial: Map<string, string> // file content for tabs not yet shown
+}
 
 interface EditorProps {
   activeId: string | null
   openIds: string[]
+  buffers: Buffers
   onStats: (stats: EditorStats) => void
-  onFirstLine: (id: string, line: string | null) => void
+  onDocChange: (id: string, state: EditorState) => void
 }
 
 // One EditorView; each tab keeps its own EditorState (doc, undo, selection),
 // swapped in when the tab is activated.
-export function Editor({ activeId, openIds, onStats, onFirstLine }: EditorProps) {
+export function Editor({ activeId, openIds, buffers, onStats, onDocChange }: EditorProps) {
   const host = useRef<HTMLDivElement>(null)
   const view = useRef<EditorView | null>(null)
-  const states = useRef(new Map<string, EditorState>())
   const shownId = useRef<string | null>(null)
-  const callbacks = useRef({ onStats, onFirstLine })
+  const callbacks = useRef({ onStats, onDocChange })
 
   useEffect(() => {
-    callbacks.current = { onStats, onFirstLine }
+    callbacks.current = { onStats, onDocChange }
   })
 
   const extensions = useMemo(
     () =>
       editorExtensions((update) => {
+        const id = shownId.current
+        if (!id) return
+        buffers.states.set(id, update.state)
         if (update.docChanged || update.selectionSet) callbacks.current.onStats(statsFor(update.state))
-        if (update.docChanged && shownId.current) {
-          callbacks.current.onFirstLine(shownId.current, firstContentLine(update.state.doc.iterLines()))
-        }
+        if (update.docChanged) callbacks.current.onDocChange(id, update.state)
       }),
-    []
+    [buffers]
   )
 
   useEffect(() => {
@@ -57,10 +62,9 @@ export function Editor({ activeId, openIds, onStats, onFirstLine }: EditorProps)
     const v = view.current
     if (!v) return
 
-    if (shownId.current) states.current.set(shownId.current, v.state)
     const open = new Set(openKey.split('\n'))
-    for (const id of states.current.keys()) {
-      if (!open.has(id)) states.current.delete(id)
+    for (const id of buffers.states.keys()) {
+      if (!open.has(id)) buffers.states.delete(id)
     }
 
     if (!activeId) {
@@ -69,12 +73,17 @@ export function Editor({ activeId, openIds, onStats, onFirstLine }: EditorProps)
     }
     if (shownId.current === activeId) return
 
-    const next = states.current.get(activeId) ?? createEditorState('', extensions)
+    let next = buffers.states.get(activeId)
+    if (!next) {
+      next = createEditorState(buffers.initial.get(activeId) ?? '', extensions)
+      buffers.states.set(activeId, next)
+      buffers.initial.delete(activeId)
+    }
     v.setState(next)
     shownId.current = activeId
     callbacks.current.onStats(statsFor(next))
     v.focus()
-  }, [activeId, openKey, extensions])
+  }, [activeId, openKey, buffers, extensions])
 
   return <div className="editor" ref={host} hidden={!activeId} />
 }
