@@ -1,7 +1,7 @@
-import type { EditorState, TransactionSpec } from '@codemirror/state'
+import type { ChangeSpec, EditorState, StateCommand, TransactionSpec } from '@codemirror/state'
 import { WidgetType } from '@codemirror/view'
 
-// Width in ch; livePreview.ts uses it for the hanging indent.
+// Width in ch; blocks.ts uses it for the hanging indent.
 export const CHECKBOX_COLS = 2
 
 // Drawn entirely in CSS (theme.ts), so no colour lives here.
@@ -44,4 +44,24 @@ export function toggleTaskAt(state: EditorState, pos: number): TransactionSpec |
     changes: { from: at, to: at + 1, insert: match[2] === ' ' ? 'x' : ' ' },
     userEvent: 'input.toggle'
   }
+}
+
+// Ctrl+Enter and the toggle command: flips every task line touched by a
+// selection. Returns false when there is no task to toggle.
+export const toggleTasksAtSelection: StateCommand = ({ state, dispatch }) => {
+  const changes: ChangeSpec[] = []
+  const seen = new Set<number>()
+  for (const range of state.selection.ranges) {
+    for (let pos = range.from; pos <= range.to; ) {
+      const line = state.doc.lineAt(pos)
+      pos = line.to + 1
+      if (seen.has(line.number)) continue
+      seen.add(line.number)
+      const spec = toggleTaskAt(state, line.from)
+      if (spec?.changes) changes.push(spec.changes)
+    }
+  }
+  if (changes.length === 0) return false
+  dispatch(state.update({ changes, userEvent: 'input.toggle' }))
+  return true
 }

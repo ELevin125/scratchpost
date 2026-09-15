@@ -18,6 +18,7 @@ interface EditorProps {
   activeId: string | null
   openIds: string[]
   buffers: Buffers
+  viewRef: { current: EditorView | null } // lets commands reach the view
   onStats: (stats: EditorStats) => void
   onDocChange: (id: string, state: EditorState) => void
   onViewChange: () => void // cursor moved or scrolled; the session needs saving
@@ -30,7 +31,15 @@ function topVisiblePos(view: EditorView): number {
 
 // One EditorView; each tab keeps its own EditorState (doc, undo, selection)
 // and scroll position, swapped in when the tab is activated.
-export function Editor({ activeId, openIds, buffers, onStats, onDocChange, onViewChange }: EditorProps) {
+export function Editor({
+  activeId,
+  openIds,
+  buffers,
+  viewRef,
+  onStats,
+  onDocChange,
+  onViewChange
+}: EditorProps) {
   const host = useRef<HTMLDivElement>(null)
   const view = useRef<EditorView | null>(null)
   const shownId = useRef<string | null>(null)
@@ -56,6 +65,7 @@ export function Editor({ activeId, openIds, buffers, onStats, onDocChange, onVie
   useEffect(() => {
     const v = new EditorView({ parent: host.current! })
     view.current = v
+    viewRef.current = v
 
     const onScroll = () => {
       const id = shownId.current
@@ -69,9 +79,10 @@ export function Editor({ activeId, openIds, buffers, onStats, onDocChange, onVie
       v.scrollDOM.removeEventListener('scroll', onScroll)
       v.destroy()
       view.current = null
+      viewRef.current = null
       shownId.current = null
     }
-  }, [buffers])
+  }, [buffers, viewRef])
 
   // A string key, so a new openIds array with the same ids doesn't re-run this.
   const openKey = openIds.join('\n')

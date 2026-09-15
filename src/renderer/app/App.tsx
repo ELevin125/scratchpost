@@ -1,10 +1,22 @@
 import type { EditorState } from '@codemirror/state'
+import type { EditorView } from '@codemirror/view'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { FileMeta } from '../../preload/api'
 import type { EditorStats } from '../editor/createEditor'
+import { CommandPalette } from './CommandPalette'
 import { Editor, type Buffers } from './Editor'
 import { EmptyState } from './EmptyState'
+import { RenameDialog } from './RenameDialog'
 import { Autosave, errorMessage, type SaveEvent } from './state/autosave'
+import {
+  availableCommands,
+  commandForEvent,
+  commandHint,
+  commands,
+  type AppActions,
+  type Command,
+  type CommandContext
+} from './state/commands'
 import { SESSION_SAVE_DELAY_MS, snapshotSession } from './state/session'
 import {
   activateTab,
@@ -28,6 +40,9 @@ const api = window.scratchpost
 // New notes use LF and no BOM on both platforms.
 const NEW_NOTE_META: FileMeta = { eol: '\n', bom: false, encoding: 'utf8' }
 
+// A rename that drops the extension keeps the original one.
+const NOTE_EXTENSION = /\.(md|markdown|txt)$/i
+
 const newNoteTab = (): Tab => ({ id: crypto.randomUUID(), path: null, scratch: true })
 
 function without<T>(record: Record<string, T>, key: string): Record<string, T> {
@@ -45,9 +60,11 @@ export function App() {
   // Only tabs with something to report: a slow write or a failed one.
   const [saveStates, setSaveStates] = useState<Record<string, SaveEvent>>({})
   const [notice, setNotice] = useState<string | null>(null)
+  const [overlay, setOverlay] = useState<'palette' | 'rename' | null>(null)
 
   const buffers = useRef<Buffers>({ states: new Map(), initial: new Map(), scroll: new Map() }).current
   const metas = useRef(new Map<string, FileMeta>()).current
+  const viewRef = useRef<EditorView | null>(null)
 
   const scratchDir = useMemo(() => {
     const dir = api.getScratchDir()
@@ -61,6 +78,11 @@ export function App() {
   const updateTabs = useCallback((change: (s: TabsState) => TabsState) => {
     tabsRef.current = change(tabsRef.current)
     setTabsState(tabsRef.current)
+  }, [])
+
+  const activeTab = useCallback((): Tab | null => {
+    const { tabs, activeId } = tabsRef.current
+    return tabs.find((t) => t.id === activeId) ?? null
   }, [])
 
   // --- Session ---
@@ -199,11 +221,20 @@ export function App() {
   // fails the tab stays open, so edits that aren't on disk are never dropped.
   const close = async (id: string) => {
     if (!(await autosave.flush(id))) return
+    const tab = tabsRef.current.tabs.find((t) => t.id === id)
+    const text = buffers.states.get(id)?.doc.toString() ?? buffers.initial.get(id)?.doc
+
     autosave.forget(id)
     updateTabs((s) => closeTab(s, id))
     buffers.initial.delete(id)
     metas.delete(id)
     setSaveStates((prev) => without(prev, id))
+
+    // An empty scratch note leaves nothing behind (D23). Main re-checks the
+    // file on disk and refuses anything outside the scratch folder.
+    if (tab?.path && tab.scratch && text !== undefined && text.trim() === '') {
+      api.deleteIfEmpty(tab.path).catch(() => {})
+    }
   }
 
   const newNote = () => {
@@ -233,9 +264,92 @@ export function App() {
     }
   }
 
+  const rename = async (input: string) => {
+    setOverlay(null)
+    viewRef.current?.focus()
+    const tab = activeTab()
+    if (!tab?.path) return
+
+    const oldName = fileName(tab.path)
+    if (/[\\/]/.test(input)) {
+      setNotice("a file name can't contain / or \\")
+      return
+    }
+    const extension = NOTE_EXTENSION.exec(oldName)?.[0] ?? ''
+    const newName = NOTE_EXTENSION.test(input) ? input : input + extension
+    if (newName === oldName) return
+    const to = tab.path.slice(0, tab.path.length - oldName.length) + newName
+
+    // Flush first, so no pending save can land on the old path afterwards.
+    if (!(await autosave.flush(tab.id))) return
+    try {
+      await api.renameFile(tab.path, to)
+      updateTabs((s) => setTabPath(s, tab.id, to))
+    } catch (err) {
+      setNotice(`couldn't rename ${oldName}: ${errorMessage(err)}`)
+    }
+  }
+
+  // --- Commands ---
+
+  const actionsRef = useRef<AppActions | null>(null)
+  useEffect(() => {
+    actionsRef.current = {
+      openPalette: () => setOverlay('palette'),
+      newNote,
+      openFile: () => void openFile(),
+      renameActive: () => {
+        if (activeTab()?.path) setOverlay('rename')
+      },
+      closeActive: () => {
+        const id = tabsRef.current.activeId
+        if (id) void close(id)
+      }
+    }
+  })
+
+  const commandContext = useCallback((): CommandContext => {
+    const tab = activeTab()
+    return { view: tab ? viewRef.current : null, activePath: tab?.path ?? null, actions: actionsRef.current! }
+  }, [activeTab])
+
+  const runCommand = (command: Command) => {
+    setOverlay(null)
+    command.run(commandContext())
+  }
+
+  const runById = (id: string) => {
+    const command = commands.find((c) => c.id === id)
+    if (command) runCommand(command)
+  }
+
+  const closeOverlay = () => {
+    setOverlay(null)
+    viewRef.current?.focus()
+  }
+
+  // Every shortcut in the app goes through here. Capture phase, so registry
+  // shortcuts win over CodeMirror's keys. Text inputs (palette, rename) are
+  // left alone so typing there never triggers a command. See D24.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || event.isComposing) return
+      const target = event.target
+      if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) return
+      const command = commandForEvent(commands, event, commandContext())
+      if (!command) return
+      event.preventDefault()
+      event.stopPropagation()
+      command.run(commandContext())
+    }
+    window.addEventListener('keydown', onKeyDown, true)
+    return () => window.removeEventListener('keydown', onKeyDown, true)
+  }, [commandContext])
+
   // --- Render ---
 
   const { tabs, activeId } = tabsState
+  const active = tabs.find((t) => t.id === activeId) ?? null
   const nameOf = (tab: Tab) => displayName(tab, firstLines[tab.id] ?? null)
 
   // Silent while saves succeed. Failures win, the active tab's first.
@@ -264,20 +378,40 @@ export function App() {
         onActivate={activate}
         onClose={(id) => void close(id)}
         onMove={(id, toIndex) => updateTabs((s) => moveTab(s, id, toIndex))}
-        onNew={newNote}
-        onOpen={() => void openFile()}
+        onNew={() => runById('note.new')}
+        onOpen={() => runById('file.open')}
+        newHint={commandHint('note.new')}
+        openHint={commandHint('file.open')}
       />
       <Editor
         activeId={activeId}
         openIds={tabs.map((tab) => tab.id)}
         buffers={buffers}
+        viewRef={viewRef}
         onStats={setStats}
         onDocChange={onDocChange}
         onViewChange={scheduleSession}
       />
       {/* Blank while the session loads, so the empty state never flashes. */}
-      {!activeId && (restoring ? <div className="editor-blank" /> : <EmptyState onNewNote={newNote} />)}
-      <StatusBar folderName="Scratchpost" stats={stats} message={statusMessage} />
+      {!activeId && (restoring ? <div className="editor-blank" /> : <EmptyState onNewNote={() => runById('note.new')} />)}
+      <StatusBar
+        folderName="Scratchpost"
+        stats={stats}
+        message={statusMessage}
+        onPalette={() => runById('palette.open')}
+        paletteHint={commandHint('palette.open')}
+      />
+
+      {overlay === 'palette' && (
+        <CommandPalette
+          commands={availableCommands(commands, commandContext())}
+          onRun={runCommand}
+          onClose={closeOverlay}
+        />
+      )}
+      {overlay === 'rename' && active?.path && (
+        <RenameDialog name={fileName(active.path)} onSubmit={(name) => void rename(name)} onClose={closeOverlay} />
+      )}
     </div>
   )
 }

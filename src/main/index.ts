@@ -39,7 +39,12 @@ function createWindow(): void {
     win.show()
   })
 
-  win.webContents.on('will-navigate', (event) => event.preventDefault())
+  win.webContents.on('will-navigate', (event, url) => {
+    // Dev only: Vite reloads the page after re-optimising dependencies. Blocking
+    // that reload left the window stuck on a half-loaded, white page.
+    if (devUrl && new URL(url).origin === new URL(devUrl).origin) return
+    event.preventDefault()
+  })
   win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
 
   if (devUrl) {

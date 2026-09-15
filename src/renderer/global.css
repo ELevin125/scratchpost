@@ -186,3 +186,79 @@ button:disabled {
 .status-spacer {
   flex: 1;
 }
+
+.status-palette:hover {
+  color: var(--ink);
+}
+
+/* Overlays: command palette, rename */
+
+.overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 48px;
+}
+
+.overlay {
+  display: flex;
+  flex-direction: column;
+  width: min(560px, calc(100% - 32px));
+  max-height: 60vh;
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+}
+
+.overlay-label {
+  padding: 8px 12px 0;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.overlay-input {
+  padding: 10px 12px;
+  font: inherit;
+  color: var(--ink);
+  background: var(--paper-2);
+  border: 0;
+  outline: none;
+}
+
+.overlay-list {
+  margin: 0;
+  padding: 4px 0;
+  overflow-y: auto;
+  list-style: none;
+  border-top: 1px solid var(--rule);
+}
+
+.overlay-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 6px 12px;
+  color: var(--body);
+  cursor: pointer;
+}
+
+.overlay-item.selected {
+  color: var(--ink);
+  background: var(--bar);
+}
+
+.overlay-shortcut {
+  font: inherit;
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.overlay-empty {
+  padding: 8px 12px;
+  color: var(--ink-soft);
+  border-top: 1px solid var(--rule);
+}

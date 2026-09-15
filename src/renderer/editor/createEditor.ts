@@ -1,4 +1,4 @@
-import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
+import { history, standardKeymap } from '@codemirror/commands'
 import { markdown } from '@codemirror/lang-markdown'
 import { EditorSelection, EditorState, type Extension } from '@codemirror/state'
 import { drawSelection, EditorView, keymap, type ViewUpdate } from '@codemirror/view'
@@ -33,7 +33,9 @@ export function editorExtensions(onUpdate: (update: ViewUpdate) => void): Extens
     livePreview,
     renumberLists,
     listKeymap,
-    keymap.of([...defaultKeymap, ...historyKeymap]),
+    // Only cursor motion, selection and deletion. Every other binding is a
+    // command in app/state/commands.ts. See D24.
+    keymap.of(standardKeymap),
     editorTheme,
     EditorView.updateListener.of(onUpdate)
   ]

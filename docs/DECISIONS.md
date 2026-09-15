@@ -362,6 +362,57 @@ the file on disk changes to match.
 
 ---
 
+## D23 — Empty scratch notes are deleted when their tab closes
+
+**Chosen:** closing a tab whose file is in the scratch folder and holds only
+whitespace deletes the file. A new `deleteIfEmpty(path)` IPC call does it: main
+supplies the scratch folder itself, refuses anything outside it, and re-reads
+the file from disk so a synced edit that arrived after the last keystroke is
+never lost. A plain delete, not the trash: there is nothing in it to recover.
+
+- Files opened from outside the scratch folder are never deleted, even empty.
+- An empty note that is still open at quit is kept and restored as a tab.
+
+**Rejected:**
+
+- **Deleting whenever a save leaves the file empty.** Clearing a note to start
+  over is normal; the file would vanish and come back under a new timestamp
+  mid-edit, and sync tools would see delete/create churn.
+- **Sweeping empty files on launch.** With two synced machines, a note created
+  on one is briefly empty before its first write lands; the other machine
+  could delete it. It would also remove empty files made on purpose.
+- **Doing nothing.** Abandoned new notes pile up as empty timestamped files
+  that clutter the file tree and quick switcher.
+
+---
+
+## D24 — The command registry owns every shortcut
+
+**Chosen:** `app/state/commands.ts` is one list of
+`{ id, label, shortcut?, run, when? }`. A single window-level `keydown`
+listener (capture phase) matches shortcuts against it, so shortcuts work
+outside the editor (the empty state, the tab strip) and win over CodeMirror's
+own keys. The palette, the tab strip buttons and the status bar read from the
+same list.
+
+- CodeMirror keeps only `standardKeymap`: cursor motion, selection, deletion
+  and select-all. Like `Enter` and `Tab` (D21) these are typing, not actions.
+  Its `defaultKeymap` extras (move line, and so on) are registry commands.
+- Shortcuts are ignored while focus is in a text input (palette, rename), so
+  typing there never triggers commands.
+- Insert date writes `YYYY-MM-DD`, matching note filenames. It has no shortcut;
+  the palette reaches it.
+
+**Known gaps:**
+
+- `Ctrl+W` is not bound to close tab: Electron's default menu already uses it
+  to close the window. Close tab is in the palette.
+- One shortcut per command, so redo is `Ctrl+Shift+Z` only, not `Ctrl+Y`.
+- GNOME uses `Ctrl+Alt+↑/↓` to switch workspaces and may take the keys before
+  the app sees them. Add cursor above and below stay reachable from the palette.
+
+---
+
 ## Open questions
 
 Not yet decided. Do not guess; raise them.

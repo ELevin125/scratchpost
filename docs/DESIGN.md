@@ -175,7 +175,14 @@ Standard CodeMirror 6 keymap plus:
 | Search in folder | `Ctrl+Shift+F` |
 | Toggle file tree | `Ctrl+B` |
 | New note | `Ctrl+N` |
+| Open file | `Ctrl+O` |
 | Rename | `F2` |
+| Undo / redo | `Ctrl+Z` / `Ctrl+Shift+Z` |
+| Insert date (`YYYY-MM-DD`) | palette only |
+| Close tab | palette only (`Ctrl+W` belongs to Electron's menu) |
+
+Every binding above is a command in the registry and appears in the palette
+with its shortcut (D24). `Enter` and `Tab` are editor keys (D21).
 
 **Auto-continue lists** is mandatory and not optional polish:
 

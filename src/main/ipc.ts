@@ -2,7 +2,7 @@ import { app, BrowserWindow, dialog, ipcMain, shell, type OpenDialogOptions } fr
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { FileMeta } from '../preload/api'
-import { createNote } from './fs/note'
+import { createNote, deleteIfEmpty, renameNote } from './fs/note'
 import { readTextFile } from './fs/read'
 import { writeTextFile } from './fs/write'
 import { loadSession, saveSession } from './session'
@@ -48,6 +48,19 @@ export function registerIpc(): void {
   ipcMain.handle('createNote', (_event, scratchDir: unknown) => {
     assertString(scratchDir, 'scratchDir')
     return createNote(scratchDir)
+  })
+
+  ipcMain.handle('renameFile', (_event, from: unknown, to: unknown) => {
+    assertString(from, 'from')
+    assertString(to, 'to')
+    return renameNote(from, to)
+  })
+
+  // The scratch folder comes from main, never the renderer, so this can only
+  // ever delete inside it.
+  ipcMain.handle('deleteIfEmpty', async (_event, path: unknown) => {
+    assertString(path, 'path')
+    return deleteIfEmpty(path, await getScratchDir())
   })
 
   ipcMain.handle('pickFile', async (event) => {

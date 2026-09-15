@@ -38,9 +38,10 @@ to this project. If something seems obviously missing, raise it; do not build it
 
 3. **No key binding outside the command registry.** Every action is registered
    once in `renderer/app/state/commands.ts`. The keymap, palette, toolbar and
-   menus all read from it. A keyboard-only feature is a bug. The one exception
-   is typing itself: `Enter`, `Tab` and `Shift+Tab` live in `editor/lists.ts`
-   (see D21).
+   menus all read from it. A keyboard-only feature is a bug. The exceptions
+   are typing itself: `Enter`, `Tab` and `Shift+Tab` in `editor/lists.ts`
+   (D21), and CodeMirror's `standardKeymap` for cursor motion, selection and
+   deletion (D24).
 
 4. **Never normalise file bytes.** Line endings and BOMs are detected on read
    and restored on write. A file must round-trip byte-identical apart from the

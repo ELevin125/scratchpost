@@ -41,7 +41,8 @@ export interface ScratchpostAPI {
   writeFile(path: string, content: string, meta: FileMeta): Promise<void>
   getScratchDir(): Promise<string>
   createNote(scratchDir: string): Promise<string>
-  renameFile(from: string, to: string): Promise<void>
+  renameFile(from: string, to: string): Promise<void> // same folder, never overwrites
+  deleteIfEmpty(path: string): Promise<boolean> // scratch folder only; see D23
   listFolder(path: string): Promise<FolderEntry[]>
   searchFolder(path: string, query: string): Promise<SearchHit[]>
   pickFolder(): Promise<string | null>

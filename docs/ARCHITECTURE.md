@@ -74,14 +74,17 @@ src/
       QuickSwitcher.tsx
       SearchPanel.tsx
       EmptyState.tsx
-      App.tsx             layout: tab strip, editor, status bar
+      RenameDialog.tsx    F2 rename input
+      App.tsx             layout, shortcut listener, overlays
       Editor.tsx          mounts the EditorView into React
       state/
         tabs.ts           tab model, open/close/reorder/activate
         session.ts        session.json load and persist
         autosave.ts       the debounce + flush scheduler
         folderContext.ts  active folder, recents
-        commands.ts       command registry (id, label, shortcut, run)
+        commands.ts       command registry (id, label, shortcut, run, when)
+        shortcuts.ts      shortcut matching and display
+        fuzzy.ts          fuzzy filter for the palette and quick switcher
     editor/
       createEditor.ts     assembles the EditorView
       livePreview.ts      ViewPlugin: walks visible ranges, dispatches to the two below
@@ -123,7 +126,8 @@ interface ScratchpostAPI {
   writeFile(path: string, content: string, meta: FileMeta): Promise<void>
   getScratchDir(): Promise<string>
   createNote(scratchDir: string): Promise<string>
-  renameFile(from: string, to: string): Promise<void>
+  renameFile(from: string, to: string): Promise<void> // same folder, never overwrites
+  deleteIfEmpty(path: string): Promise<boolean> // scratch folder only; see D23
   listFolder(path: string): Promise<FolderEntry[]>
   searchFolder(path: string, query: string): Promise<SearchHit[]>
   pickFolder(): Promise<string | null>

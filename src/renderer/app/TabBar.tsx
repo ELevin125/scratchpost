@@ -12,13 +12,24 @@ interface TabBarProps {
   onActivate: (id: string) => void
   onClose: (id: string) => void
   onMove: (id: string, toIndex: number) => void
+  // The buttons run registry commands; hints carry the label and shortcut.
   onNew: () => void
   onOpen: () => void
+  newHint: string
+  openHint: string
 }
 
-// Ctrl+N / Ctrl+O arrive with the command registry (2.1); until then the
-// buttons are the only way in, so no key is bound outside the registry.
-export function TabBar({ tabs, activeId, onActivate, onClose, onMove, onNew, onOpen }: TabBarProps) {
+export function TabBar({
+  tabs,
+  activeId,
+  onActivate,
+  onClose,
+  onMove,
+  onNew,
+  onOpen,
+  newHint,
+  openHint
+}: TabBarProps) {
   const [draggingId, setDraggingId] = useState<string | null>(null)
 
   return (
@@ -73,10 +84,10 @@ export function TabBar({ tabs, activeId, onActivate, onClose, onMove, onNew, onO
         })}
       </div>
       <div className="tab-actions">
-        <button className="tab-action" title="New note" aria-label="New note" onClick={onNew}>
+        <button className="tab-action" title={newHint} aria-label={newHint} onClick={onNew}>
           +
         </button>
-        <button className="tab-action" title="Open file" onClick={onOpen}>
+        <button className="tab-action" title={openHint} onClick={onOpen}>
           Open
         </button>
       </div>
