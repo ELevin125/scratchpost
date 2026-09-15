@@ -13,6 +13,8 @@ export interface Theme {
     rule: string // hairline borders
     hatch: string // dot field
   }
-  tagPalette: string[] // 6 hues for tag pills, hashed by tag text
+  // Tag pill hue is seeded from the tag text; the theme fixes the rest so
+  // every hue keeps contrast against paper and paper2. Percentages, 0 to 100.
+  tagColor: { saturation: number; lightness: number }
   textureOpacity: number // 0 to 1, multiplied into hatch
 }

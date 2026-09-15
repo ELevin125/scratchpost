@@ -15,7 +15,8 @@ export function applyTheme(theme: Theme): void {
   for (const [key, value] of Object.entries(theme.colors)) {
     style.setProperty(toVar(key), value)
   }
-  theme.tagPalette.forEach((hue, i) => style.setProperty(`--tag-${i}`, hue))
+  style.setProperty('--tag-saturation', `${theme.tagColor.saturation}%`)
+  style.setProperty('--tag-lightness', `${theme.tagColor.lightness}%`)
   style.setProperty('--texture-opacity', String(theme.textureOpacity))
   style.colorScheme = theme.mode
 }

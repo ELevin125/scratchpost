@@ -110,9 +110,11 @@ Checkbox handling takes precedence and is matched first, before the tag pass.
 A fully rounded pill. Brackets hidden when the line has no cursor, shown when it
 does, same as all other syntax.
 
-Colour is assigned by hashing the tag text into a small palette defined per
-theme, so `[urgent]` is consistently the same colour without configuration. The
-palette must include enough contrast against `--paper` in both themes.
+Colour is seeded from the tag text: a stable hash of the text picks a hue from
+0 to 359, so `[urgent]` is consistently the same colour without configuration
+and there is no fixed number of tag colours. The theme supplies saturation and
+lightness, which keeps every hue readable against `--paper` in both themes. See
+`THEMING.md` and D16 in `DECISIONS.md`.
 
 ### Indexing
 

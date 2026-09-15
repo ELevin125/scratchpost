@@ -15,7 +15,7 @@ export const newsprint: Theme = {
     rule: '#B4B0A4',
     hatch: 'rgba(0, 0, 0, 0.045)'
   },
-  // Placeholder hues; not specified in THEMING.md.
-  tagPalette: ['#A85A2A', '#8A7A1E', '#4E7A4A', '#3E6F85', '#6A5A96', '#94486A'],
+  // First guess; tune by eye once tags render.
+  tagColor: { saturation: 50, lightness: 35 },
   textureOpacity: 1
 }

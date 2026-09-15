@@ -37,14 +37,26 @@ interface Theme {
     rule: string         // hairline borders
     hatch: string        // dot field
   }
-  tagPalette: string[]   // 6 hues for tag pills, hashed by tag text
+  tagColor: {            // percentages, 0 to 100
+    saturation: number
+    lightness: number
+  }
   textureOpacity: number // 0 to 1, multiplied into hatch
 }
 ```
 
 Applied at runtime by writing each value to `document.documentElement.style` as
 `--paper`, `--paper-2`, `--bar`, `--ink`, `--ink-soft`, `--body`, `--spot`,
-`--spot-tint`, `--rule`, `--hatch`.
+`--spot-tint`, `--rule`, `--hatch`, plus `--tag-saturation` and
+`--tag-lightness`.
+
+## Tag colours
+
+There is no fixed tag palette. A stable hash of the tag text picks a hue from 0
+to 359, set on the pill as `--tag-hue`. The pill's colour is
+`hsl(var(--tag-hue) var(--tag-saturation) var(--tag-lightness))`, so every tag
+gets its own colour while the theme controls saturation and lightness, and
+therefore contrast. See D16 in `DECISIONS.md`.
 
 The CodeMirror theme in `editor/theme.ts` is built from the same object via
 `EditorView.theme()`, reading the tokens rather than duplicating values.
@@ -122,6 +134,7 @@ Everything else is on the neutral ramp. When in doubt, do not use the accent.
 
 1. Create `src/renderer/themes/<name>.ts` exporting a `Theme`.
 2. Register it in `themes/index.ts`.
-3. Verify contrast: body text on paper, muted text on paper, every entry in
-   `tagPalette` on both `paper` and `paper2`.
+3. Verify contrast: body text on paper, muted text on paper, and tag pills at
+   the chosen `tagColor` saturation and lightness across the full hue range on
+   both `paper` and `paper2`.
 4. No other file changes.

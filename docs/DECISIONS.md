@@ -218,6 +218,23 @@ them would be ceremony.
 
 ---
 
+## D16 — Tag colours seeded from the tag text, not a fixed palette
+
+**Chosen:** a stable hash of the tag text picks a hue from 0 to 359. Each theme
+supplies only saturation and lightness (`tagColor` in the `Theme` type).
+
+**Rejected:** a fixed per-theme palette of six hues, hashed into by tag text.
+Any fixed palette size means unrelated tags collide once there are more tags
+than colours. Seeding the hue from the word gives every tag its own colour with
+no palette to maintain, while the theme-owned saturation and lightness keep
+contrast predictable. This resolves the earlier open question on palette size.
+
+The final colour is assembled in CSS as
+`hsl(var(--tag-hue) var(--tag-saturation) var(--tag-lightness))`, with only the
+numeric hue set on the pill, so no colour literal appears outside `themes/`.
+
+---
+
 ## Open questions
 
 Not yet decided. Do not guess; raise them.
@@ -226,7 +243,6 @@ Not yet decided. Do not guess; raise them.
   title bar (consistent, more Electron config, breaks Windows snap conventions)
   or below the native one (less pretty, fewer surprises). Linux draws its own
   either way. Decide during task 1.1.
-- **Tag colour palette size.** Six hues is a guess. Revisit once there are
-  enough real tags to see collisions.
+- **Tag colour palette size.** Resolved by D16: there is no fixed palette.
 - **Texture opacity default.** Tuned by eye in a mockup; needs checking on the
   author's actual displays.

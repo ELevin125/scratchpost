@@ -15,7 +15,7 @@ export const nocturne: Theme = {
     rule: '#33363A',
     hatch: 'rgba(255, 255, 255, 0.025)'
   },
-  // Placeholder hues; not specified in THEMING.md.
-  tagPalette: ['#D4834E', '#C9B458', '#7FAE7A', '#6FA3B8', '#9A88C4', '#C47A9A'],
+  // First guess; tune by eye once tags render.
+  tagColor: { saturation: 45, lightness: 65 },
   textureOpacity: 1
 }
