@@ -1,7 +1,7 @@
 import { history, standardKeymap } from '@codemirror/commands'
 import { markdown } from '@codemirror/lang-markdown'
 import { closeSearchPanel, search } from '@codemirror/search'
-import { EditorSelection, EditorState, type Extension, type TransactionSpec } from '@codemirror/state'
+import { EditorSelection, EditorState, type Extension, type Text, type TransactionSpec } from '@codemirror/state'
 import { drawSelection, EditorView, keymap, type ViewUpdate } from '@codemirror/view'
 import { Strikethrough, TaskList } from '@lezer/markdown'
 import { codeHighlighting, codeLanguages } from './codeLanguages'
@@ -62,6 +62,23 @@ export function createEditorState(doc: string, extensions: Extension[], cursor =
     selection: EditorSelection.single(clamp(anchor), clamp(cursor)),
     extensions
   })
+}
+
+export interface TaskCount {
+  open: number
+  done: number
+}
+
+const TASK_LINE = /^\s*(?:[-*+]|\d{1,9}[.)])\s+\[([ xX])\](?:\s|$)/
+
+// Checkboxes in a note, for the cat's "checklist finished" hop (3.9).
+export function countTasks(doc: Text): TaskCount {
+  const count: TaskCount = { open: 0, done: 0 }
+  for (const line of doc.iterLines()) {
+    const match = TASK_LINE.exec(line)
+    if (match) count[match[1] === ' ' ? 'open' : 'done']++
+  }
+  return count
 }
 
 // Replaces a document with text from disk, changing only the part that

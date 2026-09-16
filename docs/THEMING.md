@@ -43,6 +43,11 @@ interface Theme {
     codeString: string   // highlighted code
     codeLiteral: string
     codeName: string
+    catBelly: string     // the cat (3.9); its body is chip
+    catInk: string       // its eyes, mouth and stripes
+    catPink: string      // its ears, blush and headphone cushions
+    catShine: string     // the glint in its eyes
+    catGear: string      // its headphones, which sit against the ground
   }
   tagColor: {            // percentages, 0 to 100
     saturation: number
@@ -80,7 +85,14 @@ All values are HSL around the seed hue `h`:
 | codeString | `h+150 45% 76%` | `h+150 45% 30%` |
 | codeLiteral | `h+210 55% 76%` | `h+210 55% 34%` |
 | codeName | `h+60 45% 76%` | `h+60 45% 32%` |
+| catBelly | `h 40% 92%` | `h 32% 88%` |
+| catInk | `h 45% 11%` | `h 45% 12%` |
+| catPink | `2 70% 82%` | `2 60% 78%` |
+| catShine | `h 30% 98%` | `h 30% 98%` |
+| catGear | `h 15% 84%` | `h 40% 20%` |
 | tag saturation, lightness | 50%, 72% | 50%, 36% |
+
+The cat's pink is the one colour not taken from the seed: pink ears stay pink.
 
 Saturation stays low on surfaces so any hue reads as a tinted neutral.
 Lightness carries the contrast, so it holds for every seed.

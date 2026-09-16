@@ -310,13 +310,24 @@ Batches, in order: 2.12–2.17; then 2.11 with 3.4 and 3.8; then 2.22; then
   3.4. The capped text column is part of Tint (D33), no longer an option.
   *Accept:* switching the system setting switches the app without restart.
 
+- [x] **3.9 The cat**
+  A round "bean" cat mascot, filled in the theme colour with pink ears, perched
+  on the dock and asleep in the empty state. It idles (breathing, blinking,
+  tail flicks) and every minute or so does a random bit: headphones and a
+  headbang, a yawn, grooming, looking around, a short nap. It hops when a
+  checklist is finished, purrs when clicked, stretches on `meow`, and naps
+  after a while without typing. On by default, with a switch in Settings.
+  No sound, no text, never over note text, still under reduced motion.
+  *Accept:* matches the prototype shown on 2026-09-16; costs nothing while the
+  window is hidden. Built before 3.6; see D37.
+
 ---
 
 ## Parked ideas
 
 Liked, not scheduled. Each needs a decision before it becomes a task:
-`[[note]]` links opened through the quick switcher, tabs in the title bar
-(D17), and a mascot or desktop toy as a useless easter egg.
+`[[note]]` links opened through the quick switcher, and tabs in the title bar
+(D17). The mascot idea became task 3.9.
 
 ---
 

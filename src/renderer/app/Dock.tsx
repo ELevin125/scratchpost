@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Icon, type IconName } from './Icon'
 import { commandHint } from './state/commands'
 
@@ -10,13 +11,15 @@ export interface DockItem {
 interface DockProps {
   groups: DockItem[][]
   onRun: (command: string) => void
+  children?: ReactNode // the cat perches here
 }
 
 // The floating dock (D33): views and tools as icons, grouped, each with the
 // command's label and shortcut as its tooltip.
-export function Dock({ groups, onRun }: DockProps) {
+export function Dock({ groups, onRun, children }: DockProps) {
   return (
     <nav className="dock" aria-label="Tools">
+      {children}
       {groups.map((group, i) => (
         <div key={i} className="dock-group">
           {group.map((item) => {

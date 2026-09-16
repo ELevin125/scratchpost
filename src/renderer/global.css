@@ -1058,3 +1058,212 @@ kbd {
 .note-conflict .secondary:hover {
   background: var(--sunken);
 }
+
+/* The cat (3.9). Body in --chip, the rest from the --cat-* tokens. */
+
+.cat {
+  overflow: visible;
+  cursor: pointer;
+}
+
+.cat-all,
+.cat-body,
+.cat-tail,
+.cat-yawn,
+.cat-paw,
+.cat-phones,
+.cat-eyes {
+  transform-box: fill-box;
+}
+
+.cat-all,
+.cat-body {
+  transform-origin: 50% 100%;
+}
+
+.cat-body {
+  animation: cat-breathe 3.6s ease-in-out infinite;
+}
+
+.cat-body.slow {
+  animation-duration: 6s;
+}
+
+.cat-tail {
+  fill: none;
+  stroke: var(--chip);
+  stroke-width: 8;
+  stroke-linecap: round;
+  transform-origin: 0% 100%;
+  animation: cat-flick 3.4s ease-in-out infinite;
+}
+
+.cat-yawn {
+  transform-origin: 50% 0%;
+}
+
+.cat.paused * {
+  animation-play-state: paused;
+}
+
+.cat-fill {
+  fill: var(--chip);
+}
+
+.cat-ears {
+  stroke: var(--chip);
+  stroke-width: 4;
+  stroke-linejoin: round;
+}
+
+.cat-belly {
+  fill: var(--cat-belly);
+}
+
+.cat-pink {
+  fill: var(--cat-pink);
+}
+
+.cat-blush {
+  opacity: 0.75;
+}
+
+.cat-stripes {
+  stroke: var(--cat-ink);
+  stroke-width: 2;
+  stroke-linecap: round;
+  opacity: 0.45;
+}
+
+.cat-ink {
+  fill: var(--cat-ink);
+}
+
+.cat-shine {
+  fill: var(--cat-shine);
+}
+
+.cat-line {
+  fill: none;
+  stroke: var(--cat-ink);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+
+.cat-mouth {
+  stroke-width: 2;
+}
+
+.cat-hidden {
+  opacity: 0;
+}
+
+.cat-paw {
+  fill: var(--cat-belly);
+  stroke: var(--chip);
+  stroke-width: 1.5;
+}
+
+.cat-gear {
+  fill: var(--cat-gear);
+}
+
+.cat-band {
+  fill: none;
+  stroke: var(--cat-gear);
+  stroke-width: 4.5;
+  stroke-linecap: round;
+}
+
+.cat-note {
+  fill: var(--soft);
+  stroke: var(--soft);
+  stroke-width: 1.6;
+}
+
+.cat-z {
+  font: 500 12px var(--font-sans);
+  fill: var(--soft);
+}
+
+@keyframes cat-breathe {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.035);
+  }
+}
+
+@keyframes cat-flick {
+  0%,
+  70%,
+  100% {
+    transform: rotate(0);
+  }
+  80% {
+    transform: rotate(-16deg);
+  }
+  90% {
+    transform: rotate(6deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cat-body,
+  .cat-tail {
+    animation: none;
+  }
+}
+
+/* Perched on the dock's right end, sitting on its top edge. */
+.dock-cat {
+  position: absolute;
+  right: 12px;
+  bottom: calc(100% - 8px);
+  width: 56px;
+  height: 52px;
+}
+
+.empty-cat {
+  width: 104px;
+  height: 97px;
+  margin-bottom: -4px;
+}
+
+.switch {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  background: var(--sunken);
+  border-radius: 999px;
+  transition: background 0.15s;
+}
+
+.switch-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  background: var(--soft);
+  border-radius: 999px;
+  transition: transform 0.15s;
+}
+
+.switch.on {
+  background: var(--chip);
+}
+
+.switch.on .switch-knob {
+  background: var(--chip-ink);
+  transform: translateX(18px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .switch,
+  .switch-knob {
+    transition: none;
+  }
+}

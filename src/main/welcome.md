@@ -45,4 +45,6 @@ const answer = 42
   open Settings (`Ctrl+,`), where you can also move the scratch folder.
 - Syncing the folder between machines is fine: a note that changes on disk
   reloads, and one you're mid-edit on asks which version to keep.
+- The cat on the dock is just a cat. Click it, or type meow. It can be turned
+  off in Settings.
 - "Open welcome note" in the command palette brings this back.

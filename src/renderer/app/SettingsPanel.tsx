@@ -11,10 +11,12 @@ type ThemeSettings = Settings['theme']
 interface SettingsPanelProps {
   theme: ThemeSettings
   fontSize: number
+  cat: boolean
   scratchDir: string // the folder in use, custom or default
   customScratch: boolean // false when the default folder is in use
   onTheme: (theme: ThemeSettings) => void
   onFontSize: (size: number) => void
+  onCat: (on: boolean) => void
   onPickScratch: () => void
   onDefaultScratch: () => void
   onClose: () => void
@@ -33,10 +35,12 @@ const hueStyle = (hue: number) => ({ '--swatch-hue': hue }) as CSSProperties
 export function SettingsPanel({
   theme,
   fontSize,
+  cat,
   scratchDir,
   customScratch,
   onTheme,
   onFontSize,
+  onCat,
   onPickScratch,
   onDefaultScratch,
   onClose
@@ -163,6 +167,21 @@ export function SettingsPanel({
                 <Icon name="plus" size={16} />
               </button>
             </div>
+          </div>
+
+          <div className="setting">
+            <label className="setting-label" htmlFor="setting-cat">
+              The cat
+            </label>
+            <button
+              id="setting-cat"
+              role="switch"
+              aria-checked={cat}
+              className={cat ? 'switch on' : 'switch'}
+              onClick={() => onCat(!cat)}
+            >
+              <span className="switch-knob" />
+            </button>
           </div>
         </section>
 

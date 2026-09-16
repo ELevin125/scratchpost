@@ -15,7 +15,7 @@ export const editorTheme = EditorView.theme({
   '.cm-scroller': { fontFamily: 'var(--font-mono)', lineHeight: '1.75' },
   // Capped at 80 characters (D33), so notes hard-wrapped at 80 never wrap
   // twice; the bottom room keeps the last line clear of the dock.
-  '.cm-content': { maxWidth: 'calc(80ch + 80px)', padding: '10px 40px 96px', caretColor: 'var(--ink)' },
+  '.cm-content': { maxWidth: 'calc(80ch + 80px)', padding: '10px 40px 140px', caretColor: 'var(--ink)' },
   // No default line padding, so hanging indents in ch line up exactly.
   '.cm-line': { padding: '0' },
   '.cm-cursor, .cm-dropCursor': { borderLeftColor: 'var(--ink)' },

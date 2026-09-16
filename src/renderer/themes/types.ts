@@ -21,6 +21,11 @@ export interface Theme {
     codeString: string // strings in highlighted code
     codeLiteral: string // numbers, booleans and null in highlighted code
     codeName: string // function, class and type names in highlighted code
+    catBelly: string // the cat's belly (3.9); its body is chip
+    catInk: string // the cat's eyes, mouth, stripes and headphones
+    catPink: string // the cat's ears, blush and headphone cushions
+    catShine: string // the glint in the cat's eyes
+    catGear: string // the cat's headphones, which sit against the ground
   }
   // Label and tag hues are seeded from the word; the theme fixes the rest so
   // every hue keeps contrast against the surface. Percentages, 0 to 100.

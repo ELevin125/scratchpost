@@ -82,6 +82,7 @@ src/
       Dock.tsx            floating tool buttons, from the command registry
       Toast.tsx           notices that aren't about saving
       Icon.tsx            the one icon set
+      Cat.tsx             the mascot: drawing, idle loop, random bits (D37)
       CommandPalette.tsx
       QuickSwitcher.tsx
       FolderMenu.tsx      scratch folder, recents, open folder
@@ -197,6 +198,7 @@ interface Settings {
   theme: { seed: number; mode: 'light' | 'dark' | 'system' } // see D33
   scratchDir: string | null // null means ~/Documents/Scratchpost
   fontSize: number // note text in px, 10 to 24
+  cat: boolean // the mascot, on by default; see D37
 }
 interface OpenRequest {
   files: string[] // open as tabs

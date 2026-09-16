@@ -41,7 +41,8 @@ export function sanitizeSettings(value: unknown): Settings {
     theme: { seed, mode },
     // Only an absolute path can be a scratch folder.
     scratchDir: typeof raw.scratchDir === 'string' && isAbsolute(raw.scratchDir) ? raw.scratchDir : null,
-    fontSize
+    fontSize,
+    cat: raw.cat !== false
   }
 }
 

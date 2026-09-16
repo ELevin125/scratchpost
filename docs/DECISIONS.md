@@ -819,6 +819,40 @@ say everything by itself).
 
 ---
 
+## D37 — The cat
+
+Task 3.9, built before 3.6 at the author's request. The parked "mascot or
+desktop toy" idea, fitting for an app named after a scratching post.
+
+**Chosen:**
+
+- **A round "bean" cat**, filled rather than outlined (an outline read as a
+  wireframe at dock size): body in `chip`, a pale belly, pink ears and blush,
+  big eyes with a glint, faint tabby stripes. Chosen over a sleepy loaf and a
+  pixel cat.
+- **Where:** perched on the right end of the dock while a note is open, and
+  asleep under "Start a note." when none is. One cat at a time.
+- **Idle:** breathing, a tail flick, blinks every few seconds.
+- **Random bits**, one every one to two minutes: headphones on and a headbang
+  with floating notes, a yawn, grooming a paw, looking around, a short nap.
+- **Reactions:** a hop when the last open checkbox in a note is ticked, a
+  purr wiggle when clicked, a stretch when `meow` is typed. After three
+  minutes without typing it falls asleep, and wakes when typing resumes.
+- **Manners:** no sound, no text, no tips. The editor's bottom padding grew so
+  a note's last line scrolls clear of the dock and the cat. Everything pauses
+  while the window is hidden. Under reduced motion it only blinks and purrs.
+- **On by default**, with a switch in Settings (`cat` in `settings.json`).
+- **Colours** are theme tokens (`catBelly`, `catInk`, `catPink`, `catShine`,
+  `catGear`); the pink is the one fixed hue in the theme.
+- **Built with SVG and the Web Animations API**, no library. The app tells the
+  cat things through a window event (`scratchpost:cat`), so the cat never
+  reaches into app state.
+
+**Rejected:** a thin outline cat, hidden-by-default easter egg (the author
+wants it visible), speech bubbles and sound.
+
+---
+
 ## Open questions
 
 Not yet decided. Do not guess; raise them.

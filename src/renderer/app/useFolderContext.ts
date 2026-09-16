@@ -18,7 +18,8 @@ const DEFAULT_SETTINGS: Settings = {
   welcomed: false,
   theme: { seed: 172, mode: 'dark' },
   scratchDir: null,
-  fontSize: 13
+  fontSize: 13,
+  cat: true
 }
 
 // The folder context: which folder the file tree, quick switcher, search and

@@ -64,6 +64,7 @@ export interface Settings {
   theme: { seed: number; mode: 'light' | 'dark' | 'system' }
   scratchDir: string | null // null means ~/Documents/Scratchpost
   fontSize: number // note text in px, 10 to 24
+  cat: boolean // the mascot (3.9), on by default
 }
 
 export interface ScratchpostAPI {

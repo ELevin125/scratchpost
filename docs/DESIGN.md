@@ -198,6 +198,14 @@ The status bar is gone (D33). Its jobs moved:
 - **Toasts**, above the dock, for notices that aren't about saving. They
   dismiss themselves.
 
+### The cat
+
+A round cat perches on the dock and naps in the empty state (D37). It idles,
+now and then puts on headphones and headbangs, yawns, grooms, looks around or
+naps, hops when a checklist is finished, purrs when clicked, and stretches
+when you type `meow`. It never makes a sound, never talks, and pauses while
+the window is hidden. On by default; Settings has a switch.
+
 ### Editing
 
 Standard CodeMirror 6 keymap plus:

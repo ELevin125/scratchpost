@@ -1,6 +1,6 @@
 import type { Theme, ThemeMode } from './types'
 
-// Every colour comes from one seed hue (D33). Surfaces stay close to the seed
+// Every colour comes from one seed hue (D33), except the cat's pink ears. Surfaces stay close to the seed
 // at low saturation; code colours sit at fixed offsets around it. Lightness
 // values are chosen for contrast against `surface` and `sunken` in each mode.
 
@@ -30,7 +30,12 @@ export function tintTheme(seed: number, mode: ThemeMode): Theme {
         selection: hsl(h, 45, 72, 0.5),
         codeString: hsl(h + 150, 45, 30),
         codeLiteral: hsl(h + 210, 55, 34),
-        codeName: hsl(h + 60, 45, 32)
+        codeName: hsl(h + 60, 45, 32),
+        catBelly: hsl(h, 32, 88),
+        catInk: hsl(h, 45, 12),
+        catPink: hsl(2, 60, 78),
+        catShine: hsl(h, 30, 98),
+        catGear: hsl(h, 40, 20)
       },
       tagColor: { saturation: 50, lightness: 36 }
     }
@@ -54,7 +59,12 @@ export function tintTheme(seed: number, mode: ThemeMode): Theme {
       selection: hsl(h, 40, 40, 0.45),
       codeString: hsl(h + 150, 45, 76),
       codeLiteral: hsl(h + 210, 55, 76),
-      codeName: hsl(h + 60, 45, 76)
+      codeName: hsl(h + 60, 45, 76),
+      catBelly: hsl(h, 40, 92),
+      catInk: hsl(h, 45, 11),
+      catPink: hsl(2, 70, 82),
+      catShine: hsl(h, 30, 98),
+      catGear: hsl(h, 15, 84)
     },
     tagColor: { saturation: 50, lightness: 72 }
   }

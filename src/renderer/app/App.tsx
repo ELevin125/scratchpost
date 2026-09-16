@@ -2,12 +2,13 @@ import { EditorSelection, type EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { FileMeta, FolderEntry, OpenRequest, SearchHit, WatchEvent } from '../../preload/api'
-import { replaceDocSpec, type EditorStats } from '../editor/createEditor'
+import { countTasks, replaceDocSpec, type EditorStats, type TaskCount } from '../editor/createEditor'
 import { TAG_CLICK_EVENT } from '../editor/livePreview'
 import { applyTheme, tintTheme, type ThemeMode } from '../themes'
 import { ColourMenu } from './ColourMenu'
 import { CommandPalette } from './CommandPalette'
 import { ContextMenu, type MenuItem, type MenuState } from './ContextMenu'
+import { Cat, signalCat } from './Cat'
 import { Dock } from './Dock'
 import { Editor, type Buffers } from './Editor'
 import { EmptyState } from './EmptyState'
@@ -178,6 +179,7 @@ export function App() {
   }, [theme, themeMode])
 
   const fontSize = folder.settings?.fontSize ?? 13
+  const catOn = folder.settings?.cat ?? true
   useEffect(() => {
     document.documentElement.style.setProperty('--note-size', `${fontSize}px`)
     viewRef.current?.requestMeasure()
@@ -308,15 +310,31 @@ export function App() {
     [buffers, metas, diskText, writing, setExternal, updateTabs]
   )
 
+  // The cat notices typing, a finished checklist and "meow" (3.9).
+  const taskCounts = useRef(new Map<string, TaskCount>()).current
+  const tellCat = useCallback(
+    (id: string, state: EditorState, previous: EditorState) => {
+      signalCat('typing')
+      const count = countTasks(state.doc)
+      const before = taskCounts.get(id) ?? countTasks(previous.doc)
+      taskCounts.set(id, count)
+      if (before.open > 0 && count.open === 0 && count.done > before.done) signalCat('checklist')
+      const head = state.selection.main.head
+      if (state.sliceDoc(head - 4, head).toLowerCase() === 'meow') signalCat('meow')
+    },
+    [taskCounts]
+  )
+
   const onDocChange = useCallback(
-    (id: string, state: EditorState) => {
+    (id: string, state: EditorState, previous: EditorState) => {
       const line = firstContentLine(state.doc.iterLines())
       setFirstLines((prev) => (prev[id] === line ? prev : { ...prev, [id]: line }))
       if (reloading.current) return // loaded from disk; nothing to save
+      tellCat(id, state, previous)
       const tab = tabsRef.current.tabs.find((t) => t.id === id)
       autosave.schedule(id, !tab?.path)
     },
-    [autosave]
+    [autosave, tellCat]
   )
 
   useEffect(() => {
@@ -1091,7 +1109,11 @@ export function App() {
           />
           {/* Blank while the session loads, so the empty state never flashes. */}
           {!activeId &&
-            (restoring ? <div className="editor-blank" /> : <EmptyState onNewNote={() => runById('note.new')} />)}
+            (restoring ? (
+              <div className="editor-blank" />
+            ) : (
+              <EmptyState onNewNote={() => runById('note.new')} cat={catOn} />
+            ))}
           <Dock
             groups={[
               [
@@ -1108,7 +1130,9 @@ export function App() {
               ]
             ]}
             onRun={runById}
-          />
+          >
+            {catOn && active && <Cat mood="awake" className="dock-cat" />}
+          </Dock>
           {notice && <Toast text={notice} onDismiss={dismissNotice} />}
         </main>
       </div>
@@ -1186,6 +1210,8 @@ export function App() {
           customScratch={folder.settings.scratchDir !== null}
           onTheme={(next) => void folder.setTheme(next)}
           onFontSize={(size) => void folder.persist({ fontSize: size })}
+          cat={catOn}
+          onCat={(on) => void folder.persist({ cat: on })}
           onPickScratch={() => void pickScratchDir()}
           onDefaultScratch={() => void changeScratchDir(null)}
           onClose={closeOverlay}
