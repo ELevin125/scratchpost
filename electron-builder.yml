@@ -22,5 +22,6 @@ nsis:
 linux:
   target: [AppImage, deb]
   category: Utility
+  syncDesktopName: true
   mimeTypes: [text/markdown, text/plain]
   maintainer: ELevin125
