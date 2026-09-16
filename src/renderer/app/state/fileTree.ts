@@ -70,3 +70,30 @@ export function relativeTime(ms: number, now: number): string {
   if (date.getFullYear() === new Date(now).getFullYear()) return `${date.getDate()} ${MONTHS[date.getMonth()]}`
   return String(date.getFullYear())
 }
+
+// The note header's edited time: "edited just now", "edited 5m ago",
+// "edited Tue", "edited 12 Sep".
+export function editedLabel(ms: number, now: number): string {
+  const time = relativeTime(ms, now)
+  if (time === 'now') return 'edited just now'
+  return /^\d+[mh]$/.test(time) ? `edited ${time} ago` : `edited ${time}`
+}
+
+const TIMESTAMP_NAME = /^(\d{4})-(\d{2})-(\d{2})-\d{4}(?:-\d+)?\.md$/
+
+// The date shown large above a note: the day a timestamp-named note was
+// created, otherwise the day it was last changed.
+export function noteDate(name: string, modified: number | null): { month: string; weekday: string; day: number } | null {
+  const match = TIMESTAMP_NAME.exec(name)
+  const date = match
+    ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+    : modified !== null
+      ? new Date(modified)
+      : null
+  if (!date || Number.isNaN(date.getTime())) return null
+  return {
+    month: MONTHS[date.getMonth()].toUpperCase(),
+    weekday: WEEKDAYS[date.getDay()].toUpperCase(),
+    day: date.getDate()
+  }
+}

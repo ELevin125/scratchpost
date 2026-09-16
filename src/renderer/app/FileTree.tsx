@@ -1,6 +1,7 @@
 import { useMemo, useState, type CSSProperties, type MouseEvent } from 'react'
 import type { FolderEntry } from '../../preload/api'
 import { tagHue } from '../../shared/tags'
+import { Icon } from './Icon'
 import { commandHint } from './state/commands'
 import { buildTree, relativeTime, sortRecent, type TreeNode } from './state/fileTree'
 import type { Listing } from './useFolderContext'
@@ -26,15 +27,16 @@ interface FileTreeProps {
   onTagFilter: (tag: string | null) => void
 }
 
-const pad = (n: number) => String(n).padStart(2, '0')
+// The scratch folder shows this many recent notes until "Show all".
+const RECENT_COUNT = 6
 
 // The hue rides on a custom property; the colour is built in global.css.
 const hueStyle = (tag: string) => ({ '--tag-hue': tagHue(tag) }) as CSSProperties
 
-// The folder context as a tree, with the tag index below it. Toggled with
-// Ctrl+B. Never has texture behind it. See DESIGN.md, "File tree", and D29.
-// App keys this by folder, so expansion resets on switch; App owns the tag
-// filter and clears it then too.
+// The left column (D33): a notes panel for the folder context and a tags
+// panel below it. The scratch folder opens on its most recent notes; other
+// folders show their tree. Toggled with Ctrl+B. App keys this by folder, so
+// expansion resets on switch; App owns the tag filter and clears it then too.
 export function FileTree({
   folderName,
   isScratch,
@@ -51,6 +53,7 @@ export function FileTree({
   onTagFilter
 }: FileTreeProps) {
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set())
+  const [showAll, setShowAll] = useState(false)
   const order = isScratch ? 'recent' : 'name'
 
   // Saves made this session are newer than the last folder read.
@@ -66,6 +69,7 @@ export function FileTree({
   )
   const tree = useMemo(() => (listing ? buildTree(listing.root, entries, order) : []), [listing, entries, order])
   const files = useMemo(() => entries.filter((entry) => !entry.isDir), [entries])
+  const recent = useMemo(() => sortRecent(files).slice(0, RECENT_COUNT), [files])
   const tags = listing?.tags ?? []
   const activeTag = tags.find((t) => t.tag === tagFilter) ?? null
   const filtered = useMemo(() => {
@@ -75,6 +79,7 @@ export function FileTree({
     return order === 'recent' ? sortRecent(matching) : matching
   }, [activeTag, files, order])
   const now = Date.now()
+  const collapsible = isScratch && entries.length > recent.length
 
   const toggle = (path: string) =>
     setExpanded((prev) => {
@@ -89,50 +94,38 @@ export function FileTree({
     onEntryMenu(entry, { x: event.clientX, y: event.clientY })
   }
 
-  const header = (
-    <div className="tree-header">
-      <button className="tree-folder-button" title={commandHint('folder.switch')} onClick={onFolderMenu}>
-        {folderName} ▾
-      </button>
-      {!isScratch && (
-        <button className="tree-home" title={commandHint('folder.scratch')} onClick={onUseScratch}>
-          ← Scratch
-        </button>
-      )}
-    </div>
-  )
+  const indent = (depth: number) => ({ paddingLeft: `calc(10px + ${depth * 14}px)` })
 
   const fileRow = (entry: FolderEntry, depth: number) => (
     <button
-      className={entry.path === activePath ? 'tree-row active' : 'tree-row'}
-      style={{ paddingLeft: `calc(12px + ${depth * 2}ch)` }}
+      className={entry.path === activePath ? 'row active' : 'row'}
+      style={indent(depth)}
       title={entry.path}
       onClick={() => onOpen(entry.path)}
       onContextMenu={menuFor(entry)}
     >
-      <span className="tree-caret" />
-      <span className="tree-name">{nameOf(entry)}</span>
-      {entry.modified !== null && <span className="tree-time">{relativeTime(entry.modified, now)}</span>}
+      <span className="row-name">{nameOf(entry)}</span>
+      {entry.modified !== null && <span className="row-time">{relativeTime(entry.modified, now)}</span>}
     </button>
   )
 
   const rows = (nodes: TreeNode[], depth: number) => (
-    <ul className="tree-list">
+    <ul className="rows">
       {nodes.map((node) => {
         const open = expanded.has(node.path)
         return (
           <li key={node.path}>
             {node.isDir ? (
               <button
-                className="tree-row"
-                style={{ paddingLeft: `calc(12px + ${depth * 2}ch)` }}
+                className="row folder"
+                style={indent(depth)}
                 title={node.path}
                 aria-expanded={open}
                 onClick={() => toggle(node.path)}
                 onContextMenu={menuFor(node)}
               >
-                <span className="tree-caret">{open ? '▾' : '▸'}</span>
-                <span className="tree-name">{node.name}</span>
+                <Icon name={open ? 'chevronDown' : 'chevronRight'} size={14} />
+                <span className="row-name">{node.name}</span>
               </button>
             ) : (
               fileRow(node, depth)
@@ -144,77 +137,100 @@ export function FileTree({
     </ul>
   )
 
+  const flat = (list: FolderEntry[]) => (
+    <ul className="rows">
+      {list.map((file) => (
+        <li key={file.path}>{fileRow(file, 0)}</li>
+      ))}
+    </ul>
+  )
+
+  const header = (
+    <div className="panel-head">
+      <button className="folder-button" title={commandHint('folder.switch')} onClick={onFolderMenu}>
+        <Icon name="folder" size={16} />
+        <span className="folder-name">{folderName}</span>
+        <Icon name="chevronDown" size={14} />
+      </button>
+      {!isScratch && (
+        <button className="icon-button" title={commandHint('folder.scratch')} onClick={onUseScratch}>
+          <Icon name="home" size={16} />
+        </button>
+      )}
+    </div>
+  )
+
+  let body
   if (listing?.error) {
     // No usable folder: an invitation, never a blank panel.
-    return (
-      <aside className="file-tree" aria-label="Files">
-        {header}
-        <div className="tree-empty">
-          <p>Pick a folder to list its notes.</p>
-          <button className="tree-button" onClick={onOpenFolder}>
-            Open folder
-          </button>
-        </div>
-      </aside>
+    body = (
+      <div className="panel-empty">
+        <p>Pick a folder to list its notes.</p>
+        <button className="pill-button" onClick={onOpenFolder}>
+          <Icon name="open" size={16} />
+          Open folder
+        </button>
+      </div>
     )
+  } else if (filtered) {
+    // Filtered by a tag: a flat list of the files that contain it.
+    body = flat(filtered)
+  } else if (listing && files.length === 0) {
+    body = (
+      <div className="panel-empty">
+        <p>{isScratch ? 'New notes land here.' : 'Markdown and text files in this folder show up here.'}</p>
+      </div>
+    )
+  } else if (isScratch && !showAll) {
+    body = flat(recent)
+  } else {
+    body = rows(tree, 0)
   }
 
   return (
-    <aside className="file-tree" aria-label="Files">
-      {header}
-      <div className="tree-section">
-        <span>Notes</span>
+    <aside className="sidebar" aria-label="Notes">
+      <section className="panel notes-panel">
+        {header}
         {activeTag && (
-          <button className="tree-clear" title="Show all notes" onClick={() => onTagFilter(null)}>
+          <button className="filter-chip" title="Show all notes" onClick={() => onTagFilter(null)}>
             <span className="tag-word" style={hueStyle(activeTag.tag)}>
               #{activeTag.tag}
-            </span>{' '}
-            ×
+            </span>
+            <span className="panel-count">{filtered?.length}</span>
+            <Icon name="x" size={14} />
           </button>
         )}
-        <span className="tree-count">{pad(filtered ? filtered.length : files.length)}</span>
-      </div>
+        <div className="panel-scroll">{body}</div>
+        {!activeTag && collapsible && (
+          <button className="show-all" onClick={() => setShowAll(!showAll)}>
+            {showAll ? 'Show recent' : `Show all · ${files.length}`}
+          </button>
+        )}
+      </section>
 
-      {filtered ? (
-        // Filtered by a tag: a flat list of the files that contain it.
-        <ul className="tree-list">
-          {filtered.map((file) => (
-            <li key={file.path}>{fileRow(file, 0)}</li>
-          ))}
-        </ul>
-      ) : listing && files.length === 0 ? (
-        <div className="tree-empty">
-          <div className="tree-folder">{folderName}</div>
-          <p>{isScratch ? 'New notes land here.' : 'Markdown and text files in this folder show up here.'}</p>
-        </div>
-      ) : (
-        rows(tree, 0)
-      )}
-
-      {tags.length > 0 && (
-        <>
-          <div className="tree-section tree-section-tags">
+      {listing && !listing.error && (
+        <section className="panel tags-panel">
+          <div className="panel-title">
+            <Icon name="tag" size={14} />
             <span>Tags</span>
-            <span className="tree-count">{pad(tags.length)}</span>
+            <span className="panel-count">{tags.length}</span>
           </div>
-          <ul className="tree-list">
+          {tags.length === 0 && <p className="panel-hint">Write #word in a note to tag it.</p>}
+          <div className="tag-chips">
             {tags.map((tag) => (
-              <li key={tag.tag}>
-                <button
-                  className={tag.tag === tagFilter ? 'tree-row selected' : 'tree-row'}
-                  aria-pressed={tag.tag === tagFilter}
-                  onClick={() => onTagFilter(tag.tag === tagFilter ? null : tag.tag)}
-                >
-                  <span className="tree-caret" />
-                  <span className="tag-word" style={hueStyle(tag.tag)}>
-                    #{tag.tag}
-                  </span>
-                  <span className="tree-tag-count">{tag.count}</span>
-                </button>
-              </li>
+              <button
+                key={tag.tag}
+                className={tag.tag === tagFilter ? 'tag-chip selected' : 'tag-chip'}
+                style={hueStyle(tag.tag)}
+                aria-pressed={tag.tag === tagFilter}
+                onClick={() => onTagFilter(tag.tag === tagFilter ? null : tag.tag)}
+              >
+                <span className="tag-word">#{tag.tag}</span>
+                <span className="tag-count">{tag.count}</span>
+              </button>
             ))}
-          </ul>
-        </>
+          </div>
+        </section>
       )}
     </aside>
   )

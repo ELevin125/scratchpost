@@ -38,7 +38,7 @@ redesign directions were mocked; the author chose Tint (D33).
 ## Checked and fine
 
 - Accent use matches `THEMING.md` (moot once D33 lands).
-- Newsprint holds contrast, including the code colours on `--bar`.
+- The light theme (then Newsprint) held contrast, including code colours.
 - Empty state copy ("Start a note. It saves itself.").
 - Right-click menus and search results are readable.
 - Hidden code fence lines keep their height, as the spec requires; it reads as

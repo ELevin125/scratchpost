@@ -38,12 +38,15 @@ export interface AppActions {
   reopenClosed(): void
   nextTab(): void
   previousTab(): void
+  toggleMode(): void
+  openColours(): void
 }
 
 export interface CommandContext {
   view: EditorView | null // null when no tab is open
   activePath: string | null // null for a new note that has no file yet
   isScratchContext: boolean // the folder context is the scratch folder
+  mode: 'light' | 'dark' // the current theme mode, for the toggle's label
   actions: AppActions
 }
 
@@ -91,7 +94,7 @@ export const commands: readonly Command[] = [
   { id: 'file.open', label: 'Open file…', shortcut: 'Ctrl+O', run: (ctx) => ctx.actions.openFile() },
   { id: 'switcher.open', label: 'Quick switcher', shortcut: 'Ctrl+P', run: (ctx) => ctx.actions.openSwitcher() },
   { id: 'search.open', label: 'Search in folder', shortcut: 'Ctrl+Shift+F', run: (ctx) => ctx.actions.openSearch() },
-  { id: 'tree.toggle', label: 'Toggle file tree', shortcut: 'Ctrl+B', run: (ctx) => ctx.actions.toggleTree() },
+  { id: 'tree.toggle', label: 'Toggle notes panel', shortcut: 'Ctrl+B', run: (ctx) => ctx.actions.toggleTree() },
   { id: 'folder.switch', label: 'Switch folder…', run: (ctx) => ctx.actions.openFolderMenu() },
   { id: 'folder.open', label: 'Open folder…', run: (ctx) => ctx.actions.openFolder() },
   { id: 'folder.parent', label: 'Open parent folder', run: (ctx) => ctx.actions.openParentFolder() },
@@ -101,6 +104,20 @@ export const commands: readonly Command[] = [
     run: (ctx) => ctx.actions.useScratchFolder(),
     when: (ctx) => !ctx.isScratchContext
   },
+
+  {
+    id: 'theme.light',
+    label: 'Switch to light mode',
+    run: (ctx) => ctx.actions.toggleMode(),
+    when: (ctx) => ctx.mode === 'dark'
+  },
+  {
+    id: 'theme.dark',
+    label: 'Switch to dark mode',
+    run: (ctx) => ctx.actions.toggleMode(),
+    when: (ctx) => ctx.mode === 'light'
+  },
+  { id: 'theme.colour', label: 'Change theme colour…', run: (ctx) => ctx.actions.openColours() },
 
   { id: 'file.rename', label: 'Rename file…', shortcut: 'F2', run: (ctx) => ctx.actions.renameActive(), when: hasFile },
   { id: 'file.reveal', label: 'Show in file manager', run: (ctx) => ctx.actions.revealActive(), when: hasFile },

@@ -1,10 +1,18 @@
-/* CSS custom properties only; no colour literals. See docs/THEMING.md. */
+/* Tint (D33). CSS custom properties only; every colour comes from the theme
+   generated in themes/tint.ts. No colour literals. See docs/THEMING.md. */
+
+:root {
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-title: 'IBM Plex Sans Condensed', 'IBM Plex Sans', system-ui, sans-serif;
+  --gap: 10px;
+  --row: 32px;
+}
 
 *,
 *::before,
 *::after {
   box-sizing: border-box;
-  border-radius: 0;
 }
 
 html,
@@ -17,9 +25,9 @@ html,
 body {
   margin: 0;
   overflow: hidden;
-  background: var(--paper);
+  background: var(--ground);
   color: var(--body);
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-family: var(--font-sans);
   font-size: 13px;
 }
 
@@ -36,99 +44,483 @@ button:disabled {
   cursor: default;
 }
 
+button:focus-visible,
+[role='tab']:focus-visible {
+  outline: 2px solid var(--chip);
+  outline-offset: 1px;
+}
+
+kbd {
+  font: 11px var(--font-mono);
+}
+
+.icon {
+  flex-shrink: 0;
+}
+
+/* Scrollbars: thin, no arrows, tinted. */
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--line);
+  background-clip: padding-box;
+  border: 3px solid transparent;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--soft);
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner,
+::-webkit-scrollbar-button {
+  display: none;
+  background: transparent;
+}
+
+/* The window: a tinted ground with a soft glow, panels floating on it. */
+
 .app {
   display: flex;
   flex-direction: column;
+  gap: var(--gap);
   height: 100%;
+  padding: var(--gap);
+  background:
+    radial-gradient(60% 80% at 88% 0%, var(--glow), transparent 70%),
+    radial-gradient(50% 70% at 0% 100%, var(--glow), transparent 70%),
+    var(--ground);
 }
 
-/* Tab strip */
+/* Top bar: open notes as pills, the find field, the new-note button. */
 
-.tab-bar {
+.top-bar {
   display: flex;
   flex-shrink: 0;
-  height: 34px;
-  background: var(--paper-2);
-  border-bottom: 1px solid var(--rule);
+  align-items: center;
+  gap: var(--gap);
+  min-height: 40px;
 }
 
 .tabs {
   display: flex;
+  flex: 0 1 auto;
+  gap: 2px;
   min-width: 0;
-  /* Extends over the strip's bottom hairline so the active tab can cover it
-     without overflowing, which would otherwise show a vertical scrollbar. */
-  height: calc(100% + 1px);
-  margin-bottom: -1px;
+  padding: 4px;
   overflow-x: auto;
-  overflow-y: hidden;
+  background: var(--surface);
+  border-radius: 999px;
   scrollbar-width: none;
 }
 
-.tab-actions {
+.tab {
   display: flex;
   flex-shrink: 0;
-}
-
-.tab-action {
-  padding: 0 12px;
-  color: var(--ink-soft);
-  border-right: 1px solid var(--rule);
-}
-
-.tab-action:hover {
-  color: var(--ink);
-}
-
-.tab {
-  position: relative;
-  display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 0 12px;
+  gap: 4px;
+  padding: 5px 6px 5px 14px;
   white-space: nowrap;
-  color: var(--ink-soft);
-  border-right: 1px solid var(--rule);
+  color: var(--soft);
+  border-radius: 999px;
+  cursor: default;
+}
+
+.tab:hover {
+  color: var(--ink);
+  background: var(--raised);
 }
 
 .tab.active {
-  color: var(--ink);
-  background: var(--paper);
-  /* Covers the strip's bottom hairline so the tab joins the editor. */
-  border-bottom: 1px solid var(--paper);
+  font-weight: 500;
+  color: var(--chip-ink);
+  background: var(--chip);
 }
-
-.tab.active::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--spot);
-}
-
-.tab-close {
-  color: var(--ink-soft);
-}
-
-.tab-close:hover {
-  color: var(--ink);
-}
-
-/* Editor */
 
 .tab.dragging {
   opacity: 0.5;
 }
 
-/* Neutral ramp, not the accent: see THEMING.md, "Accent discipline". */
+/* Save failures mark the pill; no colour of their own. */
 .tab.failed .tab-name::before {
   content: '! ';
+  font-weight: 600;
+}
+
+.tab-close {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  opacity: 0;
+}
+
+.tab:hover .tab-close,
+.tab.active .tab-close,
+.tab-close:focus-visible {
+  opacity: 0.6;
+}
+
+.tab .tab-close:hover {
+  opacity: 1;
+}
+
+.find-field {
+  display: flex;
+  flex: 0 1 320px;
+  align-items: center;
+  gap: 10px;
+  min-width: 150px;
+  height: 38px;
+  margin-left: auto;
+  padding: 0 14px;
+  color: var(--soft);
+  background: var(--surface);
+  border-radius: 999px;
+}
+
+.find-field:hover {
   color: var(--ink);
 }
 
-.status-error {
+.find-text {
+  flex: 1;
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.round-button {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 38px;
+  height: 38px;
   color: var(--ink);
+  background: var(--surface);
+  border-radius: 999px;
+}
+
+.round-button:hover {
+  background: var(--raised);
+}
+
+/* Workspace: the left column beside the note. */
+
+.workspace {
+  display: flex;
+  flex: 1;
+  gap: var(--gap);
+  min-height: 0;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: var(--gap);
+  width: 240px;
+  min-height: 0;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 8px;
+  background: var(--surface);
+  border-radius: 20px;
+}
+
+.notes-panel {
+  flex: 1 1 auto;
+}
+
+.tags-panel {
+  flex: 0 1 auto;
+  max-height: 40%;
+  padding: 12px;
+  overflow-y: auto;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-bottom: 6px;
+}
+
+.folder-button {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 6px 8px;
+  font-weight: 500;
+  color: var(--ink);
+  border-radius: 12px;
+}
+
+.folder-button .icon:last-child {
+  color: var(--soft);
+}
+
+.folder-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.icon-button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  color: var(--soft);
+  border-radius: 999px;
+}
+
+.folder-button:hover,
+.icon-button:hover {
+  color: var(--ink);
+  background: var(--raised);
+}
+
+.panel-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.rows {
+  display: grid;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  height: var(--row);
+  padding-right: 10px;
+  text-align: left;
+  color: var(--body);
+  border-radius: 12px;
+}
+
+.row:hover {
+  background: var(--raised);
+}
+
+.row.active {
+  font-weight: 500;
+  color: var(--ink);
+  background: var(--raised);
+}
+
+.row.folder .icon {
+  color: var(--soft);
+}
+
+.row-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row-time,
+.panel-count,
+.tag-count {
+  flex-shrink: 0;
+  font: 11px var(--font-mono);
+  color: var(--soft);
+}
+
+.show-all {
+  margin-top: 4px;
+  padding: 8px 10px;
+  font-size: 12px;
+  text-align: left;
+  color: var(--soft);
+  border-radius: 12px;
+}
+
+.show-all:hover {
+  color: var(--ink);
+  background: var(--raised);
+}
+
+.filter-chip {
+  display: flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 8px;
+  margin: 0 2px 6px;
+  padding: 4px 8px 4px 12px;
+  color: var(--soft);
+  background: var(--raised);
+  border-radius: 999px;
+}
+
+.panel-empty {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  padding: 6px 10px;
+  color: var(--soft);
+}
+
+.panel-empty p {
+  margin: 0;
+}
+
+.pill-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-weight: 500;
+  color: var(--chip-ink);
+  background: var(--chip);
+  border-radius: 999px;
+}
+
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.panel-title .panel-count {
+  margin-left: auto;
+}
+
+/* Labels and tags (D34). The hue is seeded from the word and set per element
+   as --tag-hue; saturation and lightness come from the theme (D16). Labels
+   are pills with hidden brackets; tags are coloured text with their #. */
+
+.panel-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--soft);
+}
+
+.tag-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 2px 10px;
+  font-size: 12px;
+  background: hsl(var(--tag-hue) var(--tag-saturation) var(--tag-lightness) / 0.14);
+  border-radius: 999px;
+}
+
+.tag-chip.selected {
+  box-shadow: inset 0 0 0 1.5px hsl(var(--tag-hue) var(--tag-saturation) var(--tag-lightness));
+}
+
+.cm-label {
+  padding: 0 0.6ch;
+  color: hsl(var(--tag-hue) var(--tag-saturation) var(--tag-lightness));
+  background: hsl(var(--tag-hue) var(--tag-saturation) var(--tag-lightness) / 0.16);
+  border-radius: 999px;
+}
+
+.cm-hashtag,
+.tag-word {
+  font-weight: 500;
+  color: hsl(var(--tag-hue) var(--tag-saturation) var(--tag-lightness));
+}
+
+.cm-hashtag {
+  cursor: pointer;
+}
+
+/* The note panel: header, editor, dock. */
+
+.note-panel {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--surface);
+  border-radius: 24px;
+}
+
+.note-header {
+  display: flex;
+  flex-shrink: 0;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 18px 20px 0 40px;
+}
+
+.note-meta {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  padding-top: 4px;
+  font-size: 12px;
+  color: var(--soft);
+}
+
+.note-problem {
+  color: var(--ink);
+}
+
+.note-problem.error {
+  font-weight: 500;
+}
+
+.date-block {
+  display: grid;
+  flex-shrink: 0;
+  text-align: center;
+  font-family: var(--font-title);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.date-top {
+  padding: 3px 12px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  background: var(--raised);
+  border-radius: 10px 10px 0 0;
+}
+
+.date-day {
+  padding: 4px 12px 7px;
+  font-size: 38px;
+  line-height: 1;
+  background: var(--sunken);
+  border-radius: 0 0 14px 14px;
 }
 
 .editor,
@@ -137,7 +529,68 @@ button:disabled {
   min-height: 0;
 }
 
-/* Empty state: no tabs open */
+.dock {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  padding: 5px;
+  background: var(--raised);
+  border-radius: 999px;
+  box-shadow: 0 12px 30px -12px var(--scrim);
+  transform: translateX(-50%);
+}
+
+.dock-group {
+  display: flex;
+  gap: 2px;
+}
+
+.dock-group + .dock-group {
+  margin-left: 6px;
+  padding-left: 6px;
+  box-shadow: inset 1px 0 0 var(--line);
+}
+
+.dock-button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  color: var(--ink);
+  border-radius: 999px;
+}
+
+.dock-button:hover {
+  background: var(--sunken);
+}
+
+.dock-button.on {
+  color: var(--chip-ink);
+  background: var(--chip);
+}
+
+.toast {
+  position: absolute;
+  bottom: 70px;
+  left: 50%;
+  z-index: 2;
+  max-width: calc(100% - 48px);
+  padding: 8px 16px;
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ground);
+  background: var(--ink);
+  border-radius: 999px;
+  box-shadow: 0 12px 30px -12px var(--scrim);
+  transform: translateX(-50%);
+}
+
+/* Empty state: no tabs open. */
 
 .empty-state {
   display: flex;
@@ -145,53 +598,40 @@ button:disabled {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 16px;
   min-height: 0;
-  color: var(--ink-soft);
+  padding-bottom: 60px;
+  color: var(--soft);
+}
+
+.empty-state-title {
+  margin: 0;
+  font: 600 30px/1.1 var(--font-title);
+  color: var(--ink);
 }
 
 .empty-state-line {
   margin: 0;
 }
 
-.empty-state-button {
-  padding: 6px 14px;
-  color: var(--ink);
-  border: 1px solid var(--rule);
+.empty-state-keys {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 6px 16px;
+  margin: 8px 0 0;
+  font-size: 12px;
 }
 
-.empty-state-button:hover {
-  background: var(--bar);
+.empty-state-keys dt {
+  text-align: right;
 }
 
-/* Status bar */
-
-.status-bar {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: 16px;
-  height: 26px;
-  padding: 0 12px;
-  font-size: 11px;
-  color: var(--ink-soft);
-  background: var(--paper-2);
-  border-top: 1px solid var(--rule);
+.empty-state-keys dd {
+  margin: 0;
 }
 
-.status-folder {
-  color: var(--spot);
-}
-
-.status-spacer {
-  flex: 1;
-}
-
-.status-palette:hover {
-  color: var(--ink);
-}
-
-/* Overlays: command palette, rename */
+/* Overlays: palette, switcher, folder and colour menus, search, rename. A
+   solid panel over a dimmed window; lists show whole rows. */
 
 .overlay-backdrop {
   position: fixed;
@@ -200,74 +640,90 @@ button:disabled {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding-top: 48px;
+  padding-top: 64px;
+  background: var(--scrim);
 }
 
 .overlay {
   display: flex;
   flex-direction: column;
   width: min(560px, calc(100% - 32px));
-  max-height: 60vh;
-  background: var(--paper-2);
-  border: 1px solid var(--rule);
+  max-height: calc(100vh - 128px);
+  overflow: hidden;
+  background: var(--raised);
+  border-radius: 20px;
+  box-shadow: 0 24px 60px -20px var(--scrim);
 }
 
 .overlay-label {
-  padding: 8px 12px 0;
-  font-size: 10px;
-  letter-spacing: 0.1em;
+  padding: 14px 18px 0;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--ink-soft);
+  color: var(--soft);
 }
 
 .overlay-input {
-  padding: 10px 12px;
+  flex-shrink: 0;
+  margin: 8px;
+  padding: 10px 14px;
   font: inherit;
+  font-size: 14px;
   color: var(--ink);
-  background: var(--paper-2);
+  background: var(--sunken);
   border: 0;
+  border-radius: 14px;
   outline: none;
 }
 
 .overlay-list {
+  flex: 0 1 auto;
+  max-height: calc(var(--row) * 10 + 8px); /* whole rows plus the bottom padding */
   margin: 0;
-  padding: 4px 0;
+  padding: 0 8px 8px;
   overflow-y: auto;
   list-style: none;
-  border-top: 1px solid var(--rule);
 }
 
 .overlay-item {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 6px 12px;
+  height: var(--row);
+  padding: 0 12px;
   color: var(--body);
+  border-radius: 12px;
   cursor: pointer;
 }
 
 .overlay-item.selected {
-  color: var(--ink);
-  background: var(--bar);
+  color: var(--chip-ink);
+  background: var(--chip);
+}
+
+.overlay-item.selected .overlay-detail,
+.overlay-item.selected .overlay-shortcut,
+.overlay-item.selected .search-line {
+  color: inherit;
+  opacity: 0.75;
 }
 
 .overlay-shortcut {
-  font: inherit;
-  font-size: 11px;
-  color: var(--ink-soft);
+  color: var(--soft);
 }
 
 .overlay-empty {
-  padding: 8px 12px;
-  color: var(--ink-soft);
-  border-top: 1px solid var(--rule);
+  padding: 2px 22px 14px;
+  color: var(--soft);
 }
 
 .overlay-text {
   display: flex;
+  align-items: center;
   gap: 12px;
   min-width: 0;
-  align-items: baseline;
 }
 
 .overlay-label-text {
@@ -282,174 +738,15 @@ button:disabled {
 }
 
 .overlay-detail {
-  font-size: 11px;
-  color: var(--ink-soft);
+  font: 11px var(--font-mono);
+  color: var(--soft);
 }
 
-/* Workspace: file tree beside the editor */
-
-.workspace {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-}
-
-.main-column {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.tree-toggle {
-  border-right: 1px solid var(--rule);
-}
-
-.tree-toggle.open {
-  color: var(--ink);
-}
-
-.status-folder:hover {
-  text-decoration: underline;
-}
-
-/* File tree. No texture behind it, ever. */
-
-.file-tree {
-  flex-shrink: 0;
-  width: 240px;
-  overflow-y: auto;
-  background: var(--paper-2);
-  border-right: 1px solid var(--rule);
-}
-
-.tree-section {
-  display: flex;
-  justify-content: space-between;
-  padding: 12px 12px 6px;
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-}
-
-.tree-list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.tree-row {
-  display: flex;
-  width: 100%;
-  padding-top: 3px;
-  padding-right: 12px;
-  padding-bottom: 3px;
-  text-align: left;
-  color: var(--body);
-}
-
-.tree-row:hover {
-  background: var(--bar);
-}
-
-/* The active file's left marker: one of the few places the accent appears. */
-.tree-row.active {
-  color: var(--ink);
-  box-shadow: inset 2px 0 0 var(--spot);
-}
-
-.tree-caret {
-  flex-shrink: 0;
-  width: 2ch;
-  color: var(--ink-soft);
-}
-
-.tree-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.tree-empty {
-  padding: 12px;
-  color: var(--ink-soft);
-}
-
-.tree-empty p {
-  margin: 6px 0 12px;
-}
-
-.tree-folder {
-  color: var(--ink);
-}
-
-.tree-button {
-  padding: 4px 10px;
-  color: var(--ink);
-  border: 1px solid var(--rule);
-}
-
-.tree-button:hover {
-  background: var(--bar);
-}
-
-.tree-section {
-  justify-content: flex-start;
-  gap: 8px;
-}
-
-.tree-count {
-  margin-left: auto;
-}
-
-.tree-section-tags {
-  margin-top: 12px;
-  border-top: 1px solid var(--rule);
-}
-
-.tree-clear {
-  font-size: 11px;
-  letter-spacing: 0;
-  text-transform: none;
-  color: var(--ink-soft);
-}
-
-.tree-clear:hover {
-  color: var(--ink);
-}
-
-.tree-row.selected {
-  color: var(--ink);
-  background: var(--bar);
-}
-
-.tree-tag-count {
-  margin-left: auto;
-  padding-left: 8px;
-  color: var(--ink-soft);
-}
-
-/* Labels and tags (D34). The hue is seeded from the word and set per element
-   as --tag-hue; saturation and lightness come from the theme (D16). Labels are
-   pills, the only rounded shape on screen (DESIGN.md). Tags are coloured text
-   with their # showing, and filter the tree when clicked. */
-
-.cm-label {
-  padding: 0 0.6ch;
+.swatch {
+  width: 14px;
+  height: 14px;
+  background: hsl(var(--swatch-hue) 45% 50%);
   border-radius: 999px;
-  color: hsl(var(--tag-hue) var(--tag-saturation) var(--tag-lightness));
-  background: hsl(var(--tag-hue) var(--tag-saturation) var(--tag-lightness) / 0.14);
-}
-
-.cm-hashtag,
-.tag-word {
-  font-weight: 500;
-  color: hsl(var(--tag-hue) var(--tag-saturation) var(--tag-lightness));
-}
-
-.cm-hashtag {
-  cursor: pointer;
 }
 
 /* Folder search */
@@ -458,13 +755,18 @@ button:disabled {
   width: min(720px, calc(100% - 32px));
 }
 
+.overlay.search .overlay-list {
+  max-height: none;
+}
+
 .search-group {
   list-style: none;
 }
 
 .search-file {
-  padding: 8px 12px 2px;
-  font-size: 11px;
+  padding: 10px 12px 4px;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--ink);
 }
 
@@ -482,73 +784,23 @@ button:disabled {
 .search-line {
   flex-shrink: 0;
   min-width: 4ch;
+  font-family: var(--font-mono);
   text-align: right;
-  color: var(--ink-soft);
+  color: var(--soft);
 }
 
 .search-text {
   overflow: hidden;
+  font-family: var(--font-mono);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .search-match {
   font-weight: 500;
-  color: var(--ink);
-  background: transparent;
-  text-decoration: underline;
-}
-
-/* Tab strip: tabs take the room they need; the buttons sit at the right edge. */
-
-.tabs {
-  flex: 0 1 auto;
-}
-
-.tab-actions {
-  margin-left: auto;
-  border-left: 1px solid var(--rule);
-}
-
-.tab-actions .tab-action:last-child {
-  border-right: 0;
-}
-
-/* Tree header: the folder, the way to switch, and the way home. */
-
-.tree-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--rule);
-}
-
-.tree-folder-button {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--ink);
-}
-
-.tree-home {
-  flex-shrink: 0;
-  margin-left: auto;
-  font-size: 11px;
-  color: var(--ink-soft);
-}
-
-.tree-folder-button:hover,
-.tree-home:hover {
-  text-decoration: underline;
-}
-
-.tree-time {
-  flex-shrink: 0;
-  margin-left: auto;
-  padding-left: 8px;
-  font-size: 11px;
-  color: var(--ink-soft);
+  color: inherit;
+  background: var(--selection);
+  border-radius: 4px;
 }
 
 /* Context menus */
@@ -563,23 +815,30 @@ button:disabled {
   position: fixed;
   display: flex;
   flex-direction: column;
-  min-width: 200px;
-  padding: 4px 0;
-  background: var(--paper-2);
-  border: 1px solid var(--rule);
+  min-width: 210px;
+  padding: 6px;
+  background: var(--raised);
+  border-radius: 16px;
   outline: none;
+  box-shadow: 0 16px 40px -16px var(--scrim);
 }
 
 .menu-item {
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  padding: 5px 12px;
+  padding: 7px 12px;
   text-align: left;
   color: var(--body);
+  border-radius: 10px;
 }
 
 .menu-item.selected {
-  color: var(--ink);
-  background: var(--bar);
+  color: var(--chip-ink);
+  background: var(--chip);
+}
+
+.menu-item.selected .overlay-shortcut {
+  color: inherit;
+  opacity: 0.75;
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react'
 import { fuzzyFilter } from './state/fuzzy'
 
 export interface PickerItem {
@@ -6,6 +6,7 @@ export interface PickerItem {
   label: string
   detail?: string // muted, and matched along with the label
   hint?: string // right-aligned, e.g. a shortcut
+  swatch?: number // a hue, shown as a dot before the label
 }
 
 interface PickerProps {
@@ -91,6 +92,9 @@ export function Picker({ items, placeholder, ariaLabel, onPick, onClose }: Picke
                 onClick={() => onPick(item)}
               >
                 <span className="overlay-text">
+                  {item.swatch !== undefined && (
+                    <span className="swatch" style={{ '--swatch-hue': item.swatch } as CSSProperties} />
+                  )}
                   <span className="overlay-label-text">{item.label}</span>
                   {item.detail && <span className="overlay-detail">{item.detail}</span>}
                 </span>

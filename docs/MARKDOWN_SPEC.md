@@ -10,23 +10,23 @@ Every fixture below has a corresponding test.
 
 | Construct | Syntax | Rendered as |
 | --- | --- | --- |
-| Heading 1 | `# text` | 18px, weight 500, `--ink` |
-| Heading 2 | `## text` | 15px, weight 500, `--ink` |
-| Heading 3 | `### text` | 13px, weight 500, `--ink` |
-| Bullet | `- text` / `* text` | `•` glyph in `--ink-soft`, hanging indent |
+| Heading 1 | `# text` | 30px condensed sans, weight 600, `--ink` |
+| Heading 2 | `## text` | 19px condensed sans, weight 600, `--ink` |
+| Heading 3 | `### text` | 13px mono, weight 500, `--ink` |
+| Bullet | `- text` / `* text` | `•` glyph in `--soft`, hanging indent |
 | Numbered | `1. text` | number shown, counts up automatically (see "List numbering"), hanging indent |
 | Checkbox, open | `- [ ] text` | empty square icon |
-| Checkbox, done | `- [x] text` | filled check icon in `--spot`, text struck through in `--ink-soft` |
+| Checkbox, done | `- [x] text` | filled check icon in `--chip`, text struck through in `--soft` |
 | Label | `[word]` | rounded pill, brackets hidden (see "Labels and tags") |
 | Tag | `#word` | coloured text, `#` kept, clickable (see "Labels and tags") |
 | Emphasis | `*text*` / `_text_` | italic, markers hidden |
 | Strong | `**text**` | weight 500, markers hidden |
 | Strikethrough | `~~text~~` | struck through, markers hidden |
-| Inline code | `` `text` `` | `--bar` background, markers hidden |
-| Link | `[label](url)` | label in `--spot`, underlined; URL and brackets hidden |
-| Block quote | `> text` | `>` markers hidden, hairline `--rule` left border |
-| Fenced code block | ` ``` ` … ` ``` ` | `--bar` background, fences hidden, contents verbatim, highlighted for a few languages |
-| Horizontal rule | `---` / `***` / `___` | hairline `--rule` across the line, characters hidden |
+| Inline code | `` `text` `` | `--sunken` background, markers hidden |
+| Link | `[label](url)` | label in `--chip`, underlined; URL and brackets hidden |
+| Block quote | `> text` | `>` markers hidden, 2px `--line` left border |
+| Fenced code block | ` ``` ` … ` ``` ` | `--sunken` background with rounded ends, fences hidden, contents verbatim, highlighted for a few languages |
+| Horizontal rule | `---` / `***` / `___` | hairline `--line` across the line, characters hidden |
 
 Headings 4 to 6 parse but render at the same size as h3. Do not add more sizes.
 
@@ -46,8 +46,8 @@ quotes, fenced code blocks and horizontal rules moved into this table.
 
 ### Fenced code blocks
 
-- Every line from the opening fence to the closing fence gets the `--bar`
-  background, edge to edge.
+- Every line from the opening fence to the closing fence gets the `--sunken`
+  background, with the first and last lines rounded.
 - The fence markers and info string (` ```js `) are hidden unless that fence
   line is revealed. The fence lines keep their height; nothing collapses.
 - Contents are verbatim: no markdown, no tags, no inline formatting.
@@ -76,17 +76,17 @@ Five token classes, and nothing else is coloured:
 | keyword | keywords, modifiers, `this`/`self` | `--ink`, weight 500 |
 | string | strings, regexps, attribute values | `--code-string` |
 | literal | numbers, booleans, `null`, atoms | `--code-literal` |
-| comment | comments | `--ink-soft`, italic |
+| comment | comments | `--soft`, italic |
 | name | function, class, type and tag names | `--code-name` |
 
-Highlighting never applies outside a fenced block, and never uses `--spot`.
+Highlighting never applies outside a fenced block, and never uses `--chip`.
 See D32.
 - An unclosed fence runs to the end of the document, as CommonMark parses it.
 
 ### Horizontal rules
 
 - `---`, `***` or `___` on its own line, preceded by a blank line, renders as a
-  hairline in `--rule` spanning the line. The characters are hidden unless the
+  hairline in `--line` spanning the line. The characters are hidden unless the
   line is revealed.
 - `---` directly under a line of text is a setext heading in CommonMark, not a
   rule. Setext headings are unsupported and render as plain text.

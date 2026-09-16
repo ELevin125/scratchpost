@@ -682,8 +682,12 @@ chose **Tint**, drawn from their own desktop setup.
   button. A left column with a notes panel (folder header, a short recent
   list, "show all" and the folder tree for other folders) and a tags panel.
   The note panel shows the title, a meta line (folder, edited time, word
-  count) and the text capped at about 64 characters. The status bar goes; its
-  contents move to the meta line and the dock.
+  count, save problems) and the text capped at 80 characters, so notes
+  hard-wrapped at 80 never wrap twice. The status bar goes; its contents move
+  to the note header, the dock and toasts. Line and column are dropped.
+- **Theme controls before settings.** "Switch to light/dark mode" and "Change
+  theme colour" are palette and dock commands, saved in `settings.json`, so
+  the seed is usable before the settings UI (3.4).
 - **Type.** Note text stays IBM Plex Mono. The app's own labels use IBM Plex
   Sans, and titles IBM Plex Sans Condensed, all bundled.
 
@@ -703,7 +707,8 @@ its dock survives), Ledger (familiar but indistinct). Real translucency:
 Electron only offers it on macOS and Windows 11, not Linux.
 
 **Open:** whether to hide the native title bar (`titleBarOverlay`, Windows
-and Linux) so the top bar becomes the drag area. Decided with 2.24.
+and Linux) so the top bar becomes the drag area. Needs checking on the
+author's Zorin desktop first.
 
 ---
 

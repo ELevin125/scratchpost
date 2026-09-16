@@ -8,6 +8,7 @@ import { writeTextFile } from './fs/write'
 // settings UI and the rest of its fields. See ARCHITECTURE.md.
 
 export const MAX_RECENT_FOLDERS = 8
+const DEFAULT_SEED = 172 // teal; matches themes/index.ts
 
 const settingsPath = () => join(app.getPath('userData'), 'settings.json')
 
@@ -22,7 +23,15 @@ export function sanitizeSettings(value: unknown): Settings {
         MAX_RECENT_FOLDERS
       )
     : []
-  return { folderContext, recentFolders, welcomed: raw.welcomed === true }
+  const theme = (typeof raw.theme === 'object' && raw.theme !== null ? raw.theme : {}) as Record<string, unknown>
+  const seed =
+    typeof theme.seed === 'number' && Number.isFinite(theme.seed) ? ((Math.round(theme.seed) % 360) + 360) % 360 : DEFAULT_SEED
+  return {
+    folderContext,
+    recentFolders,
+    welcomed: raw.welcomed === true,
+    theme: { seed, mode: theme.mode === 'light' ? 'light' : 'dark' }
+  }
 }
 
 export async function loadSettings(): Promise<Settings> {

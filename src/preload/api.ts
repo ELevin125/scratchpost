@@ -58,6 +58,7 @@ export interface Settings {
   folderContext: string | null // null means the scratch folder
   recentFolders: string[] // most recent first, at most 8
   welcomed: boolean // the first-launch welcome note has been offered; see D30
+  theme: { seed: number; mode: 'light' | 'dark' } // seed is a hue, 0 to 359; see D33
 }
 
 export interface ScratchpostAPI {

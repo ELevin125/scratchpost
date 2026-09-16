@@ -12,7 +12,12 @@ export interface Listing {
   error: string | null // the folder couldn't be listed
 }
 
-const DEFAULT_SETTINGS: Settings = { folderContext: null, recentFolders: [], welcomed: false }
+const DEFAULT_SETTINGS: Settings = {
+  folderContext: null,
+  recentFolders: [],
+  welcomed: false,
+  theme: { seed: 172, mode: 'dark' }
+}
 
 // The folder context: which folder the file tree, quick switcher, search and
 // tag index cover. Defaults to the scratch folder and never touches open tabs.
@@ -98,6 +103,8 @@ export function useFolderContext(scratchDirPromise: Promise<string>, onNotice: (
     isScratch: settings !== null && settings.folderContext === null,
     recentFolders: settings?.recentFolders ?? [],
     welcomed: settings ? settings.welcomed : null, // null until settings load
+    theme: settings?.theme ?? null, // null until settings load
+    setTheme: (theme: Settings['theme']) => persist({ theme }),
     // A listing for a previous folder is never shown for the current one.
     listing: listing?.root === root ? listing : null,
     switchTo,

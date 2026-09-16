@@ -15,7 +15,7 @@
 │    app/         Tabs, session, autosave,        │
 │                 palette, switcher, search UI    │
 │    editor/      CodeMirror extensions           │
-│    themes/      Token definitions               │
+│    themes/      Theme generation               │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -76,20 +76,24 @@ src/
   renderer/
     main.tsx              mount
     app/
-      TabBar.tsx
-      StatusBar.tsx
-      FileTree.tsx
+      TopBar.tsx          open-note pills, find field, new note (D33)
+      FileTree.tsx        notes panel and tags panel
+      NoteHeader.tsx      folder, edited time, words, save problems, date
+      Dock.tsx            floating tool buttons, from the command registry
+      Toast.tsx           notices that aren't about saving
+      Icon.tsx            the one icon set
       CommandPalette.tsx
       QuickSwitcher.tsx
       FolderMenu.tsx      scratch folder, recents, open folder
-      Picker.tsx          shared overlay behind palette, switcher, folder menu
+      ColourMenu.tsx      theme seed hues
+      Picker.tsx          shared overlay behind palette, switcher and menus
       SearchPanel.tsx
       EmptyState.tsx
       RenameDialog.tsx    F2 rename input
-      ContextMenu.tsx     right-click menus for tabs and tree rows
+      ContextMenu.tsx     right-click menus for pills and panel rows
       App.tsx             layout, shortcut listener, overlays
       Editor.tsx          mounts the EditorView into React
-      useFolderContext.ts folder context, settings and listing state
+      useFolderContext.ts folder context, settings (incl. theme) and listing state
       state/
         tabs.ts           tab model, open/close/reorder/activate
         session.ts        session.json load and persist
@@ -116,9 +120,8 @@ src/
       theme.ts            CM6 theme built from theme tokens
     themes/
       types.ts            the Theme type
-      nocturne.ts
-      newsprint.ts
-      index.ts            registry, active theme, CSS var application
+      tint.ts             generates a theme from a seed hue and a mode (D33)
+      index.ts            named seeds, defaults, CSS var application
 ```
 
 ## The command registry
@@ -126,8 +129,8 @@ src/
 Every user-triggerable action is registered once in
 `renderer/app/state/commands.ts` as `{ id, label, shortcut?, run, when? }`.
 
-The command palette, the keymap, the toolbar and the overflow menu all read
-from this registry. Nothing binds a key or wires a button directly.
+The command palette, the keymap, the dock, the top bar, the panels and the
+right-click menus all read from this registry. Nothing binds a key or wires a button directly.
 
 This is what mechanically enforces the "every command has a visible affordance"
 principle from `DESIGN.md`. A new command added to the registry appears in the
@@ -186,6 +189,7 @@ interface Settings {
   folderContext: string | null // null means the scratch folder
   recentFolders: string[] // most recent first, at most 8
   welcomed: boolean // the welcome note has been offered; see D30
+  theme: { seed: number; mode: 'light' | 'dark' } // see D33
 }
 interface OpenRequest {
   files: string[] // open as tabs
@@ -251,8 +255,9 @@ notes folder is expected to be synced, and session state is machine-specific.
 
 ### Settings
 
-`settings.json` alongside it: scratch folder path, active theme, texture
-enabled, texture opacity, recent folders, font size.
+`settings.json` alongside it: folder context, recent folders, the welcome
+flag and the theme (seed hue and mode). The settings UI (3.4) adds the scratch
+folder path and font size.
 
 ### External changes
 

@@ -11,7 +11,7 @@ away again. All the markdown here works like that.
 - [ ] Press `Ctrl+Shift+P` to see every command and its shortcut
 - [ ] Press `Ctrl+P` to jump to any note by name
 - [ ] Press `Ctrl+Shift+F` to search inside every note
-- [ ] Right-click this tab to rename or delete this note
+- [ ] Right-click this note's pill at the top to rename or delete it
 
 ## Looks like
 
@@ -21,7 +21,7 @@ away again. All the markdown here works like that.
 Labels like [urgent] and [maybe] colour a word in this note. Tags like
 #ideas gather notes: click one to see every note that uses it.
 
-> Quotes get a hairline down the side.
+> Quotes get a line down the side.
 
 ```js
 // Name a language after the fence and it gets colour
@@ -39,4 +39,5 @@ const answer = 42
 - Notes are plain files in `Documents/Scratchpost`. `Ctrl+O` opens any file
   from anywhere, and so does dropping it on the window.
 - Select a word and paste a link to turn the word into a link.
+- The buttons at the bottom switch light and dark mode and the theme colour.
 - "Open welcome note" in the command palette brings this back.

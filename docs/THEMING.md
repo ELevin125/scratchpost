@@ -1,159 +1,138 @@
 # Theming
 
-Themes are data. Adding one is a new file in `src/renderer/themes/`, never a
-code change.
-
-The token names are borrowed from the author's portfolio site so that one
-vocabulary describes both.
+A theme is **a seed hue and a mode**. Every colour in the app is generated
+from those two values by `src/renderer/themes/tint.ts`. There are no
+hand-picked theme files and no fixed accent colour. See D33.
 
 ## The rule
 
 > **No literal colour appears anywhere outside `src/renderer/themes/`.**
 
-No hex values, no `rgb()`, no named CSS colours, in components, in the CM6
-theme, or in any stylesheet. Everything reads a CSS custom property.
+No hex values, no `rgb()` or `hsl()` with literal numbers, no named CSS
+colours, in components, in the CM6 theme, or in any stylesheet. Everything
+reads a CSS custom property. The two exceptions are hue-seeded words and
+swatches, which build `hsl(var(--tag-hue) …)` from custom properties only.
 
 This is enforced by an ESLint rule (`no-restricted-syntax` matching colour
 literals) with `src/renderer/themes/**` excluded. The rule exists because a
 half-themed app is worse than an unthemed one, and colour literals leak in
-quietly — especially into the CodeMirror theme object, which is the most likely
-place for this to go wrong.
+quietly, especially into the CodeMirror theme object.
 
 ## Token set
 
 ```ts
+type ThemeMode = 'light' | 'dark'
+
 interface Theme {
-  name: string
-  mode: 'light' | 'dark'
+  seed: number           // hue, 0 to 359
+  mode: ThemeMode
   colors: {
-    paper: string        // editor background
-    paper2: string       // chrome: tab strip, status bar, tree panel
-    bar: string          // selected rows, inline code background
-    ink: string          // headings, active text
-    inkSoft: string      // muted text, list markers
-    body: string         // editor body text
-    spot: string         // accent
-    spotTint: string     // accent wash
-    rule: string         // hairline borders
-    codeString: string   // strings in highlighted code
-    codeLiteral: string  // numbers, booleans, null in highlighted code
-    codeName: string     // function, class and type names in highlighted code
-    hatch: string        // dot field
+    ground: string       // window background, behind the panels
+    glow: string         // soft light in the ground's gradient
+    surface: string      // panels, the top bar's pills (slightly translucent)
+    raised: string       // selected and hovered rows, overlays, menus, the dock
+    sunken: string       // code blocks, inline code, input fields
+    ink: string          // titles, active text
+    body: string         // note text
+    soft: string         // muted text, list markers, times
+    line: string         // the few dividers left, scrollbar thumbs
+    chip: string         // selected pill, checked checkbox, links, active dock button
+    chipInk: string      // text on chip
+    scrim: string        // dims the window behind an overlay; shadows
+    selection: string    // selected text and search matches
+    codeString: string   // highlighted code
+    codeLiteral: string
+    codeName: string
   }
   tagColor: {            // percentages, 0 to 100
     saturation: number
     lightness: number
   }
-  textureOpacity: number // 0 to 1, multiplied into hatch
 }
 ```
 
-Applied at runtime by writing each value to `document.documentElement.style` as
-`--paper`, `--paper-2`, `--bar`, `--ink`, `--ink-soft`, `--body`, `--spot`,
-`--spot-tint`, `--rule`, `--code-string`, `--code-literal`, `--code-name`,
-`--hatch`, plus `--tag-saturation` and
-`--tag-lightness`.
+Applied at runtime by `applyTheme` writing each value to
+`document.documentElement.style` as `--ground`, `--glow`, `--surface`,
+`--raised`, `--sunken`, `--ink`, `--body`, `--soft`, `--line`, `--chip`,
+`--chip-ink`, `--scrim`, `--selection`, `--code-string`, `--code-literal`,
+`--code-name`, plus `--tag-saturation` and `--tag-lightness`. The root also
+gets `color-scheme` and `data-mode`.
 
-## Tag colours
+## How colours are generated
 
-There is no fixed tag palette. A stable hash of the tag text picks a hue from 0
-to 359, set on the pill as `--tag-hue`. The pill's colour is
-`hsl(var(--tag-hue) var(--tag-saturation) var(--tag-lightness))`, so every tag
-gets its own colour while the theme controls saturation and lightness, and
-therefore contrast. See D16 in `DECISIONS.md`.
+All values are HSL around the seed hue `h`:
 
-The CodeMirror theme in `editor/theme.ts` is built from the same object via
-`EditorView.theme()`, reading the tokens rather than duplicating values.
+| Token | Dark | Light |
+| --- | --- | --- |
+| ground | `h 38% 9%` | `h 26% 84%` |
+| glow | `h+40 40% 17%` | `h+40 34% 76%` |
+| surface | `h 22% 14% / 0.88` | `h 30% 96% / 0.88` |
+| raised | `h 20% 21%` | `h 28% 89%` |
+| sunken | `h 26% 7%` | `h 22% 91%` |
+| ink | `h 25% 93%` | `h 35% 12%` |
+| body | `h 12% 80%` | `h 18% 22%` |
+| soft | `h 10% 58%` | `h 12% 40%` |
+| line | `h 16% 26%` | `h 18% 80%` |
+| chip | `h 45% 72%` | `h 42% 26%` |
+| chipInk | `h 40% 11%` | `h 30% 96%` |
+| scrim | `h 40% 4% / 0.5` | `h 30% 20% / 0.22` |
+| selection | `h 40% 40% / 0.45` | `h 45% 72% / 0.5` |
+| codeString | `h+150 45% 76%` | `h+150 45% 30%` |
+| codeLiteral | `h+210 55% 76%` | `h+210 55% 34%` |
+| codeName | `h+60 45% 76%` | `h+60 45% 32%` |
+| tag saturation, lightness | 50%, 72% | 50%, 36% |
 
-## Shipped themes
+Saturation stays low on surfaces so any hue reads as a tinted neutral.
+Lightness carries the contrast, so it holds for every seed.
 
-### Nocturne (dark, default)
+## Seeds
 
-```
-paper      #131416
-paper2     #1C1E21
-bar        #24272B
-ink        #E4E1D8
-inkSoft    #8B8C88
-body       #C7C4BC
-spot       #E0592F
-spotTint   rgba(224, 89, 47, 0.08)
-rule       #33363A
-codeString #A9B58F
-codeLiteral #D2A874
-codeName   #94ABC6
-hatch      rgba(255, 255, 255, 0.025)
-```
+The default is teal (172) in dark mode. "Change theme colour" offers the named
+seeds in `themes/index.ts`: Teal 172, Slate 218, Plum 320, Rose 350, Ochre 38
+and Moss 95. Any hue works; the settings UI (3.4) may offer a free picker.
+"Switch to light/dark mode" flips the mode. Both are saved in
+`settings.json` as `theme: { seed, mode }`.
 
-### Newsprint (light)
+## Where colour appears
 
-```
-paper      #DFDCD2
-paper2     #D5D1C6
-bar        #CBC6B8
-ink        #191A1C
-inkSoft    #5A5B58
-body       #2E2F30
-spot       #BF3B1E
-spotTint   rgba(191, 59, 30, 0.08)
-rule       #B4B0A4
-codeString #3D5A2A
-codeLiteral #744A12
-codeName   #35557A
-hatch      rgba(0, 0, 0, 0.045)
-```
+- **chip** is the only strong colour: the active note pill, the selected row in
+  overlays and menus, checked checkboxes, links, and the pressed dock button.
+- **Tag and label words** carry their own hue (below).
+- **Code** uses the three code tokens plus `ink` (keywords) and `soft`
+  (comments).
+- Everything else is the tinted neutral ramp: ground, surface, raised, sunken,
+  ink, body, soft, line.
 
-Both are cool-neutral greys with a warm cream ink and a vermilion spot. Do not
-warm the greys; this was corrected once already.
+## Label and tag colours
+
+There is no fixed palette. A stable hash of the word picks a hue from 0 to
+359, set on the element as `--tag-hue`. The colour is
+`hsl(var(--tag-hue) var(--tag-saturation) var(--tag-lightness))`; label pills
+and tag chips use the same colour at low alpha as their background. See D16
+and D34.
 
 ## Code highlighting
 
 Fenced code in a bundled language uses five classes (see `MARKDOWN_SPEC.md`).
-Keywords and comments stay on the neutral ramp (`--ink` at weight 500, and
-`--ink-soft` in italic). Only strings, literals and names get their own
-tokens, all muted so a code block reads as quieter than prose. They must hold
-contrast on `--bar`, the code block background. Never `--spot`. See D32.
+Keywords use `ink` at weight 500 and comments `soft` in italic; strings,
+literals and names use the three code tokens. They must hold contrast on
+`sunken`. See D32.
 
 ## Typography
 
-`IBM Plex Mono`, weights 400 and 500 plus 400 italic for emphasis, **bundled
-with the app**. It is not
-fetched from Google Fonts or any CDN — see the security posture in
-`ARCHITECTURE.md`. Fallback chain: `ui-monospace, monospace`.
+All bundled with the app, never fetched:
 
-Font size is a user setting, defaulting to 13px, and scales the heading ramp
-proportionally rather than using fixed pixel values throughout.
+- **IBM Plex Mono** 400, 500 and 400 italic: note text, times, counts,
+  shortcuts. Fallback `ui-monospace, monospace`.
+- **IBM Plex Sans** 400 and 500: the app's own labels, buttons and menus.
+  Fallback `system-ui, sans-serif`.
+- **IBM Plex Sans Condensed** 600: the h1 and h2 headings in notes, the empty
+  state title and the date block.
 
-## Texture
+Exposed as `--font-mono`, `--font-sans` and `--font-title`. Font size is a user
+setting, defaulting to 13px; heading sizes are in em so they scale with it.
 
-The dot field is a single element, `aria-hidden`, absolutely positioned at the
-top-right of the window:
+## Shape
 
-- `radial-gradient(var(--hatch) 1px, transparent 1px)` at a 10px grid
-- masked with `linear-gradient(to left, black, transparent 88%)`
-- roughly 55% of window width, 76px tall
-- `pointer-events: none`
-
-It sits behind the tab strip and the top of the content area, and never behind
-body text. `textureOpacity` scales it; a settings toggle removes it entirely.
-
-## Accent discipline
-
-`--spot` appears only on:
-
-- the active tab's top marker
-- the active file's left marker in the tree
-- checked checkboxes
-- the folder name in the status bar
-- tag pills and links
-
-Everything else is on the neutral ramp. When in doubt, do not use the accent.
-
-## Adding a theme
-
-1. Create `src/renderer/themes/<name>.ts` exporting a `Theme`.
-2. Register it in `themes/index.ts`.
-3. Verify contrast: body text on paper, muted text on paper, and tag pills at
-   the chosen `tagColor` saturation and lightness across the full hue range on
-   both `paper` and `paper2`.
-4. No other file changes.
+Panels 20 to 24px radius, rows and inputs 10 to 14px, buttons and chips fully
+round. The ground's gradient replaces the dot texture (2.11 was dropped).

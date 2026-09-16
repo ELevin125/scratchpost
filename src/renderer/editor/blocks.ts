@@ -28,6 +28,10 @@ const checkbox = {
 const doneText = Decoration.mark({ class: 'cm-task-done' })
 const quoteLine = Decoration.line({ class: 'cm-quote' })
 const codeLine = Decoration.line({ class: 'cm-code-block' })
+// The block's first and last lines round its corners.
+const codeFirst = Decoration.line({ class: 'cm-code-block cm-code-first' })
+const codeLast = Decoration.line({ class: 'cm-code-block cm-code-last' })
+const codeOnly = Decoration.line({ class: 'cm-code-block cm-code-first cm-code-last' })
 const ruleLine = Decoration.line({ class: 'cm-hr' })
 
 // h4 to h6 render at h3 size.
@@ -96,10 +100,12 @@ export function hideQuoteMark(ctx: Context, mark: SyntaxNode): void {
 // Tinted lines, fences hidden per line, contents verbatim.
 export function decorateFencedCode(ctx: Context, node: SyntaxNode): void {
   const { doc } = ctx.state
+  const first = doc.lineAt(node.from).number
   const last = doc.lineAt(node.to).number
-  for (let n = doc.lineAt(node.from).number; n <= last; n++) {
+  for (let n = first; n <= last; n++) {
     const line = doc.line(n)
-    ctx.add(`code:${line.from}`, codeLine.range(line.from))
+    const deco = first === last ? codeOnly : n === first ? codeFirst : n === last ? codeLast : codeLine
+    ctx.add(`code:${line.from}`, deco.range(line.from))
   }
 
   // Each fence's marker and info string (```js) hide to the end of its line.

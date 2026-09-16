@@ -55,8 +55,8 @@ file to be "imported" or "added to" anything before it can be edited.
 ### 2. Every command has a visible affordance
 
 Keyboard shortcuts accelerate; they never gate. Every command must be reachable
-by mouse through the toolbar, the overflow menu, the status bar, or the command
-palette. The command palette displays each command's shortcut next to it, so it
+by mouse through the top bar, the dock, a panel, a right-click menu, or the
+command palette. The command palette displays each command's shortcut next to it, so it
 doubles as the way shortcuts are learned.
 
 A feature that exists only as a key binding is a feature the user will forget
@@ -65,14 +65,15 @@ exists. This has been explicitly requested.
 ### 3. Saving is not a user-facing concept
 
 There is no Save command, no dirty indicator asking a question, no "unsaved
-changes" dialog on quit. The status bar reports save state as information, not
-as a prompt.
+changes" dialog on quit. The note header reports save state as information,
+not as a prompt.
 
-### 4. It must not look like a web app
+### 4. It must feel like a desktop object, not an IDE
 
-Square corners, hairline borders, monospace text, tight vertical rhythm, system
-window behaviour. See "Visual language" below for the specifics. This has been
-raised repeatedly and matters more than it might seem.
+Calm tinted panels floating on a tinted ground, one colour family, soft shapes,
+monospace notes, and a few things set large. It should look like nothing else
+in the author's editor stack. See "Visual language" below, and D33, which
+replaced the earlier square-and-hairline look.
 
 ### 5. Plain files, unmodified
 
@@ -84,7 +85,8 @@ syntax degrades gracefully in other editors.
 
 ### Tabs
 
-- Tab strip runs across the top. No window title bar content beyond it.
+- Open notes are **pills** in the top bar, left of the find field. They are
+  the tabs.
 - **Display name** follows the filename (D26):
   - Scratch notes still named by timestamp (`YYYY-MM-DD-HHmm.md`, with any
     `-2` suffix) show their **first line of content**, trimmed of leading `#`
@@ -94,8 +96,9 @@ syntax degrades gracefully in other editors.
   - Files opened from elsewhere show their **actual filename**, including
     extension.
   - The same names appear in the file tree and quick switcher.
-- Active tab is marked with a 2px accent line along its top edge.
-- Middle-click or the `×` closes. Closing does not prompt; the file is saved.
+- The active pill is filled with `chip`.
+- Middle-click or the `×` (shown on hover and on the active pill) closes.
+  Closing does not prompt; the file is saved.
 - Tab order is user-reorderable by drag and persists across restarts.
 
 ### New notes
@@ -119,10 +122,10 @@ Never prompt for a filename. Never auto-rename on heading edits.
   quit, and before any rename or external-change reload.
 - Writes are atomic: write to `<name>.md.tmp` in the same directory, `fsync`,
   then rename over the target. A crash mid-write can never corrupt a note.
-- A failed write surfaces in the status bar and must not be silent.
-- The status bar's save slot is **empty while saves succeed**. `saving` appears
+- A failed write surfaces in the note header and must not be silent.
+- The header's save slot is **empty while saves succeed**. `saving` appears
   only when a write has taken longer than 500ms. A failure names the file
-  (`save failed: notes.txt: permission denied`), marks its tab with `!`, and
+  (`save failed: notes.txt: permission denied`), marks its pill with `!`, and
   stays until a save of that file succeeds.
 - Closing a tab whose save fails leaves the tab open, so edits that aren't on
   disk are never dropped.
@@ -142,28 +145,39 @@ dropped silently.
 ### Folder context
 
 - Defaults to the scratch folder.
-- Switched via the folder name in the status bar (click), the overflow menu, or
-  the command palette. Keeps a recent-folders list.
+- Switched via the folder name at the top of the notes panel, the dock's
+  folder button, or the command palette. Keeps a recent-folders list.
 - Changing context does not close or affect any open tab.
 - New notes always land in the **scratch folder**, never in the active context.
 
-### File tree
+### Notes panel
 
-- Hidden by default. Toggled from the toolbar icon or `Ctrl+B`.
+- The left column (D33). Shown by default; toggled from the dock or `Ctrl+B`.
+- Headed by the folder name, which opens the folder menu, and a home button
+  when the context isn't the scratch folder.
+- The scratch folder shows its six most recent notes, with "Show all" for the
+  full tree, newest first. Other folders show their tree in name order.
 - Lists `.md` and `.txt` files in the folder context, plus subdirectories.
-- Below the file list, a **tag index**: every `#tag` found in the context
-  with an occurrence count. Clicking one, here or in a note, filters to files
-  containing it. `[labels]` are not indexed (D34).
-- Section labels are tracked uppercase with a count beside them (`NOTES 04`).
-- Empty state when no folder is open: a short line and a button, never a blank
-  panel.
+- Below it, a **tags panel**: every `#tag` found in the context with an
+  occurrence count. Clicking one, here or in a note, filters the notes panel
+  to files containing it. `[labels]` are not indexed (D34).
+- Empty state when no folder is open: a short line and an "Open folder"
+  button, never a blank panel.
 
-### Status bar
+### Note header and dock
 
-Left to right: folder name (clickable, accent-coloured), save state, spacer,
-line and column, word count, command palette button.
+The status bar is gone (D33). Its jobs moved:
 
-This bar is the primary discoverability surface. Treat it as load-bearing.
+- **Note header**, above the text: the note's folder, when it was last edited,
+  its word count, and a save problem if there is one. On the right, the note's
+  date set large: the day a timestamp-named note was created, otherwise the
+  day it last changed.
+- **Dock**, floating at the bottom of the note panel: notes panel, folder
+  search, open file, switch folder; then light or dark mode, theme colour, and
+  the command palette. Every button's tooltip is its command's label and
+  shortcut.
+- **Toasts**, above the dock, for notices that aren't about saving. They
+  dismiss themselves.
 
 ### Editing
 
@@ -179,7 +193,7 @@ Standard CodeMirror 6 keymap plus:
 | Command palette | `Ctrl+Shift+P` |
 | Quick switcher | `Ctrl+P` |
 | Search in folder | `Ctrl+Shift+F` |
-| Toggle file tree | `Ctrl+B` |
+| Toggle notes panel | `Ctrl+B` |
 | New note | `Ctrl+N` |
 | Open file | `Ctrl+O` |
 | Rename | `F2` |
@@ -206,58 +220,68 @@ Getting this wrong makes the whole app feel broken.
 
 ## Visual language
 
-> **Being replaced.** D33 (Tint) supersedes this section and principle 4.
-> It describes the current build until tasks 2.23 to 2.26 land, then gets
-> rewritten.
+See D33 for why, and `THEMING.md` for the tokens.
+
+### Layout
+
+- A tinted ground with a soft glow, 10px of it around and between everything.
+- Top bar: open-note pills, then the find field and a round new-note button on
+  the right.
+- Below it, the notes and tags panels on the left (240px) and the note panel
+  filling the rest, with the dock floating at its bottom.
+- Note text is capped at 80 characters, left-aligned in the note panel.
 
 ### Typography
 
-- Editor and all UI: **IBM Plex Mono**, bundled, not fetched from a CDN.
-- Editor body 13px, line-height 1.75.
-- Headings scale but stay monospace: h1 18px, h2 15px, h3 13px, all weight 500.
-- Section labels: 10px, uppercase, letter-spacing 0.1em.
+- Note text: **IBM Plex Mono** 13px, line-height 1.75.
+- Headings in notes: h1 30px and h2 19px in **IBM Plex Sans Condensed** 600;
+  h3 and below 13px mono at weight 500.
+- App labels, buttons and menus: **IBM Plex Sans**. Times, counts and
+  shortcuts: mono 11px.
+- All bundled, never fetched from a CDN.
 
 ### Shape
 
-- **Square corners everywhere** — window, panels, tabs, inputs, buttons.
-- The single exception: **tag pills are fully rounded**, making them the only
-  soft shape on screen.
-- Hairline borders (`--rule`) for separation, never surface-value-only
-  separation. Visible rules read as technical; borderless panels read as web.
+- Rounded panels (20 to 24px), rows and inputs (10 to 14px), fully round
+  buttons, pills and chips.
+- Separation by space and tint. Borders are almost gone; the few left use
+  `line`.
 
 ### Colour
 
-- Accent (`--spot`) is used sparingly: active tab marker, active tree row,
-  checked checkboxes, folder name in the status bar, tag pills.
-- Everything else is on the neutral ramp. An agent given "orange accent" will
-  over-apply it; resist this.
+- One seed hue generates everything; light and dark modes; no fixed accent.
+- `chip` is the only strong colour: the active pill, selected overlay rows,
+  checked checkboxes, links, the pressed dock button.
+- Tags and labels carry their own word-seeded hue.
 
-### Texture
+### Icons
 
-- A dot field in the top-right of the window, fading out towards the left,
-  drawn with the `--hatch` token. Roughly 10px grid, 1px dots.
-- **Never behind body text.** Not behind the editor, not behind the file tree,
-  not behind the tag list. Chrome and empty space only.
-- Opacity is a theme token, and there is a settings toggle to disable texture.
+- One bundled set of 20-unit line icons (`app/Icon.tsx`), stroked in the text
+  colour. No text-only buttons in the chrome.
+- Every icon button has a tooltip with the command's label and shortcut.
 
 ### Rejected visual ideas
 
 Do not reintroduce these; they were considered and dropped:
 
-- Texture behind the file tree panel
-- A capped, centred text column with visible gutters (the "sheet on a desk" look)
+- A dot texture (2.11); the tinted ground replaced it
 - A decorative accent rule across the top edge of the window
 - Chrome that hides while typing and reveals on mouse move
-- Rounded tabs or borderless surface-value separation
+- An icon rail beside a file list (reads as VS Code; D33)
+- Note cards as the main navigation (too much room for notes rarely revisited)
+- Real window translucency (not available on Linux)
 
 ## Empty states
 
 Specify and implement these; they are the first thing seen on a fresh install
 and the most likely place for an agent to produce something embarrassing.
 
-- **No tabs open**: centred, muted, a line of text and a "New note" button.
-- **No folder context**: file tree shows a line and an "Open folder" button.
+- **No tabs open**: centred in the note panel: a large "Start a note.", a
+  muted line, a "New note" button and four key hints.
+- **No folder context**: the notes panel shows a line and an "Open folder"
+  button.
 - **Search with no results**: the query echoed back, and nothing else.
-- **Empty scratch folder**: the tree shows the folder name and an invitation.
+- **Empty scratch folder**: the notes panel shows the folder name and an
+  invitation.
 
 Empty states are an invitation, not an apology. No "Nothing here yet."

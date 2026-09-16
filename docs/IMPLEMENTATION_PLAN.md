@@ -240,7 +240,7 @@ Batches, in order: 2.12–2.17; then 2.11 with 3.4 and 3.8; then 2.22; then
   *Accept:* `[x]` never appears in the tag index; clicking `#work` in a note
   lists the notes tagged `#work`.
 
-- [ ] **2.23 Tint theme model**
+- [x] **2.23 Tint theme model**
   Themes generated from a seed hue and a mode instead of hand-picked files.
   Nocturne and Newsprint become the dark and light modes of the default
   seed. Code colours derive from the seed; tag hues stay seeded by the word.
@@ -248,17 +248,17 @@ Batches, in order: 2.12–2.17; then 2.11 with 3.4 and 3.8; then 2.22; then
   *Accept:* changing the seed recolours every surface; no colour literal
   outside `themes/`.
 
-- [ ] **2.24 Tint layout**
+- [x] **2.24 Tint layout**
   Top bar (open-note pills, find field, new note), left column (notes panel
   with folder header, recent list, show all and folder tree; tags panel),
   note panel (title, meta line, date block, capped text), floating dock, one
   bundled icon set. The status bar's contents move to the meta line and dock.
-  Decide the title bar question from D33. Rewrite `DESIGN.md`, "Visual
-  language", and update the welcome note.
+  Rewrite `DESIGN.md`, "Visual language", and update the welcome note. The
+  title bar question from D33 is still open.
   *Accept:* every command still has a visible affordance; folders still open
   and switch; matches the D33 mockup in both modes.
 
-- [ ] **2.26 Tint overlays and states**
+- [x] **2.26 Tint overlays and states**
   Palette, switcher, folder menu, search, rename, context menus and empty
   states restyled as rounded panels over a dimmed editor. Lists show whole
   rows.

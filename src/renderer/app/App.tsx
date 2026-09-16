@@ -4,15 +4,20 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { FileMeta, FolderEntry, OpenRequest, SearchHit } from '../../preload/api'
 import type { EditorStats } from '../editor/createEditor'
 import { TAG_CLICK_EVENT } from '../editor/livePreview'
+import { applyTheme, tintTheme } from '../themes'
+import { ColourMenu } from './ColourMenu'
 import { CommandPalette } from './CommandPalette'
 import { ContextMenu, type MenuItem, type MenuState } from './ContextMenu'
+import { Dock } from './Dock'
 import { Editor, type Buffers } from './Editor'
 import { EmptyState } from './EmptyState'
 import { FileTree } from './FileTree'
 import { FolderMenu } from './FolderMenu'
+import { NoteHeader } from './NoteHeader'
 import { QuickSwitcher } from './QuickSwitcher'
 import { RenameDialog } from './RenameDialog'
 import { SearchPanel } from './SearchPanel'
+import { Toast } from './Toast'
 import { Autosave, errorMessage, type SaveEvent } from './state/autosave'
 import {
   availableCommands,
@@ -23,8 +28,8 @@ import {
   type Command,
   type CommandContext
 } from './state/commands'
-import { relativePath } from './state/fileTree'
-import { folderName, parentFolder, shortPath } from './state/folderContext'
+import { editedLabel, noteDate, relativePath } from './state/fileTree'
+import { folderName, parentFolder } from './state/folderContext'
 import { selectionForHit } from './state/searchHits'
 import { SESSION_SAVE_DELAY_MS, snapshotSession } from './state/session'
 import { formatShortcut } from './state/shortcuts'
@@ -44,8 +49,7 @@ import {
   type Tab,
   type TabsState
 } from './state/tabs'
-import { StatusBar, type StatusMessage } from './StatusBar'
-import { TabBar } from './TabBar'
+import { TopBar } from './TopBar'
 import { useFolderContext } from './useFolderContext'
 
 const api = window.scratchpost
@@ -56,10 +60,13 @@ const NEW_NOTE_META: FileMeta = { eol: '\n', bom: false, encoding: 'utf8' }
 // A rename that drops the extension keeps the original one.
 const NOTE_EXTENSION = /\.(md|markdown|txt)$/i
 
+// How long saving must be quiet before the notes and tags panels re-read.
+const LISTING_REFRESH_MS = 1500
+
 // Ctrl+Shift+T remembers this many closed tabs.
 const MAX_CLOSED = 20
 
-type Overlay = 'palette' | 'switcher' | 'search' | 'folders' | 'rename'
+type Overlay = 'palette' | 'switcher' | 'search' | 'folders' | 'rename' | 'colours'
 
 // Where to land when opening a file from a search result.
 interface HitTarget {
@@ -96,7 +103,7 @@ export function App() {
   const [notice, setNotice] = useState<string | null>(null)
   const [overlay, setOverlay] = useState<Overlay | null>(null)
   const [menu, setMenu] = useState<MenuState | null>(null)
-  const [treeOpen, setTreeOpen] = useState(false) // hidden by default
+  const [treeOpen, setTreeOpen] = useState(true) // the notes column is part of the layout (D33)
   const [tagFilter, setTagFilter] = useState<string | null>(null) // lowercased
   // When each file was last saved this session, so the tree's times and
   // recent-first order are current without re-reading the folder.
@@ -114,6 +121,13 @@ export function App() {
   }, [])
 
   const folder = useFolderContext(scratchDir, setNotice)
+
+  // The saved theme, applied whenever it changes. See D33.
+  const theme = folder.theme
+  const themeMode = theme?.mode ?? 'dark'
+  useEffect(() => {
+    if (theme) applyTheme(tintTheme(theme.seed, theme.mode))
+  }, [theme])
 
   // Saves read tabs from this ref, not render state, so a path set by
   // createNote is visible to the very next save.
@@ -261,6 +275,14 @@ export function App() {
     window.addEventListener('focus', onFocus)
     return () => window.removeEventListener('focus', onFocus)
   }, [refreshFolder])
+
+  // Saves can add or remove #tags, so the listing and tag index are re-read
+  // once saving has been quiet for a moment.
+  useEffect(() => {
+    if (!treeOpen || Object.keys(savedAt).length === 0) return
+    const timer = setTimeout(() => void refreshFolder(), LISTING_REFRESH_MS)
+    return () => clearTimeout(timer)
+  }, [savedAt, treeOpen, refreshFolder])
 
   const pathsKey = tabsState.tabs.map((tab) => tab.path ?? '').join('\n')
   useEffect(() => {
@@ -641,7 +663,11 @@ export function App() {
       },
       reopenClosed,
       nextTab: () => cycleTab(1),
-      previousTab: () => cycleTab(-1)
+      previousTab: () => cycleTab(-1),
+      toggleMode: () => {
+        if (theme) folder.setTheme({ ...theme, mode: theme.mode === 'dark' ? 'light' : 'dark' })
+      },
+      openColours: () => setOverlay('colours')
     }
   })
 
@@ -652,9 +678,10 @@ export function App() {
       view: tab ? viewRef.current : null,
       activePath: tab?.path ?? null,
       isScratchContext,
+      mode: themeMode,
       actions: actionsRef.current!
     }
-  }, [activeTab, isScratchContext])
+  }, [activeTab, isScratchContext, themeMode])
 
   const runCommand = (command: Command) => {
     setOverlay(null)
@@ -729,19 +756,32 @@ export function App() {
     return state?.kind === 'error' ? [{ tab, message: state.message }] : []
   })
   const failure = failures.find((f) => f.tab.id === activeId) ?? failures[0]
-  const statusMessage: StatusMessage | null = failure
+  const problem = failure
     ? { text: `save failed: ${nameOf(failure.tab)}: ${failure.message}`, error: true }
-    : notice
-      ? { text: notice, error: true }
-      : Object.values(saveStates).some((s) => s.kind === 'slow')
-        ? { text: 'saving', error: false }
-        : null
+    : Object.values(saveStates).some((s) => s.kind === 'slow')
+      ? { text: 'saving', error: false }
+      : null
+
+  // The note header: where the active note lives, when it changed, its length.
+  const activeModified = active?.path
+    ? (savedAt[active.path] ?? entriesByPath.get(active.path)?.modified ?? null)
+    : null
+  const activeParent = active?.path ? parentFolder(active.path) : null
+  const meta = active
+    ? [
+        activeParent ? folderName(activeParent) : 'new note',
+        ...(activeModified !== null ? [editedLabel(activeModified, Date.now())] : []),
+        `${stats.words} ${stats.words === 1 ? 'word' : 'words'}`
+      ]
+    : []
+  const date = active?.path ? noteDate(fileName(active.path), activeModified) : null
+  const dismissNotice = useCallback(() => setNotice(null), [])
 
   const contextName = folder.root ? folderName(folder.root) : ''
 
   return (
     <div className="app">
-      <TabBar
+      <TopBar
         tabs={tabs.map((tab) => ({
           id: tab.id,
           name: nameOf(tab),
@@ -752,13 +792,11 @@ export function App() {
         onClose={(id) => void close(id)}
         onMove={(id, toIndex) => updateTabs((s) => moveTab(s, id, toIndex))}
         onTabMenu={openTabMenu}
-        treeOpen={treeOpen}
-        onToggleTree={() => runById('tree.toggle')}
+        onFind={() => runById('switcher.open')}
         onNew={() => runById('note.new')}
-        onOpen={() => runById('file.open')}
-        treeHint={commandHint('tree.toggle')}
+        findHint={commandHint('switcher.open')}
+        findShortcut={formatShortcut('Ctrl+P')}
         newHint={commandHint('note.new')}
-        openHint={commandHint('file.open')}
       />
       <div className="workspace">
         {treeOpen && (
@@ -779,7 +817,8 @@ export function App() {
             onTagFilter={setTagFilter}
           />
         )}
-        <div className="main-column">
+        <main className="note-panel">
+          {active && <NoteHeader meta={meta} problem={problem?.text ?? null} problemIsError={problem?.error ?? false} date={date} />}
           <Editor
             activeId={activeId}
             openIds={tabs.map((tab) => tab.id)}
@@ -792,17 +831,25 @@ export function App() {
           {/* Blank while the session loads, so the empty state never flashes. */}
           {!activeId &&
             (restoring ? <div className="editor-blank" /> : <EmptyState onNewNote={() => runById('note.new')} />)}
-        </div>
+          <Dock
+            groups={[
+              [
+                { command: 'tree.toggle', icon: 'notes', pressed: treeOpen },
+                { command: 'search.open', icon: 'search' },
+                { command: 'file.open', icon: 'open' },
+                { command: 'folder.switch', icon: 'folder' }
+              ],
+              [
+                { command: themeMode === 'dark' ? 'theme.light' : 'theme.dark', icon: themeMode === 'dark' ? 'sun' : 'moon' },
+                { command: 'theme.colour', icon: 'palette' },
+                { command: 'palette.open', icon: 'command' }
+              ]
+            ]}
+            onRun={runById}
+          />
+          {notice && <Toast text={notice} onDismiss={dismissNotice} />}
+        </main>
       </div>
-      <StatusBar
-        folderLabel={folder.root ? shortPath(folder.root) : ''}
-        folderPath={folder.root ?? ''}
-        stats={active ? stats : null}
-        message={statusMessage}
-        onFolder={() => runById('folder.switch')}
-        onPalette={() => runById('palette.open')}
-        paletteHint={commandHint('palette.open')}
-      />
 
       {overlay === 'palette' && (
         <CommandPalette
@@ -856,6 +903,16 @@ export function App() {
         <RenameDialog
           name={renameSuggestion({ ...active, path: active.path })}
           onSubmit={(name) => void rename(name)}
+          onClose={closeOverlay}
+        />
+      )}
+      {overlay === 'colours' && theme && (
+        <ColourMenu
+          current={theme.seed}
+          onPick={(seed) => {
+            closeOverlay()
+            folder.setTheme({ ...theme, seed })
+          }}
           onClose={closeOverlay}
         />
       )}
