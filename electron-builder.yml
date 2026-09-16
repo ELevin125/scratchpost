@@ -1,0 +1,26 @@
+# Packaging (3.5). Windows: NSIS installer. Linux: AppImage and .deb.
+appId: com.scratchpost.app
+productName: Scratchpost
+directories:
+  output: dist
+files:
+  - out/**
+  - package.json
+fileAssociations:
+  - ext: md
+    name: Markdown note
+    role: Editor
+  - ext: txt
+    name: Text note
+    role: Editor
+win:
+  target: nsis
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+linux:
+  target: [AppImage, deb]
+  category: Utility
+  mimeTypes: [text/markdown, text/plain]
+  maintainer: ELevin125

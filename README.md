@@ -41,3 +41,13 @@ See `docs/IMPLEMENTATION_PLAN.md` for the milestone breakdown.
 
 Read `DESIGN.md` and `DECISIONS.md` before proposing changes to either.
 
+
+## Building installers
+
+Node 22 or newer, then `npm ci`.
+
+- `npm run dist:win` builds `dist/Scratchpost Setup <version>.exe` (NSIS). On
+  Linux this needs Wine.
+- `npm run dist:linux` builds an AppImage and a `.deb`.
+
+Both register `.md` and `.txt` so notes can be opened with Scratchpost.

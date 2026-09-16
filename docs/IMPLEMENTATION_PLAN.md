@@ -290,7 +290,7 @@ Batches, in order: 2.12–2.17; then 2.11 with 3.4 and 3.8; then 2.22; then
   Scratch folder, seed hue, light or dark mode, font size.
   *Accept:* every setting persists and applies without restart.
 
-- [ ] **3.5 Packaging**
+- [~] **3.5 Packaging** (Windows installer built; Linux and icon still to check)
   AppImage and `.deb`; NSIS for Windows. Lockfile committed, Electron major
   pinned, build steps in the README. Register `.md` and `.txt` so "Open with"
   lists the app (a `.desktop` entry with `%F`, and NSIS file associations);

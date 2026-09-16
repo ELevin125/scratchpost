@@ -9,7 +9,9 @@
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "dist:win": "electron-vite build && electron-builder --win",
+    "dist:linux": "electron-vite build && electron-builder --linux"
   },
   "dependencies": {
     "@codemirror/commands": "^6.11.0",
@@ -40,10 +42,12 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^5.2.0",
     "electron": "^44.3.0",
+    "electron-builder": "^26.15.3",
     "electron-vite": "^5.0.0",
     "eslint": "^10.10.0",
     "typescript": ">=5.8 <6.1",
     "typescript-eslint": "^8.70.0",
     "vite": "^7.3.6"
-  }
+  },
+  "author": "ELevin125"
 }
