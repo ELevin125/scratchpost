@@ -75,6 +75,12 @@ export class Autosave {
     return run
   }
 
+  // True while the tab has edits that may not be on disk: a save is waiting,
+  // running, or failed last time.
+  isPending(id: string): boolean {
+    return this.timers.has(id) || this.chains.has(id) || this.failed.has(id)
+  }
+
   flushAll(): Promise<boolean> {
     const ids = new Set([...this.timers.keys(), ...this.chains.keys(), ...this.failed])
     return Promise.all([...ids].map((id) => this.flush(id))).then((results) => results.every(Boolean))

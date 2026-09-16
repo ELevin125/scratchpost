@@ -30,6 +30,7 @@
     "@lezer/common": "^1.5.2",
     "@lezer/highlight": "^1.2.3",
     "@lezer/markdown": "^1.7.2",
+    "chokidar": "^4.0.3",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },

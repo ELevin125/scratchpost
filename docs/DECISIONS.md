@@ -706,9 +706,8 @@ Bar), Index (cards take too much room for notes that are rarely revisited;
 its dock survives), Ledger (familiar but indistinct). Real translucency:
 Electron only offers it on macOS and Windows 11, not Linux.
 
-**Open:** whether to hide the native title bar (`titleBarOverlay`, Windows
-and Linux) so the top bar becomes the drag area. Needs checking on the
-author's Zorin desktop first.
+**Title bar:** kept native. The author finds it unobtrusive; revisit only if
+that changes.
 
 ---
 
@@ -741,6 +740,45 @@ search, rendering approach, case-insensitivity and shared-pattern rules stand.
 
 **Rejected:** `@tag` (reads as a mention), `+tag` (unknown to other apps),
 and outlined pills for tags (too close to labels).
+
+---
+
+## D35 — Watching, settings and the system theme
+
+Tasks 3.1, 3.4 and 3.8.
+
+**External changes (3.1).**
+
+- **chokidar**, as `ARCHITECTURE.md` planned, rather than `fs.watch`: it
+  reports atomic replaces (ours and most editors') as one change, and waits
+  for sync tools to finish writing.
+- **Two watchers per window**, one for the folder context and one for open
+  files. Opening a tab never re-scans the folder, and un-watching a closed
+  file can't silence the folder's events for it.
+- **Own writes are recognised by content**, not by timing: the renderer
+  remembers the last text read or written per tab and the text of a save in
+  flight.
+- **A conflict blocks saving** by failing the save with a message. Closing is
+  blocked the same way a failed save blocks it, so the unsaved text is never
+  dropped and the disk version is never overwritten until the user picks.
+  "Keep mine" saves at once; "Load disk version" replaces the buffer.
+- **The watcher replaced the save-triggered folder refresh** added after 2.25:
+  our own saves are changes in the folder too.
+
+**Settings (3.4).** One overlay, `Ctrl+,` or the dock's settings button:
+mode (system, light, dark), colour (named seeds and a free hue slider), note
+text size (10 to 24px) and the scratch folder. Every change applies and saves
+at once. Changing the scratch folder only affects where new notes go and what
+"scratch" means from then on; existing notes don't move and open tabs keep
+their state.
+
+**System theme (3.8).** A third mode, `system`, follows
+`prefers-color-scheme`, which Electron maps to the OS setting. The dock's
+sun/moon button always picks an explicit mode, the opposite of what's showing.
+
+**Rejected:** watching only the folder context (open files from elsewhere
+would never update), and pausing autosave silently during a conflict (closing
+the tab would then drop the edits).
 
 ---
 

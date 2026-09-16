@@ -272,7 +272,7 @@ Batches, in order: 2.12–2.17; then 2.11 with 3.4 and 3.8; then 2.22; then
 
 ## M3 — Yours
 
-- [ ] **3.1 External change watching**
+- [x] **3.1 External change watching**
   Reload clean buffers silently; on a dirty conflict, offer reload or keep.
   Mark deleted files without closing the tab.
   *Accept:* editing the same note from a synced second machine behaves per
@@ -286,7 +286,7 @@ Batches, in order: 2.12–2.17; then 2.11 with 3.4 and 3.8; then 2.22; then
 - ~~**3.3 Tray and hide-on-close**~~ — dropped, see D31. Closing the window
   quits.
 
-- [ ] **3.4 Settings UI**
+- [x] **3.4 Settings UI**
   Scratch folder, seed hue, light or dark mode, font size.
   *Accept:* every setting persists and applies without restart.
 
@@ -305,7 +305,7 @@ Batches, in order: 2.12–2.17; then 2.11 with 3.4 and 3.8; then 2.22; then
 
 - ~~**3.7 Global capture shortcut**~~ — dropped with the tray, see D31.
 
-- [ ] **3.8 System theme**
+- [x] **3.8 System theme**
   A mode option that follows the system light or dark setting. Built with
   3.4. The capped text column is part of Tint (D33), no longer an option.
   *Accept:* switching the system setting switches the app without restart.

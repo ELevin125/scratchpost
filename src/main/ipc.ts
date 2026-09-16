@@ -17,6 +17,7 @@ import { readTextFile } from './fs/read'
 import { searchFolder } from './fs/search'
 import { indexTags } from './fs/tags'
 import { createWelcomeNote } from './fs/welcome'
+import { PathWatcher } from './fs/watch'
 import { writeTextFile } from './fs/write'
 import { classifyPaths } from './launch'
 import { loadSession, saveSession } from './session'
@@ -27,9 +28,9 @@ function assertString(value: unknown, name: string): asserts value is string {
   if (typeof value !== 'string') throw new TypeError(`${name} must be a string`)
 }
 
-// Configurable in settings (3.4); until then always the default.
+// The settings' scratch folder, or ~/Documents/Scratchpost. Created if missing.
 async function getScratchDir(): Promise<string> {
-  const dir = join(app.getPath('documents'), 'Scratchpost')
+  const dir = (await loadSettings()).scratchDir ?? join(app.getPath('documents'), 'Scratchpost')
   await mkdir(dir, { recursive: true })
   return dir
 }
@@ -124,6 +125,30 @@ export function registerIpc(): void {
       throw new TypeError('paths must be an array of strings')
     }
     return classifyPaths(paths, app.getPath('home'))
+  })
+
+  // One watcher pair per window, closed with it.
+  const watchers = new Map<number, PathWatcher>()
+  ipcMain.handle('watch', (event, folder: unknown, files: unknown) => {
+    if (folder !== null) assertString(folder, 'folder')
+    if (!Array.isArray(files) || !files.every((f) => typeof f === 'string')) {
+      throw new TypeError('files must be an array of strings')
+    }
+    const sender = event.sender
+    let watcher = watchers.get(sender.id)
+    if (!watcher) {
+      const id = sender.id
+      const created = new PathWatcher((change) => {
+        if (!sender.isDestroyed()) sender.send('watchEvent', change)
+      })
+      watchers.set(id, created)
+      sender.once('destroyed', () => {
+        created.close()
+        watchers.delete(id)
+      })
+      watcher = created
+    }
+    watcher.set(folder, files)
   })
 
   ipcMain.handle('getSession', () => loadSession())

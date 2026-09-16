@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, webUtils } from 'electron'
-import type { OpenRequest, ScratchpostAPI } from './api'
+import type { OpenRequest, ScratchpostAPI, WatchEvent } from './api'
 
 const api: ScratchpostAPI = {
   readFile: (path) => ipcRenderer.invoke('readFile', path),
@@ -26,10 +26,13 @@ const api: ScratchpostAPI = {
       ipcRenderer.removeListener('openPaths', listener)
     }
   },
-  // Lands with external change watching in 3.1. Synchronous in the interface,
-  // so it throws rather than rejects.
-  watchFolder: () => {
-    throw new Error('not implemented: watchFolder')
+  watch: (folder, files) => ipcRenderer.invoke('watch', folder, files),
+  onWatchEvent: (cb) => {
+    const listener = (_event: Electron.IpcRendererEvent, change: WatchEvent) => cb(change)
+    ipcRenderer.on('watchEvent', listener)
+    return () => {
+      ipcRenderer.removeListener('watchEvent', listener)
+    }
   },
   getSession: () => ipcRenderer.invoke('getSession'),
   setSession: (session) => ipcRenderer.invoke('setSession', session),

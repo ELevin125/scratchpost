@@ -40,6 +40,7 @@ export interface AppActions {
   previousTab(): void
   toggleMode(): void
   openColours(): void
+  openSettings(): void
 }
 
 export interface CommandContext {
@@ -118,6 +119,7 @@ export const commands: readonly Command[] = [
     when: (ctx) => ctx.mode === 'light'
   },
   { id: 'theme.colour', label: 'Change theme colour…', run: (ctx) => ctx.actions.openColours() },
+  { id: 'settings.open', label: 'Settings…', shortcut: 'Ctrl+,', run: (ctx) => ctx.actions.openSettings() },
 
   { id: 'file.rename', label: 'Rename file…', shortcut: 'F2', run: (ctx) => ctx.actions.renameActive(), when: hasFile },
   { id: 'file.reveal', label: 'Show in file manager', run: (ctx) => ctx.actions.revealActive(), when: hasFile },

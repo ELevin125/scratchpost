@@ -4,7 +4,7 @@ import { Icon } from './Icon'
 export interface TabView {
   id: string
   name: string
-  failed: boolean // last save failed; the pill shows a marker
+  failed: boolean // a failed save or a change on disk; the pill shows a marker
 }
 
 interface TopBarProps {
@@ -53,7 +53,7 @@ export function TopBar({
                 className={['tab', active && 'active', tab.failed && 'failed', tab.id === draggingId && 'dragging']
                   .filter(Boolean)
                   .join(' ')}
-                title={tab.failed ? 'Last save failed' : undefined}
+                title={tab.failed ? 'Needs attention: see above the note' : undefined}
                 draggable
                 onClick={() => onActivate(tab.id)}
                 onContextMenu={(e) => {

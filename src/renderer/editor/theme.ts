@@ -8,7 +8,8 @@ export const editorTheme = EditorView.theme({
   '&': {
     height: '100%',
     color: 'var(--body)',
-    backgroundColor: 'transparent'
+    backgroundColor: 'transparent',
+    fontSize: 'var(--note-size, 13px)' // the font size setting (3.4)
   },
   '&.cm-focused': { outline: 'none' },
   '.cm-scroller': { fontFamily: 'var(--font-mono)', lineHeight: '1.75' },

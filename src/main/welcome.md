@@ -39,5 +39,8 @@ const answer = 42
 - Notes are plain files in `Documents/Scratchpost`. `Ctrl+O` opens any file
   from anywhere, and so does dropping it on the window.
 - Select a word and paste a link to turn the word into a link.
-- The buttons at the bottom switch light and dark mode and the theme colour.
+- The buttons at the bottom switch light and dark mode, the theme colour, and
+  open Settings (`Ctrl+,`), where you can also move the scratch folder.
+- Syncing the folder between machines is fine: a note that changes on disk
+  reloads, and one you're mid-edit on asks which version to keep.
 - "Open welcome note" in the command palette brings this back.

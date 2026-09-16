@@ -133,6 +133,17 @@ Never prompt for a filename. Never auto-rename on heading edits.
 Because every buffer is always a current file on disk, there is no separate
 crash-recovery mechanism and none should be built.
 
+### Changes from outside
+
+The folder is often synced from another machine, so notes change underneath
+the app (D35):
+
+- An open note with nothing unsaved reloads silently, cursor kept.
+- An open note with unsaved edits is never overwritten. A bar above it offers
+  "Keep mine" or "Load disk version", and saving waits for the choice.
+- A note deleted on disk stays open and marked; typing saves it again.
+- The notes and tags panels follow changes in the folder.
+
 ### Session
 
 `session.json` is stored in the app's userData directory, **not** in the notes
@@ -173,8 +184,8 @@ The status bar is gone (D33). Its jobs moved:
   date set large: the day a timestamp-named note was created, otherwise the
   day it last changed.
 - **Dock**, floating at the bottom of the note panel: notes panel, folder
-  search, open file, switch folder; then light or dark mode, theme colour, and
-  the command palette. Every button's tooltip is its command's label and
+  search, open file, switch folder; then light or dark mode, theme colour,
+  settings, and the command palette. Every button's tooltip is its command's label and
   shortcut.
 - **Toasts**, above the dock, for notices that aren't about saving. They
   dismiss themselves.
@@ -194,6 +205,7 @@ Standard CodeMirror 6 keymap plus:
 | Quick switcher | `Ctrl+P` |
 | Search in folder | `Ctrl+Shift+F` |
 | Toggle notes panel | `Ctrl+B` |
+| Settings | `Ctrl+,` |
 | New note | `Ctrl+N` |
 | Open file | `Ctrl+O` |
 | Rename | `F2` |

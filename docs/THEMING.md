@@ -87,11 +87,14 @@ Lightness carries the contrast, so it holds for every seed.
 
 ## Seeds
 
-The default is teal (172) in dark mode. "Change theme colour" offers the named
-seeds in `themes/index.ts`: Teal 172, Slate 218, Plum 320, Rose 350, Ochre 38
-and Moss 95. Any hue works; the settings UI (3.4) may offer a free picker.
-"Switch to light/dark mode" flips the mode. Both are saved in
-`settings.json` as `theme: { seed, mode }`.
+The default is teal (172) in dark mode. "Change theme colour" and Settings
+offer the named seeds in `themes/index.ts`: Teal 172, Slate 218, Plum 320,
+Rose 350, Ochre 38 and Moss 95. Settings also has a slider for any hue.
+
+The mode is `light`, `dark` or `system`; `system` follows the OS through
+`prefers-color-scheme` and switches live. "Switch to light/dark mode" always
+sets an explicit mode. Both are saved in `settings.json` as
+`theme: { seed, mode }`.
 
 ## Where colour appears
 
@@ -129,8 +132,9 @@ All bundled with the app, never fetched:
 - **IBM Plex Sans Condensed** 600: the h1 and h2 headings in notes, the empty
   state title and the date block.
 
-Exposed as `--font-mono`, `--font-sans` and `--font-title`. Font size is a user
-setting, defaulting to 13px; heading sizes are in em so they scale with it.
+Exposed as `--font-mono`, `--font-sans` and `--font-title`. Note text size is
+a setting from 10 to 24px, default 13px, applied as `--note-size`; heading
+sizes and the 80-character cap are in em and ch, so they scale with it.
 
 ## Shape
 

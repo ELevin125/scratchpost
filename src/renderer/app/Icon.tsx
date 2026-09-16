@@ -9,6 +9,8 @@ const paths = {
   folder: 'M2.5 4.5h5l2 2h8v9h-15z',
   open: 'M2.5 4.5h5l2 2h8v2 M2.5 4.5v11h12l3-7h-12l-3 7',
   plus: 'M10 4v12 M4 10h12',
+  minus: 'M4 10h12',
+  settings: 'M3 6h9 M15 6h2 M3 14h2 M8 14h9 M12 4v4 M5 12v4',
   command: 'M3 5l5 5-5 5 M10 15h7',
   x: 'M6 6l8 8 M14 6l-8 8',
   home: 'M3 9.5l7-6 7 6 M5 8v8.5h10V8',

@@ -67,7 +67,7 @@ src/
       search.ts           folder-wide content search
       tags.ts             tag index for the file tree
       welcome.ts          writes welcome.md into the scratch folder
-      watch.ts            chokidar-based external change detection
+      watch.ts            chokidar watchers for the folder context and open files (D35)
   preload/
     index.ts              contextBridge exposure
     api.ts                the typed API shape, shared with renderer
@@ -86,6 +86,7 @@ src/
       QuickSwitcher.tsx
       FolderMenu.tsx      scratch folder, recents, open folder
       ColourMenu.tsx      theme seed hues
+      SettingsPanel.tsx   mode, colour, note text size, scratch folder (3.4)
       Picker.tsx          shared overlay behind palette, switcher and menus
       SearchPanel.tsx
       EmptyState.tsx
@@ -161,7 +162,9 @@ interface ScratchpostAPI {
   // Command-line, "Open with" and second-launch paths. Subscribing marks the
   // renderer ready; earlier requests are delivered then.
   onOpenPaths(cb: (request: OpenRequest) => void): () => void
-  watchFolder(path: string, cb: (e: WatchEvent) => void): () => void
+  // Replaces what this window watches: the folder context and the open files.
+  watch(folder: string | null, files: string[]): Promise<void>
+  onWatchEvent(cb: (e: WatchEvent) => void): () => void // see D35
   getSession(): Promise<Session>
   setSession(s: Session): Promise<void>
   getSettings(): Promise<Settings>
@@ -189,7 +192,9 @@ interface Settings {
   folderContext: string | null // null means the scratch folder
   recentFolders: string[] // most recent first, at most 8
   welcomed: boolean // the welcome note has been offered; see D30
-  theme: { seed: number; mode: 'light' | 'dark' } // see D33
+  theme: { seed: number; mode: 'light' | 'dark' | 'system' } // see D33
+  scratchDir: string | null // null means ~/Documents/Scratchpost
+  fontSize: number // note text in px, 10 to 24
 }
 interface OpenRequest {
   files: string[] // open as tabs
@@ -256,19 +261,29 @@ notes folder is expected to be synced, and session state is machine-specific.
 ### Settings
 
 `settings.json` alongside it: folder context, recent folders, the welcome
-flag and the theme (seed hue and mode). The settings UI (3.4) adds the scratch
-folder path and font size.
+flag, the theme (seed hue and mode), the scratch folder and the note text
+size. Main validates every field on read and write; the renderer writes one at
+a time, always the latest.
 
 ### External changes
 
 `watch.ts` reports changes from outside the app, which happens whenever the
-folder is synced from the other machine.
+folder is synced from the other machine. Main runs two chokidar watchers per
+window: the folder context (depth 10, hidden files, `node_modules` and `.tmp`
+skipped) and the open files. Events include the app's own saves; the renderer
+tells them apart by content.
 
-- File changed on disk, buffer **not** dirty → reload silently, preserve cursor.
-- File changed on disk, buffer **is** dirty → do not clobber. Surface a status
-  bar notice offering reload or keep. This is the only conflict case and it
-  should be rare given the 400ms debounce.
-- File deleted on disk → mark the tab, do not close it.
+- The renderer keeps, per tab, the text last read from or written to disk,
+  and the text of a save in flight. A change whose content matches either, or
+  matches the buffer, is ignored.
+- File changed on disk, buffer **not** dirty → reload silently. Only the
+  differing span is replaced, so the cursor and scroll stay put.
+- File changed on disk, buffer **is** dirty → do not clobber. The tab is held
+  in conflict: saves stop (and fail, so closing is blocked), the pill is
+  marked, and a bar above the note offers "Keep mine" or "Load disk version".
+- File deleted on disk → mark the tab, do not close it. Typing saves it again.
+- Any change inside the folder context re-reads the listing and tag index
+  after 500ms.
 
 ## Testing
 

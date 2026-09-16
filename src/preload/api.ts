@@ -33,6 +33,8 @@ export interface TagSummary {
   paths: string[] // files containing it
 }
 
+// A file or folder changed outside the app. Also fired for the app's own
+// writes; the renderer tells those apart by content. See D35.
 export interface WatchEvent {
   type: 'change' | 'add' | 'unlink'
   path: string
@@ -58,7 +60,10 @@ export interface Settings {
   folderContext: string | null // null means the scratch folder
   recentFolders: string[] // most recent first, at most 8
   welcomed: boolean // the first-launch welcome note has been offered; see D30
-  theme: { seed: number; mode: 'light' | 'dark' } // seed is a hue, 0 to 359; see D33
+  // seed is a hue, 0 to 359; 'system' follows the OS light or dark setting. See D33.
+  theme: { seed: number; mode: 'light' | 'dark' | 'system' }
+  scratchDir: string | null // null means ~/Documents/Scratchpost
+  fontSize: number // note text in px, 10 to 24
 }
 
 export interface ScratchpostAPI {
@@ -83,7 +88,9 @@ export interface ScratchpostAPI {
   // Command-line, "Open with" and second-launch paths. Subscribing tells main
   // the renderer is ready; requests that arrived earlier are delivered then.
   onOpenPaths(cb: (request: OpenRequest) => void): () => void
-  watchFolder(path: string, cb: (e: WatchEvent) => void): () => void
+  // Replaces what this window watches: the folder context and the open files.
+  watch(folder: string | null, files: string[]): Promise<void>
+  onWatchEvent(cb: (e: WatchEvent) => void): () => void
   getSession(): Promise<Session>
   setSession(s: Session): Promise<void>
   getSettings(): Promise<Settings>

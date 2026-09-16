@@ -1,7 +1,7 @@
 import { history, standardKeymap } from '@codemirror/commands'
 import { markdown } from '@codemirror/lang-markdown'
 import { closeSearchPanel, search } from '@codemirror/search'
-import { EditorSelection, EditorState, type Extension } from '@codemirror/state'
+import { EditorSelection, EditorState, type Extension, type TransactionSpec } from '@codemirror/state'
 import { drawSelection, EditorView, keymap, type ViewUpdate } from '@codemirror/view'
 import { Strikethrough, TaskList } from '@lezer/markdown'
 import { codeHighlighting, codeLanguages } from './codeLanguages'
@@ -62,4 +62,23 @@ export function createEditorState(doc: string, extensions: Extension[], cursor =
     selection: EditorSelection.single(clamp(anchor), clamp(cursor)),
     extensions
   })
+}
+
+// Replaces a document with text from disk, changing only the part that
+// differs, so the cursor and scroll stay put wherever the text is unchanged.
+// Used when a note changes outside the app (3.1).
+export function replaceDocSpec(state: EditorState, text: string): TransactionSpec | null {
+  const current = state.doc.toString()
+  if (current === text) return null
+  let start = 0
+  const max = Math.min(current.length, text.length)
+  while (start < max && current.charCodeAt(start) === text.charCodeAt(start)) start++
+  let end = 0
+  while (
+    end < max - start &&
+    current.charCodeAt(current.length - 1 - end) === text.charCodeAt(text.length - 1 - end)
+  ) {
+    end++
+  }
+  return { changes: { from: start, to: current.length - end, insert: text.slice(start, text.length - end) } }
 }
