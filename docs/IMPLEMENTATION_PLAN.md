@@ -278,7 +278,7 @@ Batches, in order: 2.12–2.17; then 2.11 with 3.4 and 3.8; then 2.22; then
   *Accept:* editing the same note from a synced second machine behaves per
   `ARCHITECTURE.md`.
 
-- [ ] **3.2 Pin and archive tabs**
+- [x] **3.2 Pin and archive tabs**
   Pinned tabs sort first and survive close-all. Archive moves a note to an
   `archive/` subfolder.
   *Accept:* pinned state persists in session.

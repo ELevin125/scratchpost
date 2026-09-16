@@ -1,5 +1,5 @@
-import { access, lstat, mkdir, open, readFile, rename, unlink } from 'node:fs/promises'
-import { basename, dirname, isAbsolute, join, relative, sep } from 'node:path'
+import { access, link, lstat, mkdir, open, readFile, rename, unlink } from 'node:fs/promises'
+import { basename, dirname, extname, isAbsolute, join, relative, sep } from 'node:path'
 import { NOTE_FILE } from './list'
 
 const pad = (n: number) => String(n).padStart(2, '0')
@@ -32,13 +32,54 @@ export async function renameNote(from: string, to: string): Promise<void> {
   if (from === to) return
   // A case-only rename is the same file on Windows; let it through.
   if (from.toLowerCase() !== to.toLowerCase()) {
-    const taken = await access(to).then(
-      () => true,
-      () => false
-    )
-    if (taken) throw new Error(`${basename(to)} already exists`)
+    if (await exists(to)) throw new Error(`${basename(to)} already exists`)
   }
   await rename(from, to)
+}
+
+const exists = (path: string) =>
+  access(path).then(
+    () => true,
+    () => false
+  )
+
+// Moves a note into dir under the same name, or name-2, name-3 if taken, and
+// returns the new path. A hard link claims the name atomically; where links
+// aren't supported it falls back to checking first.
+export async function moveNoteTo(from: string, dir: string): Promise<string> {
+  await mkdir(dir, { recursive: true })
+  const ext = extname(from)
+  const stem = basename(from, ext)
+  for (let n = 1; ; n++) {
+    const to = join(dir, n === 1 ? `${stem}${ext}` : `${stem}-${n}${ext}`)
+    try {
+      await link(from, to)
+    } catch (err) {
+      const code = (err as NodeJS.ErrnoException).code
+      if (code === 'EEXIST') continue
+      if (code !== 'EPERM' && code !== 'ENOTSUP' && code !== 'EXDEV' && code !== 'ENOSYS') throw err
+      if (await exists(to)) continue
+      await rename(from, to)
+      return to
+    }
+    await unlink(from)
+    return to
+  }
+}
+
+// Archived notes live in an `archive` folder beside where they were. See D36.
+export const ARCHIVE_DIR = 'archive'
+
+export const isArchived = (path: string) => basename(dirname(path)) === ARCHIVE_DIR
+
+export async function archiveNote(path: string): Promise<string> {
+  if (isArchived(path)) throw new Error('already archived')
+  return moveNoteTo(path, join(dirname(path), ARCHIVE_DIR))
+}
+
+export async function unarchiveNote(path: string): Promise<string> {
+  if (!isArchived(path)) throw new Error('not in an archive folder')
+  return moveNoteTo(path, dirname(dirname(path)))
 }
 
 export function isInsideDir(path: string, dir: string): boolean {

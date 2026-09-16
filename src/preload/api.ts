@@ -51,7 +51,7 @@ export interface OpenRequest {
 export interface Session {
   // cursor and scroll are document positions; scroll is the start of the top
   // visible line, so it survives a different window size.
-  tabs: { path: string; cursor: number; scroll: number }[]
+  tabs: { path: string; cursor: number; scroll: number; pinned?: boolean }[]
   activeIndex: number // -1 when the active tab wasn't saved
 }
 
@@ -77,6 +77,10 @@ export interface ScratchpostAPI {
   renameFile(from: string, to: string): Promise<void> // same folder, never overwrites
   deleteIfEmpty(path: string): Promise<boolean> // scratch folder only; see D23
   trashFile(path: string): Promise<void> // .md and .txt files only, to the OS trash; see D29
+  // Moves a note into an archive/ folder beside it, or back out; returns the
+  // new path. Never overwrites: a taken name gets -2, -3. See D36.
+  archiveFile(path: string): Promise<string>
+  unarchiveFile(path: string): Promise<string>
   showInFolder(path: string): Promise<void> // reveal in the file manager
   listFolder(path: string): Promise<FolderEntry[]> // recursive walk; see D25
   searchFolder(path: string, query: string): Promise<SearchHit[]> // see D27

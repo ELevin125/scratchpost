@@ -4,6 +4,7 @@ import { tagHue } from '../../shared/tags'
 import { Icon } from './Icon'
 import { commandHint } from './state/commands'
 import { buildTree, relativeTime, sortRecent, type TreeNode } from './state/fileTree'
+import { isArchivedPath } from './state/tabs'
 import type { Listing } from './useFolderContext'
 
 interface Point {
@@ -69,7 +70,11 @@ export function FileTree({
   )
   const tree = useMemo(() => (listing ? buildTree(listing.root, entries, order) : []), [listing, entries, order])
   const files = useMemo(() => entries.filter((entry) => !entry.isDir), [entries])
-  const recent = useMemo(() => sortRecent(files).slice(0, RECENT_COUNT), [files])
+  // Archived notes stay out of the recent list; "Show all" still has them.
+  const recent = useMemo(
+    () => sortRecent(files.filter((file) => !isArchivedPath(file.path))).slice(0, RECENT_COUNT),
+    [files]
+  )
   const tags = listing?.tags ?? []
   const activeTag = tags.find((t) => t.tag === tagFilter) ?? null
   const filtered = useMemo(() => {

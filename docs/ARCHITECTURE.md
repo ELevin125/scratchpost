@@ -151,6 +151,8 @@ interface ScratchpostAPI {
   renameFile(from: string, to: string): Promise<void> // same folder, never overwrites
   deleteIfEmpty(path: string): Promise<boolean> // scratch folder only; see D23
   trashFile(path: string): Promise<void> // .md and .txt files only, to the OS trash; see D29
+  archiveFile(path: string): Promise<string> // into ./archive, returns the new path; see D36
+  unarchiveFile(path: string): Promise<string> // back out of ./archive
   showInFolder(path: string): Promise<void> // reveal in the file manager
   listFolder(path: string): Promise<FolderEntry[]> // recursive walk; see D25
   searchFolder(path: string, query: string): Promise<SearchHit[]> // see D27
@@ -207,7 +209,7 @@ interface WatchEvent { type: 'change' | 'add' | 'unlink'; path: string }
 interface Session {
   // cursor and scroll are document positions; scroll is the start of the top
   // visible line, so it survives a different window size.
-  tabs: { path: string; cursor: number; scroll: number }[]
+  tabs: { path: string; cursor: number; scroll: number; pinned?: boolean }[]
   activeIndex: number // -1 when the active tab wasn't saved
 }
 ```

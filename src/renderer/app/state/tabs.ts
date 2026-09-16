@@ -4,6 +4,7 @@ export interface Tab {
   id: string
   path: string | null // null until a new note's first keystroke creates its file
   scratch: boolean // lives in the scratch folder; decides the display name
+  pinned?: boolean // pinned tabs sit first and survive "close all" (3.2)
 }
 
 export interface TabsState {
@@ -34,13 +35,39 @@ export function activateTab(state: TabsState, id: string): TabsState {
   return state.tabs.some((t) => t.id === id) ? { ...state, activeId: id } : state
 }
 
+// Pinned tabs first, each group keeping its order.
+export function pinnedFirst(tabs: readonly Tab[]): Tab[] {
+  return [...tabs.filter((t) => t.pinned), ...tabs.filter((t) => !t.pinned)]
+}
+
+// A tab only moves within its own group: pinned among pinned, the rest after.
 export function moveTab(state: TabsState, id: string, toIndex: number): TabsState {
   const from = state.tabs.findIndex((t) => t.id === id)
   if (from === -1) return state
   const tabs = [...state.tabs]
   const [tab] = tabs.splice(from, 1)
-  tabs.splice(Math.max(0, Math.min(toIndex, tabs.length)), 0, tab)
+  const pinnedCount = tabs.filter((t) => t.pinned).length
+  const [min, max] = tab.pinned ? [0, pinnedCount] : [pinnedCount, tabs.length]
+  tabs.splice(Math.max(min, Math.min(toIndex, max)), 0, tab)
   return { ...state, tabs }
+}
+
+// Pinning moves a tab to the end of the pinned group; unpinning, to the start
+// of the rest.
+export function setPinned(state: TabsState, id: string, pinned: boolean): TabsState {
+  const tab = state.tabs.find((t) => t.id === id)
+  if (!tab || Boolean(tab.pinned) === pinned) return state
+  const others = state.tabs.filter((t) => t.id !== id)
+  const pinnedCount = others.filter((t) => t.pinned).length
+  const tabs = [...others]
+  tabs.splice(pinnedCount, 0, { ...tab, pinned })
+  return { ...state, tabs }
+}
+
+// The tabs "close others" (keep given) and "close all" (keep null) close.
+// Pinned tabs are never among them.
+export function closableTabs(state: TabsState, keep: string | null): Tab[] {
+  return state.tabs.filter((t) => !t.pinned && t.id !== keep)
 }
 
 export function setTabPath(state: TabsState, id: string, path: string): TabsState {
@@ -48,6 +75,9 @@ export function setTabPath(state: TabsState, id: string, path: string): TabsStat
 }
 
 const normalisePath = (p: string) => p.replace(/\\/g, '/').replace(/\/+$/, '')
+
+// A note directly inside a folder named `archive` (D36).
+export const isArchivedPath = (path: string): boolean => /(^|\/)archive\/[^/]+$/.test(normalisePath(path))
 
 // True for files anywhere under dir, including subfolders.
 export function isInside(path: string, dir: string): boolean {

@@ -43,8 +43,12 @@ import {
   fileName,
   firstContentLine,
   isInside,
+  closableTabs,
+  isArchivedPath,
   moveTab,
   openTab,
+  pinnedFirst,
+  setPinned,
   setTabPath,
   suggestedNoteName,
   type Tab,
@@ -244,13 +248,18 @@ export function App() {
           metas.set(id, meta)
           diskText.set(id, content)
           lines[id] = firstContentLine(content.split('\n'))
-          restored.push({ id, path: saved.path, scratch: dir !== null && isInside(saved.path, dir) })
+          restored.push({
+            id,
+            path: saved.path,
+            scratch: dir !== null && isInside(saved.path, dir),
+            ...(saved.pinned ? { pinned: true } : {})
+          })
           if (index === session.activeIndex) activeRestored = id
         }
 
         setFirstLines((prev) => ({ ...prev, ...lines }))
         updateTabs((s) => ({
-          tabs: [...restored, ...s.tabs],
+          tabs: pinnedFirst([...restored, ...s.tabs]),
           activeId: s.activeId ?? activeRestored ?? restored.at(-1)?.id ?? null
         }))
       } catch {
@@ -536,9 +545,43 @@ export function App() {
     }
   }
 
+  // --- Pinning, closing many, archiving (3.2) ---
+
+  const closeMany = async (keep: string | null) => {
+    for (const tab of closableTabs(tabsRef.current, keep)) await close(tab.id)
+  }
+
+  // Archiving closes the note's tab; Ctrl+Shift+T reopens it from the archive.
+  // Moving out of the archive keeps the tab open at the new path. See D36.
+  const moveArchive = async (path: string, out: boolean) => {
+    const tab = tabsRef.current.tabs.find((t) => t.path === path)
+    if (tab && !(await autosave.flush(tab.id))) return
+    try {
+      const to = out ? await api.unarchiveFile(path) : await api.archiveFile(path)
+      closedPaths.current = closedPaths.current.filter((p) => p !== path)
+      if (tab && out) {
+        updateTabs((s) => setTabPath(s, tab.id, to))
+        setExternal(tab.id, null)
+      } else if (tab) {
+        discardTab(tab.id)
+        closedPaths.current = [...closedPaths.current, to].slice(-MAX_CLOSED)
+      }
+      setNotice(out ? `moved ${fileName(to)} out of the archive` : `archived ${fileName(path)}`)
+      void refreshFolder()
+    } catch (err) {
+      setNotice(`couldn't ${out ? 'move' : 'archive'} ${fileName(path)}: ${errorMessage(err)}`)
+    }
+  }
+
+  const archiveItem = (path: string): MenuItem =>
+    isArchivedPath(path)
+      ? menuItem('file.unarchive', () => void moveArchive(path, true))
+      : menuItem('file.archive', () => void moveArchive(path, false))
+
   // --- Context menus ---
 
   const pathItems = (path: string): MenuItem[] => [
+    archiveItem(path),
     menuItem('file.reveal', () => revealPath(path)),
     menuItem('file.copyPath', () => copyPath(path)),
     menuItem('file.delete', () => void deleteNote(path))
@@ -556,7 +599,11 @@ export function App() {
             })
           ]
         : []),
+      tab.pinned
+        ? menuItem('tab.unpin', () => updateTabs((s) => setPinned(s, tab.id, false)))
+        : menuItem('tab.pin', () => updateTabs((s) => setPinned(s, tab.id, true))),
       menuItem('tab.close', () => void close(tab.id)),
+      ...(tabsRef.current.tabs.length > 1 ? [menuItem('tab.closeOthers', () => void closeMany(tab.id))] : []),
       ...(tab.path ? pathItems(tab.path) : [])
     ]
     setMenu({ ...at, items })
@@ -842,7 +889,21 @@ export function App() {
         if (theme) void folder.setTheme({ ...theme, mode: themeMode === 'dark' ? 'light' : 'dark' })
       },
       openColours: () => setOverlay('colours'),
-      openSettings: () => setOverlay('settings')
+      openSettings: () => setOverlay('settings'),
+      pinActive: (pinned) => {
+        const id = tabsRef.current.activeId
+        if (id) updateTabs((s) => setPinned(s, id, pinned))
+      },
+      closeOthers: () => void closeMany(tabsRef.current.activeId),
+      closeAll: () => void closeMany(null),
+      archiveActive: () => {
+        const path = activeTab()?.path
+        if (path) void moveArchive(path, false)
+      },
+      unarchiveActive: () => {
+        const path = activeTab()?.path
+        if (path) void moveArchive(path, true)
+      }
     }
   })
 
@@ -854,6 +915,9 @@ export function App() {
       activePath: tab?.path ?? null,
       isScratchContext,
       mode: themeMode,
+      activePinned: Boolean(tab?.pinned),
+      activeArchived: tab?.path ? isArchivedPath(tab.path) : false,
+      tabCount: tabsRef.current.tabs.length,
       actions: actionsRef.current!
     }
   }, [activeTab, isScratchContext, themeMode])
@@ -962,7 +1026,8 @@ export function App() {
         tabs={tabs.map((tab) => ({
           id: tab.id,
           name: nameOf(tab),
-          failed: saveStates[tab.id]?.kind === 'error' || tab.id in external
+          failed: saveStates[tab.id]?.kind === 'error' || tab.id in external,
+          pinned: Boolean(tab.pinned)
         }))}
         activeId={activeId}
         onActivate={activate}

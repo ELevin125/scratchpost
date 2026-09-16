@@ -5,6 +5,7 @@ export interface TabView {
   id: string
   name: string
   failed: boolean // a failed save or a change on disk; the pill shows a marker
+  pinned: boolean // shows a pin instead of the close button
 }
 
 interface TopBarProps {
@@ -50,7 +51,13 @@ export function TopBar({
                 key={tab.id}
                 role="tab"
                 aria-selected={active}
-                className={['tab', active && 'active', tab.failed && 'failed', tab.id === draggingId && 'dragging']
+                className={[
+                  'tab',
+                  active && 'active',
+                  tab.pinned && 'pinned',
+                  tab.failed && 'failed',
+                  tab.id === draggingId && 'dragging'
+                ]
                   .filter(Boolean)
                   .join(' ')}
                 title={tab.failed ? 'Needs attention: see above the note' : undefined}
@@ -60,9 +67,10 @@ export function TopBar({
                   e.preventDefault()
                   onTabMenu(tab.id, { x: e.clientX, y: e.clientY })
                 }}
-                // Middle-click closes; preventing mousedown stops autoscroll.
+                // Middle-click closes, except pinned pills; preventing
+                // mousedown stops autoscroll.
                 onMouseDown={(e) => e.button === 1 && e.preventDefault()}
-                onAuxClick={(e) => e.button === 1 && onClose(tab.id)}
+                onAuxClick={(e) => e.button === 1 && !tab.pinned && onClose(tab.id)}
                 onDragStart={(e) => {
                   e.dataTransfer.effectAllowed = 'move'
                   setDraggingId(tab.id)
@@ -75,8 +83,14 @@ export function TopBar({
                 }}
                 onDragEnd={() => setDraggingId(null)}
               >
+                {tab.pinned && (
+                  <span className="tab-pin" title="Pinned">
+                    <Icon name="pin" size={13} />
+                  </span>
+                )}
                 <span className="tab-name">{tab.name}</span>
-                <button
+                {!tab.pinned && (
+                  <button
                   className="tab-close"
                   aria-label={`Close ${tab.name}`}
                   onClick={(e) => {
@@ -85,7 +99,8 @@ export function TopBar({
                   }}
                 >
                   <Icon name="x" size={14} />
-                </button>
+                  </button>
+                )}
               </div>
             )
           })}

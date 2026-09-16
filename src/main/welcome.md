@@ -36,6 +36,8 @@ const answer = 42
   sticks.
 - Close a note you never typed in and it leaves no file behind.
 - `Ctrl+Shift+T` reopens the tab you just closed.
+- Right-click a note's pill to pin it, so it stays at the left and survives
+  "Close all tabs", or to archive it into an `archive` folder.
 - Notes are plain files in `Documents/Scratchpost`. `Ctrl+O` opens any file
   from anywhere, and so does dropping it on the window.
 - Select a word and paste a link to turn the word into a link.

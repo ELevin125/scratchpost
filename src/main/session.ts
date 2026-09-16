@@ -23,10 +23,15 @@ export function sanitizeSession(value: unknown): Session {
   const tabs: Session['tabs'] = []
   raw.tabs.forEach((entry, index) => {
     if (typeof entry !== 'object' || entry === null) return
-    const { path, cursor, scroll } = entry as Record<string, unknown>
+    const { path, cursor, scroll, pinned } = entry as Record<string, unknown>
     if (typeof path !== 'string' || path === '') return
     if (index === raw.activeIndex) activeIndex = tabs.length
-    tabs.push({ path, cursor: nonNegativeInt(cursor), scroll: nonNegativeInt(scroll) })
+    tabs.push({
+      path,
+      cursor: nonNegativeInt(cursor),
+      scroll: nonNegativeInt(scroll),
+      ...(pinned === true ? { pinned: true } : {})
+    })
   })
   return { tabs, activeIndex }
 }

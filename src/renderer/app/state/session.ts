@@ -13,7 +13,7 @@ export interface TabPosition {
 export function snapshotSession(state: TabsState, positionOf: (id: string) => TabPosition): Session {
   const saved = state.tabs.filter((tab) => tab.path !== null)
   return {
-    tabs: saved.map((tab) => ({ path: tab.path!, ...positionOf(tab.id) })),
+    tabs: saved.map((tab) => ({ path: tab.path!, ...positionOf(tab.id), ...(tab.pinned ? { pinned: true } : {}) })),
     activeIndex: saved.findIndex((tab) => tab.id === state.activeId)
   }
 }

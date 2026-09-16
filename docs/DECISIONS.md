@@ -782,6 +782,43 @@ the tab would then drop the edits).
 
 ---
 
+## D36 — Pinned tabs and the archive
+
+Task 3.2.
+
+**Pinned tabs.**
+
+- "Pin tab" and "Unpin tab" in the palette and the pill's right-click menu.
+  Pinning moves the pill to the end of the pinned group at the left;
+  unpinning moves it to the start of the rest. Dragging never mixes the two
+  groups.
+- A pinned pill shows a pin and no `×`, and middle-click doesn't close it.
+  `Ctrl+W` and "Close tab" still do: closing a pinned tab on purpose is fine.
+- New "Close other tabs" and "Close all tabs" commands skip pinned tabs.
+  Tabs whose save fails stay open, as with any close.
+- Pinned state is saved in `session.json` (`pinned: true` per tab).
+
+**The archive.**
+
+- "Archive note" moves the file into an `archive` folder beside it, so a
+  scratch note goes to `Scratchpost/archive/` and a note in `work/` to
+  `work/archive/`. "Move out of archive" moves it back up one folder. Both are
+  in the palette and in the right-click menus for pills and panel rows.
+- Never overwrites: a taken name gets `-2`, `-3`. The name is claimed with a
+  hard link, which fails atomically if taken, then the original is removed;
+  file systems without hard links fall back to check-then-rename.
+- Archiving closes the note's tab, and `Ctrl+Shift+T` reopens it from its new
+  place. Moving a note out keeps its tab open.
+- Archived notes are left out of the scratch folder's recent list; "Show all",
+  the quick switcher, search and the tag index still include them.
+- Only `.md` and `.txt` files, like delete.
+
+**Rejected:** a separate archive location outside the notes folder (it would
+not sync), and an "archived" flag stored by the app (the notes folder should
+say everything by itself).
+
+---
+
 ## Open questions
 
 Not yet decided. Do not guess; raise them.

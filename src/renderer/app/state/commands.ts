@@ -41,6 +41,11 @@ export interface AppActions {
   toggleMode(): void
   openColours(): void
   openSettings(): void
+  pinActive(pinned: boolean): void
+  closeOthers(): void
+  closeAll(): void
+  archiveActive(): void
+  unarchiveActive(): void
 }
 
 export interface CommandContext {
@@ -48,6 +53,9 @@ export interface CommandContext {
   activePath: string | null // null for a new note that has no file yet
   isScratchContext: boolean // the folder context is the scratch folder
   mode: 'light' | 'dark' // the current theme mode, for the toggle's label
+  activePinned: boolean
+  activeArchived: boolean // the active note sits in an archive folder
+  tabCount: number
   actions: AppActions
 }
 
@@ -124,6 +132,18 @@ export const commands: readonly Command[] = [
   { id: 'file.rename', label: 'Rename file…', shortcut: 'F2', run: (ctx) => ctx.actions.renameActive(), when: hasFile },
   { id: 'file.reveal', label: 'Show in file manager', run: (ctx) => ctx.actions.revealActive(), when: hasFile },
   { id: 'file.copyPath', label: 'Copy path', run: (ctx) => ctx.actions.copyActivePath(), when: hasFile },
+  {
+    id: 'file.archive',
+    label: 'Archive note',
+    run: (ctx) => ctx.actions.archiveActive(),
+    when: (ctx) => hasFile(ctx) && !ctx.activeArchived
+  },
+  {
+    id: 'file.unarchive',
+    label: 'Move out of archive',
+    run: (ctx) => ctx.actions.unarchiveActive(),
+    when: (ctx) => hasFile(ctx) && ctx.activeArchived
+  },
   { id: 'file.delete', label: 'Delete note', run: (ctx) => ctx.actions.deleteActive(), when: hasFile },
 
   { id: 'tab.next', label: 'Next tab', shortcut: 'Ctrl+Tab', run: (ctx) => ctx.actions.nextTab(), when: hasTab },
@@ -135,6 +155,30 @@ export const commands: readonly Command[] = [
     when: hasTab
   },
   { id: 'tab.close', label: 'Close tab', shortcut: 'Ctrl+W', run: (ctx) => ctx.actions.closeActive(), when: hasTab },
+  {
+    id: 'tab.pin',
+    label: 'Pin tab',
+    run: (ctx) => ctx.actions.pinActive(true),
+    when: (ctx) => hasTab(ctx) && !ctx.activePinned
+  },
+  {
+    id: 'tab.unpin',
+    label: 'Unpin tab',
+    run: (ctx) => ctx.actions.pinActive(false),
+    when: (ctx) => hasTab(ctx) && ctx.activePinned
+  },
+  {
+    id: 'tab.closeOthers',
+    label: 'Close other tabs',
+    run: (ctx) => ctx.actions.closeOthers(),
+    when: (ctx) => ctx.tabCount > 1
+  },
+  {
+    id: 'tab.closeAll',
+    label: 'Close all tabs',
+    run: (ctx) => ctx.actions.closeAll(),
+    when: (ctx) => ctx.tabCount > 0
+  },
   { id: 'tab.reopen', label: 'Reopen closed tab', shortcut: 'Ctrl+Shift+T', run: (ctx) => ctx.actions.reopenClosed() },
 
   { id: 'find.open', label: 'Find in note', shortcut: 'Ctrl+F', ...editorCommand(openSearchPanel) },

@@ -100,6 +100,14 @@ syntax degrades gracefully in other editors.
 - Middle-click or the `×` (shown on hover and on the active pill) closes.
   Closing does not prompt; the file is saved.
 - Tab order is user-reorderable by drag and persists across restarts.
+- **Pinned** tabs sit at the left with a pin and no `×`, and survive "Close
+  other tabs" and "Close all tabs". Pinned state persists (D36).
+
+### Archive
+
+"Archive note" moves a note into an `archive` folder beside it and closes its
+tab; "Move out of archive" moves it back. Archived notes leave the recent list
+but stay findable everywhere else. Nothing is ever overwritten (D36).
 
 ### New notes
 
@@ -216,6 +224,8 @@ Standard CodeMirror 6 keymap plus:
 | Reopen closed tab | `Ctrl+Shift+T` |
 | Insert date (`YYYY-MM-DD`) | palette only |
 | Delete note, show in file manager, copy path | palette and right-click menus |
+| Pin tab, close other tabs, close all tabs | palette and right-click menus |
+| Archive note, move out of archive | palette and right-click menus |
 
 Every binding above is a command in the registry and appears in the palette
 with its shortcut (D24). `Enter` and `Tab` are editor keys (D21).

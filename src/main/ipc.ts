@@ -12,7 +12,7 @@ import { join } from 'node:path'
 import type { FileMeta } from '../preload/api'
 import { isExternalUrl } from './external'
 import { listFolder } from './fs/list'
-import { createNote, deleteIfEmpty, isNoteFile, renameNote } from './fs/note'
+import { archiveNote, createNote, deleteIfEmpty, isNoteFile, renameNote, unarchiveNote } from './fs/note'
 import { readTextFile } from './fs/read'
 import { searchFolder } from './fs/search'
 import { indexTags } from './fs/tags'
@@ -82,6 +82,18 @@ export function registerIpc(): void {
     assertString(path, 'path')
     if (!(await isNoteFile(path))) throw new Error('only .md and .txt files can be deleted')
     await shell.trashItem(path)
+  })
+
+  ipcMain.handle('archiveFile', async (_event, path: unknown) => {
+    assertString(path, 'path')
+    if (!(await isNoteFile(path))) throw new Error('only .md and .txt files can be archived')
+    return archiveNote(path)
+  })
+
+  ipcMain.handle('unarchiveFile', async (_event, path: unknown) => {
+    assertString(path, 'path')
+    if (!(await isNoteFile(path))) throw new Error('only .md and .txt files can be moved')
+    return unarchiveNote(path)
   })
 
   ipcMain.handle('showInFolder', (_event, path: unknown) => {
