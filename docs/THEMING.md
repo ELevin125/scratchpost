@@ -35,6 +35,9 @@ interface Theme {
     spot: string         // accent
     spotTint: string     // accent wash
     rule: string         // hairline borders
+    codeString: string   // strings in highlighted code
+    codeLiteral: string  // numbers, booleans, null in highlighted code
+    codeName: string     // function, class and type names in highlighted code
     hatch: string        // dot field
   }
   tagColor: {            // percentages, 0 to 100
@@ -47,7 +50,8 @@ interface Theme {
 
 Applied at runtime by writing each value to `document.documentElement.style` as
 `--paper`, `--paper-2`, `--bar`, `--ink`, `--ink-soft`, `--body`, `--spot`,
-`--spot-tint`, `--rule`, `--hatch`, plus `--tag-saturation` and
+`--spot-tint`, `--rule`, `--code-string`, `--code-literal`, `--code-name`,
+`--hatch`, plus `--tag-saturation` and
 `--tag-lightness`.
 
 ## Tag colours
@@ -75,6 +79,9 @@ body       #C7C4BC
 spot       #E0592F
 spotTint   rgba(224, 89, 47, 0.08)
 rule       #33363A
+codeString #A9B58F
+codeLiteral #D2A874
+codeName   #94ABC6
 hatch      rgba(255, 255, 255, 0.025)
 ```
 
@@ -90,11 +97,22 @@ body       #2E2F30
 spot       #BF3B1E
 spotTint   rgba(191, 59, 30, 0.08)
 rule       #B4B0A4
+codeString #3D5A2A
+codeLiteral #744A12
+codeName   #35557A
 hatch      rgba(0, 0, 0, 0.045)
 ```
 
 Both are cool-neutral greys with a warm cream ink and a vermilion spot. Do not
 warm the greys; this was corrected once already.
+
+## Code highlighting
+
+Fenced code in a bundled language uses five classes (see `MARKDOWN_SPEC.md`).
+Keywords and comments stay on the neutral ramp (`--ink` at weight 500, and
+`--ink-soft` in italic). Only strings, literals and names get their own
+tokens, all muted so a code block reads as quieter than prose. They must hold
+contrast on `--bar`, the code block background. Never `--spot`. See D32.
 
 ## Typography
 

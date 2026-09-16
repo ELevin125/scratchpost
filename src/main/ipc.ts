@@ -18,6 +18,7 @@ import { searchFolder } from './fs/search'
 import { indexTags } from './fs/tags'
 import { createWelcomeNote } from './fs/welcome'
 import { writeTextFile } from './fs/write'
+import { classifyPaths } from './launch'
 import { loadSession, saveSession } from './session'
 import { loadSettings, saveSettings } from './settings'
 import welcomeText from './welcome.md?raw'
@@ -116,6 +117,14 @@ export function registerIpc(): void {
   )
 
   ipcMain.handle('pickFolder', (event) => pickPath(event, { properties: ['openDirectory'] }))
+
+  // Dropped files arrive as absolute paths from the preload's pathForFile.
+  ipcMain.handle('resolvePaths', (_event, paths: unknown) => {
+    if (!Array.isArray(paths) || !paths.every((p) => typeof p === 'string')) {
+      throw new TypeError('paths must be an array of strings')
+    }
+    return classifyPaths(paths, app.getPath('home'))
+  })
 
   ipcMain.handle('getSession', () => loadSession())
 

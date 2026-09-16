@@ -57,6 +57,7 @@ src/
     session.ts            session.json read, validation and atomic write
     settings.ts           settings.json read, validation and atomic write
     external.ts           which links may open in the system browser
+    launch.ts             single instance, command-line and dropped paths (D32)
     welcome.md            the welcome note's text, the in-app tutorial (D30)
     fs/
       read.ts             readFile with encoding + EOL + BOM detection
@@ -109,6 +110,8 @@ src/
       tags.ts             [tag] pill decoration
       lists.ts            Enter continuation, Tab indent and outdent
       renumber.ts         keeps numbered lists counting up after edits
+      typing.ts           auto-closing pairs, pasting a URL as a link (D32)
+      codeLanguages.ts    bundled languages and classes for code highlighting
       keymap.ts           bindings, sourced from the command registry
       theme.ts            CM6 theme built from theme tokens
     themes/
@@ -150,6 +153,11 @@ interface ScratchpostAPI {
   listTags(path: string): Promise<TagSummary[]> // tag index; see D27
   pickFolder(): Promise<string | null>
   pickFile(): Promise<string | null>
+  pathForFile(file: File): string // a dropped file's path, via webUtils
+  resolvePaths(paths: string[]): Promise<OpenRequest> // sorts dropped paths; see D32
+  // Command-line, "Open with" and second-launch paths. Subscribing marks the
+  // renderer ready; earlier requests are delivered then.
+  onOpenPaths(cb: (request: OpenRequest) => void): () => void
   watchFolder(path: string, cb: (e: WatchEvent) => void): () => void
   getSession(): Promise<Session>
   setSession(s: Session): Promise<void>
@@ -178,6 +186,11 @@ interface Settings {
   folderContext: string | null // null means the scratch folder
   recentFolders: string[] // most recent first, at most 8
   welcomed: boolean // the welcome note has been offered; see D30
+}
+interface OpenRequest {
+  files: string[] // open as tabs
+  folders: string[] // the last becomes the folder context
+  skipped: string[] // binary files (a NUL in the first 8 KB), never opened
 }
 interface SearchHit { path: string; line: number; text: string } // line is 1-based
 interface TagSummary { tag: string; count: number; paths: string[] } // tag lowercased

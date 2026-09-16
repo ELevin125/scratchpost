@@ -1,5 +1,5 @@
-import { contextBridge, ipcRenderer } from 'electron'
-import type { ScratchpostAPI } from './api'
+import { contextBridge, ipcRenderer, webUtils } from 'electron'
+import type { OpenRequest, ScratchpostAPI } from './api'
 
 const api: ScratchpostAPI = {
   readFile: (path) => ipcRenderer.invoke('readFile', path),
@@ -16,6 +16,16 @@ const api: ScratchpostAPI = {
   listTags: (path) => ipcRenderer.invoke('listTags', path),
   pickFolder: () => ipcRenderer.invoke('pickFolder'),
   pickFile: () => ipcRenderer.invoke('pickFile'),
+  pathForFile: (file) => webUtils.getPathForFile(file),
+  resolvePaths: (paths) => ipcRenderer.invoke('resolvePaths', paths),
+  onOpenPaths: (cb) => {
+    const listener = (_event: Electron.IpcRendererEvent, request: OpenRequest) => cb(request)
+    ipcRenderer.on('openPaths', listener)
+    ipcRenderer.send('openPathsReady')
+    return () => {
+      ipcRenderer.removeListener('openPaths', listener)
+    }
+  },
   // Lands with external change watching in 3.1. Synchronous in the interface,
   // so it throws rather than rejects.
   watchFolder: () => {

@@ -38,6 +38,13 @@ export interface WatchEvent {
   path: string
 }
 
+// Paths opened from outside the app; see D32.
+export interface OpenRequest {
+  files: string[] // open as tabs, in order
+  folders: string[] // the last one becomes the folder context
+  skipped: string[] // binary files, never opened
+}
+
 // Stored as session.json in userData. Never holds note content.
 export interface Session {
   // cursor and scroll are document positions; scroll is the start of the top
@@ -70,6 +77,11 @@ export interface ScratchpostAPI {
   listTags(path: string): Promise<TagSummary[]> // tag index; see D27
   pickFolder(): Promise<string | null>
   pickFile(): Promise<string | null>
+  pathForFile(file: File): string // a dropped file's path; '' if it has none
+  resolvePaths(paths: string[]): Promise<OpenRequest> // sorts dropped paths; see D32
+  // Command-line, "Open with" and second-launch paths. Subscribing tells main
+  // the renderer is ready; requests that arrived earlier are delivered then.
+  onOpenPaths(cb: (request: OpenRequest) => void): () => void
   watchFolder(path: string, cb: (e: WatchEvent) => void): () => void
   getSession(): Promise<Session>
   setSession(s: Session): Promise<void>

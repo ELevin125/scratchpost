@@ -4,10 +4,12 @@ import { closeSearchPanel, search } from '@codemirror/search'
 import { EditorSelection, EditorState, type Extension } from '@codemirror/state'
 import { drawSelection, EditorView, keymap, type ViewUpdate } from '@codemirror/view'
 import { Strikethrough, TaskList } from '@lezer/markdown'
+import { codeHighlighting, codeLanguages } from './codeLanguages'
 import { listKeymap } from './lists'
 import { livePreview } from './livePreview'
 import { renumberLists } from './renumber'
 import { editorTheme } from './theme'
+import { typingHelpers } from './typing'
 
 export interface EditorStats {
   line: number
@@ -30,10 +32,13 @@ export function editorExtensions(onUpdate: (update: ViewUpdate) => void): Extens
     EditorView.lineWrapping,
     // CommonMark plus GFM task lists and strikethrough; see MARKDOWN_SPEC.md.
     // The package's own Enter handling is off: lists.ts implements the spec's.
-    markdown({ extensions: [TaskList, Strikethrough], addKeymap: false }),
+    // Fences naming a bundled language are highlighted; see codeLanguages.ts.
+    markdown({ extensions: [TaskList, Strikethrough], addKeymap: false, codeLanguages }),
+    codeHighlighting,
     livePreview,
     renumberLists,
     listKeymap,
+    typingHelpers,
     // The find bar (2.12). Opening it is a registry command; Escape, scoped to
     // the bar, is the bar's own key. See D29.
     search({ top: true }),

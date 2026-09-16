@@ -40,7 +40,8 @@ to this project. If something seems obviously missing, raise it; do not build it
    once in `renderer/app/state/commands.ts`. The keymap, palette, toolbar and
    menus all read from it. A keyboard-only feature is a bug. The exceptions
    are typing itself: `Enter`, `Tab` and `Shift+Tab` in `editor/lists.ts`
-   (D21), and CodeMirror's `standardKeymap` for cursor motion, selection and
+   (D21), `Backspace` inside an auto-closed pair in `editor/typing.ts` (D32),
+   and CodeMirror's `standardKeymap` for cursor motion, selection and
    deletion (D24).
 
 4. **Never normalise file bytes.** Line endings and BOMs are detected on read

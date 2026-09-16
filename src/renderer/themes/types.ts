@@ -11,6 +11,9 @@ export interface Theme {
     spot: string // accent
     spotTint: string // accent wash
     rule: string // hairline borders
+    codeString: string // strings in highlighted code
+    codeLiteral: string // numbers, booleans and null in highlighted code
+    codeName: string // function, class and type names in highlighted code
     hatch: string // dot field
   }
   // Tag pill hue is seeded from the tag text; the theme fixes the rest so

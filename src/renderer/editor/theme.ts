@@ -81,6 +81,12 @@ export const editorTheme = EditorView.theme({
   // Block constructs
   '.cm-quote': { borderLeft: '1px solid var(--rule)', paddingLeft: '12px' },
   '.cm-code-block': { backgroundColor: 'var(--bar)' },
+  // Highlighting (2.21). Scoped to code block lines; see codeLanguages.ts.
+  '.cm-code-block .cm-code-keyword': { color: 'var(--ink)', fontWeight: '500' },
+  '.cm-code-block .cm-code-string': { color: 'var(--code-string)' },
+  '.cm-code-block .cm-code-literal': { color: 'var(--code-literal)' },
+  '.cm-code-block .cm-code-comment': { color: 'var(--ink-soft)', fontStyle: 'italic' },
+  '.cm-code-block .cm-code-name': { color: 'var(--code-name)' },
   '.cm-hr': {
     backgroundImage: 'linear-gradient(var(--rule), var(--rule))',
     backgroundSize: '100% 1px',

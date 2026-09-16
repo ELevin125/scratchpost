@@ -13,6 +13,9 @@ export const nocturne: Theme = {
     spot: '#E0592F',
     spotTint: 'rgba(224, 89, 47, 0.08)',
     rule: '#33363A',
+    codeString: '#A9B58F',
+    codeLiteral: '#D2A874',
+    codeName: '#94ABC6',
     hatch: 'rgba(255, 255, 255, 0.025)'
   },
   // First guess; tune by eye once tags render.

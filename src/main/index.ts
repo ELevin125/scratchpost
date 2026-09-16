@@ -1,6 +1,7 @@
 import { app, BrowserWindow, Menu, session } from 'electron'
 import { join } from 'node:path'
 import { flushBeforeClose, registerIpc } from './ipc'
+import { handleOpenRequests } from './launch'
 import { loadWindowState, trackWindowState } from './window'
 
 const devUrl = process.env.ELECTRON_RENDERER_URL
@@ -64,7 +65,16 @@ function createWindow(): void {
   }
 }
 
-app.whenReady().then(() => {
+// One window, one process: a second launch hands its paths to the first and
+// quits. See D32.
+if (!app.requestSingleInstanceLock()) {
+  app.quit()
+} else {
+  handleOpenRequests(() => BrowserWindow.getAllWindows()[0] ?? null)
+  app.whenReady().then(start)
+}
+
+function start(): void {
   // No application menu: its accelerators bypassed the command registry. See D29.
   Menu.setApplicationMenu(null)
 
@@ -79,7 +89,7 @@ app.whenReady().then(() => {
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
-})
+}
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()

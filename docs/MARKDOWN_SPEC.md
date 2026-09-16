@@ -24,7 +24,7 @@ Every fixture below has a corresponding test.
 | Inline code | `` `text` `` | `--bar` background, markers hidden |
 | Link | `[label](url)` | label in `--spot`, underlined; URL and brackets hidden |
 | Block quote | `> text` | `>` markers hidden, hairline `--rule` left border |
-| Fenced code block | ` ``` ` … ` ``` ` | `--bar` background, fences hidden, contents verbatim |
+| Fenced code block | ` ``` ` … ` ``` ` | `--bar` background, fences hidden, contents verbatim, highlighted for a few languages |
 | Horizontal rule | `---` / `***` / `___` | hairline `--rule` across the line, characters hidden |
 
 Headings 4 to 6 parse but render at the same size as h3. Do not add more sizes.
@@ -49,8 +49,37 @@ quotes, fenced code blocks and horizontal rules moved into this table.
   background, edge to edge.
 - The fence markers and info string (` ```js `) are hidden unless that fence
   line is revealed. The fence lines keep their height; nothing collapses.
-- Contents are verbatim: no markdown, no tags, no inline formatting, and **no
-  syntax highlighting**.
+- Contents are verbatim: no markdown, no tags, no inline formatting.
+- If the info string names a bundled language, the contents are syntax
+  highlighted (see "Code highlighting"). Otherwise, **no highlighting**.
+
+#### Code highlighting
+
+Bundled languages, matched case-insensitively against the info string's name
+or an alias:
+
+| Language | Info strings |
+| --- | --- |
+| JavaScript | `javascript`, `js`, `jsx`, `mjs`, `cjs` |
+| TypeScript | `typescript`, `ts`, `tsx`, `mts`, `cts` |
+| JSON | `json`, `jsonc`, `json5` |
+| Python | `python`, `py` |
+| CSS | `css` |
+| HTML | `html`, `htm` |
+| Shell | `shell`, `sh`, `bash`, `zsh`, `console` |
+
+Five token classes, and nothing else is coloured:
+
+| Class | Covers | Rendered as |
+| --- | --- | --- |
+| keyword | keywords, modifiers, `this`/`self` | `--ink`, weight 500 |
+| string | strings, regexps, attribute values | `--code-string` |
+| literal | numbers, booleans, `null`, atoms | `--code-literal` |
+| comment | comments | `--ink-soft`, italic |
+| name | function, class, type and tag names | `--code-name` |
+
+Highlighting never applies outside a fenced block, and never uses `--spot`.
+See D32.
 - An unclosed fence runs to the end of the document, as CommonMark parses it.
 
 ### Horizontal rules
@@ -246,7 +275,52 @@ from the list's start. See D22.
 - **Copying** yields the markdown source, not the rendered text. A copied
   heading pastes as `## Heading`.
 - **Pasting** inserts plain text verbatim. No smart conversion, no HTML-to-
-  markdown, no link auto-formatting.
+  markdown, no link auto-formatting, with one exception:
+- **Pasting a URL onto a selection** makes a link: selecting `docs` and pasting
+  `https://x.org` gives `[docs](https://x.org)`. It applies only when the
+  clipboard holds a single `http`, `https` or `mailto` URL with no spaces and
+  balanced parentheses, and the selection is one range on one line, contains
+  no `[` or `]`, isn't itself a URL, and isn't inside code. A URL pasted with
+  nothing selected is inserted verbatim. See D28 and D32.
+
+## Typing helpers
+
+Single cursor only; with several cursors, typing is plain. See D32.
+
+### Auto-closing pairs
+
+- Typing `(`, `[` or `` ` `` inserts its closer after the cursor, when the next
+  character is whitespace, the end of the line, or one of ``)]}.,;:!?`*``.
+- A `` ` `` doesn't pair after another `` ` `` or a word character, so fences
+  type normally.
+- Typing the second `*` of `**` inserts `**` after the cursor, when the
+  character before the first `*` is whitespace, the line start, or an opening
+  bracket or quote. Never inside code.
+- Typing a closer the helper inserted steps over it. Closers are only tracked
+  on the cursor's line; once the cursor leaves it, they are ordinary text.
+- `Backspace` between a pair the helper just opened deletes both halves.
+  `**|**` goes back to `*|`.
+- A third `*` in an empty `**|**` gives `***|`, so rules type normally.
+- Nothing pairs after a `\`.
+- Typing `(`, `[`, `` ` `` or `*` with a selection on one line wraps it and
+  keeps it selected, so `*` twice makes it bold.
+
+### Fixtures
+
+```
+"|"        + type "("      →  "(|)"
+"(a|)"     + type ")"      →  "(a)|"
+"|word"    + type "("      →  "(|word"
+"- |"      + type "[ ] a"  →  "- [ ] a|"
+"|"        + type "```js"  →  "```js|"
+"|"        + type "**b**"  →  "**b**|"
+"|"        + type "***"    →  "***|"
+"|"        + type "* a"    →  "* a|"
+"a|"       + type "**"     →  "a**|"
+"(|)"      + Backspace     →  "|"
+"**|**"    + Backspace     →  "*|"
+"a [word] b" selected, type "**"  →  "a **word** b", "word" still selected
+```
 
 ## File handling
 

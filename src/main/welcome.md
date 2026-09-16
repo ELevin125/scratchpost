@@ -23,9 +23,9 @@ Tags like [ideas] and [someday] become pills, and gather in the file tree
 
 > Quotes get a hairline down the side.
 
-```
-Code stays exactly
-as you typed it.
+```js
+// Name a language after the fence and it gets colour
+const answer = 42
 ```
 
 ---
@@ -36,6 +36,7 @@ as you typed it.
   sticks.
 - Close a note you never typed in and it leaves no file behind.
 - `Ctrl+Shift+T` reopens the tab you just closed.
-- Notes are plain files in `Documents/Scratchpost`, and `Ctrl+O` opens any file
-  from anywhere.
+- Notes are plain files in `Documents/Scratchpost`. `Ctrl+O` opens any file
+  from anywhere, and so does dropping it on the window.
+- Select a word and paste a link to turn the word into a link.
 - "Open welcome note" in the command palette brings this back.

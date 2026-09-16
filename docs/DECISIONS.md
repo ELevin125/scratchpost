@@ -516,7 +516,7 @@ some the docs had ruled out. This entry records each reversal; the tasks are
 
 **Added, not previously considered:** find in note, tab shortcuts, folder
 navigation, delete to trash, context menus, recent-first scratch folder, open
-from outside the app, daily note, auto-closing pairs, local version history
+from outside the app, daily note (later dropped, D32), auto-closing pairs, local version history
 (3.6), following the system theme (3.8), and a design review (2.22).
 
 **Parked, not scheduled:** `[[note]]` links (still a `DESIGN.md` non-goal),
@@ -596,6 +596,59 @@ two go together. The author doesn't want either.
 **Kept:** 3.1 external change watching. It is what stops autosave from writing
 an open tab's stale text over a newer version synced from the other machine,
 so it matters more than the tray ever did.
+
+---
+
+## D32 — Opening from outside, typing helpers, code highlighting
+
+Tasks 2.18, 2.20 and 2.21. Task 2.19 (daily note) is dropped; the author
+doesn't want it.
+
+**Opening from outside the app (2.18).**
+
+- Single instance. A second launch passes its arguments to the running app
+  and quits; the window is restored and focused. A dev build and an installed
+  build share `userData`, so only one of them can run at a time.
+- Arguments that aren't switches are paths, relative to the launching
+  directory, with `file://` URIs accepted. Files open as tabs; a folder
+  becomes the folder context and opens the tree. "Open with" in a file manager
+  is the same path on the command line; registering the file types is part of
+  packaging (3.5).
+- Dropping files or folders on the window does the same. The drop is caught
+  in the capture phase so CodeMirror never inserts the file's text.
+- A file with a NUL byte in its first 8 KB is treated as binary and never
+  opened; the status bar says so. `Ctrl+O` still opens anything, as 1.7 says.
+- Requests wait in main until the renderer has restored its session and
+  subscribed, so launch paths open after the restored tabs.
+
+**Typing helpers (2.20).** Rules and fixtures are in `MARKDOWN_SPEC.md`.
+
+- Pairs are `(`, `[`, `` ` `` and `**`. `{`, quotes and a single `*` or `_`
+  don't pair: quotes and underscores are prose, and a lone `*` starts bullets
+  and italics equally often.
+- Written as a small input handler rather than CodeMirror's `closeBrackets`,
+  which pairs single characters only and can't do `**`. The tracking of
+  inserted closers mirrors it.
+- `Backspace` in an empty pair is bound in `typing.ts`. It is a typing key,
+  like `Enter` and `Tab` in D21, not a command.
+- Pasting a URL onto a selection makes a link; the one paste transform D28
+  allowed. Done in a paste handler, not a clipboard filter, because the filter
+  also runs on drops, where the selection isn't what gets replaced.
+
+**Code highlighting (2.21).**
+
+- Seven languages: JavaScript, TypeScript, JSON, Python, CSS, HTML and shell,
+  through the markdown package's nested parsing. Anything else renders
+  exactly as before.
+- Five classes. Keywords and comments use the neutral ramp; strings,
+  literals and names get three new theme tokens, `codeString`, `codeLiteral`
+  and `codeName`. The accent is never used.
+- Classes are only coloured on code block lines, so markdown's own tokens
+  (an HTML comment, say) stay plain.
+
+**Rejected:** `@codemirror/language-data` (every language, far beyond the
+small set D28 allowed), and colouring punctuation and operators (too busy for
+notes).
 
 ---
 

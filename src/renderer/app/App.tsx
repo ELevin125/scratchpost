@@ -1,7 +1,7 @@
 import { EditorSelection, type EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { FileMeta, FolderEntry, SearchHit } from '../../preload/api'
+import type { FileMeta, FolderEntry, OpenRequest, SearchHit } from '../../preload/api'
 import type { EditorStats } from '../editor/createEditor'
 import { CommandPalette } from './CommandPalette'
 import { ContextMenu, type MenuItem, type MenuState } from './ContextMenu'
@@ -491,6 +491,59 @@ export function App() {
         ]
     setMenu({ ...at, items })
   }
+
+  // --- Opening from outside the app ---
+  // Command-line paths, "Open with", a second launch and drops all end up here.
+  // Requests are taken only after the session is restored. See D32.
+
+  const openRequest = async (request: OpenRequest) => {
+    const target = request.folders.at(-1)
+    if (target) {
+      folder.switchTo(target)
+      setTreeOpen(true)
+    }
+    for (const path of request.files) await openPath(path)
+    if (request.skipped.length > 0) {
+      setNotice(`couldn't open ${request.skipped.map(fileName).join(', ')}: not a text file`)
+    }
+  }
+  const openRequestRef = useRef(openRequest)
+  useEffect(() => {
+    openRequestRef.current = openRequest
+  })
+
+  useEffect(() => {
+    if (restoring) return
+    return api.onOpenPaths((request) => void openRequestRef.current(request))
+  }, [restoring])
+
+  // Capture phase, so CodeMirror never sees a file drop and inserts its text.
+  useEffect(() => {
+    const hasFiles = (event: DragEvent) => event.dataTransfer?.types.includes('Files') ?? false
+    const onDragOver = (event: DragEvent) => {
+      if (!hasFiles(event)) return
+      event.preventDefault()
+      event.stopPropagation()
+      event.dataTransfer!.dropEffect = 'copy'
+    }
+    const onDrop = (event: DragEvent) => {
+      if (!hasFiles(event)) return
+      event.preventDefault()
+      event.stopPropagation()
+      const paths = [...event.dataTransfer!.files].map((file) => api.pathForFile(file)).filter(Boolean)
+      if (paths.length === 0) return
+      api.resolvePaths(paths).then(
+        (request) => void openRequestRef.current(request),
+        () => {}
+      )
+    }
+    window.addEventListener('dragover', onDragOver, true)
+    window.addEventListener('drop', onDrop, true)
+    return () => {
+      window.removeEventListener('dragover', onDragOver, true)
+      window.removeEventListener('drop', onDrop, true)
+    }
+  }, [])
 
   const closeMenu = useCallback(() => setMenu(null), [])
 

@@ -13,6 +13,9 @@ export const newsprint: Theme = {
     spot: '#BF3B1E',
     spotTint: 'rgba(191, 59, 30, 0.08)',
     rule: '#B4B0A4',
+    codeString: '#3D5A2A',
+    codeLiteral: '#744A12',
+    codeName: '#35557A',
     hatch: 'rgba(0, 0, 0, 0.045)'
   },
   // First guess; tune by eye once tags render.
