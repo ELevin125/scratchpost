@@ -80,7 +80,9 @@ export const editorTheme = EditorView.theme({
 
   // Block constructs
   '.cm-quote': { borderLeft: '1px solid var(--rule)', paddingLeft: '12px' },
-  '.cm-code-block': { backgroundColor: 'var(--bar)' },
+  // The shadow fills the sub-pixel gap fractional line heights leave between
+  // tinted lines, which otherwise shows as faint stripes.
+  '.cm-code-block': { backgroundColor: 'var(--bar)', boxShadow: '0 1px 0 var(--bar)' },
   // Highlighting (2.21). Scoped to code block lines; see codeLanguages.ts.
   '.cm-code-block .cm-code-keyword': { color: 'var(--ink)', fontWeight: '500' },
   '.cm-code-block .cm-code-string': { color: 'var(--code-string)' },

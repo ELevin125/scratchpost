@@ -24,6 +24,10 @@ import { decorateTags } from './tags'
 // endpoint; see MARKDOWN_SPEC.md, "Cursor reveal". Only visible ranges are
 // walked. The decorations themselves live in blocks.ts, inline.ts and tags.ts.
 
+// Fired on window with the lowercased tag when a rendered #tag is clicked;
+// App filters the file tree by it. See D34.
+export const TAG_CLICK_EVENT = 'scratchpost:tag'
+
 // Rendered as plain text: nothing inside is decorated.
 const UNSUPPORTED_BLOCKS = new Set(['CodeBlock', 'HTMLBlock', 'Table'])
 
@@ -119,6 +123,15 @@ export const livePreview = ViewPlugin.fromClass(
           const spec = toggleTaskAt(view.state, view.posAtDOM(target))
           if (spec) view.dispatch(spec)
           event.preventDefault()
+          return true
+        }
+
+        // A tag filters the tree. On a revealed line a click edits instead,
+        // as with links.
+        const tag = target.closest<HTMLElement>('.cm-hashtag')?.dataset.tag
+        if (tag && !revealedLines(view.state).has(view.state.doc.lineAt(view.posAtDOM(target)).number)) {
+          event.preventDefault()
+          window.dispatchEvent(new CustomEvent(TAG_CLICK_EVENT, { detail: tag }))
           return true
         }
 

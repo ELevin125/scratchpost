@@ -33,6 +33,7 @@ export function RenameDialog({ name, onSubmit, onClose }: RenameDialogProps) {
           ref={input}
           className="overlay-input"
           spellCheck={false}
+          autoComplete="off"
           value={value}
           onChange={(event) => setValue(event.target.value)}
           onKeyDown={(event) => {

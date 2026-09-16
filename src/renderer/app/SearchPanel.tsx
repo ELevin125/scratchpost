@@ -100,6 +100,7 @@ export function SearchPanel({ folderName, nameOf, search, onOpen, onClose }: Sea
           className="overlay-input"
           autoFocus
           spellCheck={false}
+          autoComplete="off"
           placeholder={`Search in ${folderName}`}
           value={query}
           onChange={(event) => setQuery(event.target.value)}

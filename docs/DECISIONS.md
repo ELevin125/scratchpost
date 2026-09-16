@@ -126,6 +126,9 @@ notes.
 
 ## D8 — `[tag]` syntax kept, with link disambiguation
 
+> Since D34, `[word]` is a label and tags are `#word`. The link
+> disambiguation below still applies to labels.
+
 **Chosen:** `[word]` renders as a pill, where the word has no spaces and is not
 followed by `(` or `[`.
 
@@ -649,6 +652,90 @@ doesn't want it.
 **Rejected:** `@codemirror/language-data` (every language, far beyond the
 small set D28 allowed), and colouring punctuation and operators (too busy for
 notes).
+
+---
+
+## D33 — Tint: a new visual identity
+
+The design review (2.22, `docs/DESIGN_REVIEW.md`) found the app reads as VS
+Code: boxed tabs, an Explorer-style sidebar, an IDE status bar, orange on every
+active thing, and full-width text. Four directions were mocked; the author
+chose **Tint**, drawn from their own desktop setup.
+
+**Chosen:**
+
+- **One seed hue makes the theme.** Every surface, text and selection colour
+  is derived from a single hue plus a light or dark mode. The seed is a
+  setting (default teal, 172). There is no fixed accent colour; the orange is
+  gone. Tag and label colours keep their own hues (D16), and code colours
+  (D32) are derived from the seed.
+- **Space and tint instead of lines.** Panels float on a tinted ground with
+  gaps between them, with a soft gradient in the ground. Hairline borders go.
+- **Soft shapes.** Rounded panels, pill buttons and pill-shaped open-note
+  chips, round icon buttons, rounded checkboxes.
+- **A few things set big.** The note title in a large condensed sans, and a
+  date block in the note panel.
+- **Icons.** One bundled set of line icons, always with a tooltip giving the
+  label and shortcut. A floating dock holds views and tools; panel titles
+  carry icons. Text buttons like "Open" go.
+- **Layout.** A top bar with open notes as pills, a find field and a new-note
+  button. A left column with a notes panel (folder header, a short recent
+  list, "show all" and the folder tree for other folders) and a tags panel.
+  The note panel shows the title, a meta line (folder, edited time, word
+  count) and the text capped at about 64 characters. The status bar goes; its
+  contents move to the meta line and the dock.
+- **Type.** Note text stays IBM Plex Mono. The app's own labels use IBM Plex
+  Sans, and titles IBM Plex Sans Condensed, all bundled.
+
+**Reversed:** `DESIGN.md` principle 4 ("must not look like a web app"),
+square corners, hairline separation, monospace for all UI, the accent list in
+`THEMING.md`, the status bar layout, and two rejected visual ideas: the
+"sheet on a desk" look and borderless surface separation. `DESIGN.md`
+"Visual language" and `THEMING.md` are rewritten as tasks 2.23 to 2.25 land.
+Task 2.11 (the dot texture) is dropped; the tinted ground replaces it.
+
+**Kept:** tabs as a concept (as pills), every shortcut and command, folder
+context and opening any file, monospace note text, live preview rules.
+
+**Rejected:** Graphite (an icon rail beside a file list is VS Code's Activity
+Bar), Index (cards take too much room for notes that are rarely revisited;
+its dock survives), Ledger (familiar but indistinct). Real translucency:
+Electron only offers it on macOS and Windows 11, not Linux.
+
+**Open:** whether to hide the native title bar (`titleBarOverlay`, Windows
+and Linux) so the top bar becomes the drag area. Decided with 2.24.
+
+---
+
+## D34 — Labels and tags are different things
+
+`[word]` was doing two jobs: marking something inside a note, and grouping
+notes across the folder. The author wants the first to stay local.
+
+**Chosen:**
+
+- **`[word]` is a label.** Same pattern and pill as before, never indexed.
+- **`#word` is a tag.** Starts with a letter; continues with letters, digits,
+  `_`, `-` and `/`; follows whitespace, `(` or the line start. Indexed across
+  the folder context. Full rules in `MARKDOWN_SPEC.md`, "Labels and tags".
+- **They look different.** Tags are coloured text with the `#` always shown;
+  labels are pills with hidden brackets. Both use the D16 hue, so a word has
+  one colour either way.
+- **Tags are clickable.** Clicking one in a note filters the file tree to the
+  notes that use it and opens the tree, unless the line has the cursor (then
+  the click edits, as with links). The filter now lives in App and clears on
+  a folder switch.
+- `#tag` because it's what Obsidian, Bear and most note apps use, so tags keep
+  working if the folder is opened elsewhere. It doesn't clash with headings,
+  which need a space after `#`.
+
+**Reversed:** the tag half of D27: `[word]` is no longer indexed. D27's
+search, rendering approach, case-insensitivity and shared-pattern rules stand.
+
+**Known catch:** a colour written as `#fff` is a tag.
+
+**Rejected:** `@tag` (reads as a mention), `+tag` (unknown to other apps),
+and outlined pills for tags (too close to labels).
 
 ---
 

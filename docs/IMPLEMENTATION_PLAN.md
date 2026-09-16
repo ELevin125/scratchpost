@@ -228,15 +228,45 @@ Batches, in order: 2.12–2.17; then 2.11 with 3.4 and 3.8; then 2.22; then
   languages, coloured from theme tokens.
   *Accept:* an unknown language renders exactly as before.
 
-- [ ] **2.22 Design review**
+- [x] **2.22 Design review**
   Audit both themes against `DESIGN.md` and `THEMING.md`: layout, empty
   states, overlays, menus, accent discipline, texture. Fix what fails.
   *Accept:* a written list of findings, each fixed or recorded as a decision.
+  Findings are in `docs/DESIGN_REVIEW.md`; the redesign is D33.
 
-- [ ] **2.11 Texture and visual polish**
-  The dot field per `THEMING.md`. Accent discipline audited.
-  *Accept:* texture never appears behind body text; disabling it in settings
-  removes it entirely.
+- [x] **2.25 Labels and tags**
+  `[word]` stays a local label; `#word` becomes the indexed tag, rendered as
+  coloured text and clickable to filter the tree. See D34.
+  *Accept:* `[x]` never appears in the tag index; clicking `#work` in a note
+  lists the notes tagged `#work`.
+
+- [ ] **2.23 Tint theme model**
+  Themes generated from a seed hue and a mode instead of hand-picked files.
+  Nocturne and Newsprint become the dark and light modes of the default
+  seed. Code colours derive from the seed; tag hues stay seeded by the word.
+  Bundle IBM Plex Sans and Plex Sans Condensed. Rewrite `THEMING.md`.
+  *Accept:* changing the seed recolours every surface; no colour literal
+  outside `themes/`.
+
+- [ ] **2.24 Tint layout**
+  Top bar (open-note pills, find field, new note), left column (notes panel
+  with folder header, recent list, show all and folder tree; tags panel),
+  note panel (title, meta line, date block, capped text), floating dock, one
+  bundled icon set. The status bar's contents move to the meta line and dock.
+  Decide the title bar question from D33. Rewrite `DESIGN.md`, "Visual
+  language", and update the welcome note.
+  *Accept:* every command still has a visible affordance; folders still open
+  and switch; matches the D33 mockup in both modes.
+
+- [ ] **2.26 Tint overlays and states**
+  Palette, switcher, folder menu, search, rename, context menus and empty
+  states restyled as rounded panels over a dimmed editor. Lists show whole
+  rows.
+  *Accept:* every overlay and empty state from `DESIGN.md` checked in both
+  modes.
+
+- ~~**2.11 Texture and visual polish**~~ — dropped, the tinted ground
+  replaces the dot field. See D33.
 
 ---
 
@@ -257,7 +287,7 @@ Batches, in order: 2.12–2.17; then 2.11 with 3.4 and 3.8; then 2.22; then
   quits.
 
 - [ ] **3.4 Settings UI**
-  Scratch folder, theme, font size, texture on/off and opacity.
+  Scratch folder, seed hue, light or dark mode, font size.
   *Accept:* every setting persists and applies without restart.
 
 - [ ] **3.5 Packaging**
@@ -275,10 +305,10 @@ Batches, in order: 2.12–2.17; then 2.11 with 3.4 and 3.8; then 2.22; then
 
 - ~~**3.7 Global capture shortcut**~~ — dropped with the tray, see D31.
 
-- [ ] **3.8 Reading width and system theme**
-  An optional capped, centred text column (off by default), and a theme option
-  that follows the system light or dark setting. Built with 3.4.
-  *Accept:* with both off, the app looks exactly as before.
+- [ ] **3.8 System theme**
+  A mode option that follows the system light or dark setting. Built with
+  3.4. The capped text column is part of Tint (D33), no longer an option.
+  *Accept:* switching the system setting switches the app without restart.
 
 ---
 

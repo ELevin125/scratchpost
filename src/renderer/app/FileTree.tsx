@@ -22,16 +22,19 @@ interface FileTreeProps {
   onFolderMenu: () => void
   onUseScratch: () => void
   onEntryMenu: (entry: FolderEntry, at: Point) => void
+  tagFilter: string | null // lowercased; clicking a tag in a note sets it too
+  onTagFilter: (tag: string | null) => void
 }
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
-// The hue rides on a custom property; the pill colour is built in global.css.
-const pillStyle = (tag: string) => ({ '--tag-hue': tagHue(tag) }) as CSSProperties
+// The hue rides on a custom property; the colour is built in global.css.
+const hueStyle = (tag: string) => ({ '--tag-hue': tagHue(tag) }) as CSSProperties
 
 // The folder context as a tree, with the tag index below it. Toggled with
 // Ctrl+B. Never has texture behind it. See DESIGN.md, "File tree", and D29.
-// App keys this by folder, so expansion and the tag filter reset on switch.
+// App keys this by folder, so expansion resets on switch; App owns the tag
+// filter and clears it then too.
 export function FileTree({
   folderName,
   isScratch,
@@ -43,10 +46,11 @@ export function FileTree({
   onOpenFolder,
   onFolderMenu,
   onUseScratch,
-  onEntryMenu
+  onEntryMenu,
+  tagFilter,
+  onTagFilter
 }: FileTreeProps) {
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set())
-  const [tagFilter, setTagFilter] = useState<string | null>(null)
   const order = isScratch ? 'recent' : 'name'
 
   // Saves made this session are newer than the last folder read.
@@ -161,9 +165,9 @@ export function FileTree({
       <div className="tree-section">
         <span>Notes</span>
         {activeTag && (
-          <button className="tree-clear" title="Show all notes" onClick={() => setTagFilter(null)}>
-            <span className="tag-pill" style={pillStyle(activeTag.tag)}>
-              {activeTag.tag}
+          <button className="tree-clear" title="Show all notes" onClick={() => onTagFilter(null)}>
+            <span className="tag-word" style={hueStyle(activeTag.tag)}>
+              #{activeTag.tag}
             </span>{' '}
             ×
           </button>
@@ -199,11 +203,11 @@ export function FileTree({
                 <button
                   className={tag.tag === tagFilter ? 'tree-row selected' : 'tree-row'}
                   aria-pressed={tag.tag === tagFilter}
-                  onClick={() => setTagFilter((current) => (current === tag.tag ? null : tag.tag))}
+                  onClick={() => onTagFilter(tag.tag === tagFilter ? null : tag.tag)}
                 >
                   <span className="tree-caret" />
-                  <span className="tag-pill" style={pillStyle(tag.tag)}>
-                    {tag.tag}
+                  <span className="tag-word" style={hueStyle(tag.tag)}>
+                    #{tag.tag}
                   </span>
                   <span className="tree-tag-count">{tag.count}</span>
                 </button>

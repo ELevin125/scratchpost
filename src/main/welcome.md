@@ -18,8 +18,8 @@ away again. All the markdown here works like that.
 **Bold**, *italic*, ~~struck through~~ and `inline code`.
 [Links](https://commonmark.org/help/) open in your browser.
 
-Tags like [ideas] and [someday] become pills, and gather in the file tree
-(`Ctrl+B`), where clicking one shows every note that uses it.
+Labels like [urgent] and [maybe] colour a word in this note. Tags like
+#ideas gather notes: click one to see every note that uses it.
 
 > Quotes get a hairline down the side.
 

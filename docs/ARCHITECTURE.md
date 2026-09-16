@@ -72,7 +72,7 @@ src/
     index.ts              contextBridge exposure
     api.ts                the typed API shape, shared with renderer
   shared/
-    tags.ts               tag regex and hue, used by editor and main
+    tags.ts               label and tag patterns and hue, used by editor and main
   renderer/
     main.tsx              mount
     app/
@@ -107,7 +107,7 @@ src/
       inline.ts           emphasis, strong, strikethrough, inline code, links
       decorations.ts      shared reveal logic and helpers
       checkbox.ts         checkbox widget and toggle
-      tags.ts             [tag] pill decoration
+      tags.ts             [label] pills and #tag words (D34)
       lists.ts            Enter continuation, Tab indent and outdent
       renumber.ts         keeps numbered lists counting up after edits
       typing.ts           auto-closing pairs, pasting a URL as a link (D32)
@@ -224,13 +224,16 @@ A CodeMirror `ViewPlugin` that:
    Syntax reappears on the active line so it can be edited.
 5. Rebuilds on `update.docChanged`, `update.viewportChanged`, and
    `update.selectionSet`.
+6. Reveals nothing until the tab has seen a user event (`revealArmed` in
+   `decorations.ts`), so notes open fully rendered.
 
 Step 4 is the entire trick. Without it, live preview is unusable; with it, it is
 invisible. Test it directly.
 
-Tags do **not** use the markdown grammar. They are matched by the regex in
-`src/shared/tags.ts` (shared with the main-process tag index) and decorated by
-the same builder, so their brackets reveal with the cursor like other syntax.
+Labels and tags do **not** use the markdown grammar. They are matched by the
+patterns in `src/shared/tags.ts` (shared with the main-process tag index) and
+decorated by the same builder, so label brackets reveal with the cursor like
+other syntax. Only tags are indexed (D34).
 A CodeMirror `MatchDecorator` was rejected because it doesn't re-decorate on
 selection changes. See `MARKDOWN_SPEC.md` for the pattern and D27.
 

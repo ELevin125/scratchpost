@@ -9,8 +9,10 @@ interface CommandPaletteProps {
 }
 
 // Every registered command, with its shortcut beside it, so the palette is
-// also how shortcuts are learned. See DESIGN.md principle 2.
-export function CommandPalette({ commands, onRun, onClose }: CommandPaletteProps) {
+// also how shortcuts are learned. See DESIGN.md principle 2. The palette
+// doesn't list itself; its shortcut is on the status bar button.
+export function CommandPalette({ commands: all, onRun, onClose }: CommandPaletteProps) {
+  const commands = all.filter((command) => command.id !== 'palette.open')
   return (
     <Picker
       ariaLabel="Command palette"

@@ -70,6 +70,7 @@ export function Picker({ items, placeholder, ariaLabel, onPick, onClose }: Picke
           className="overlay-input"
           autoFocus
           spellCheck={false}
+          autoComplete="off"
           placeholder={placeholder}
           value={query}
           onChange={(event) => {

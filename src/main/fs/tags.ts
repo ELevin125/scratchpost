@@ -3,7 +3,7 @@ import { findTags, tagKey } from '../../shared/tags'
 import { listFolder } from './list'
 import { scanFiles } from './scan'
 
-// The tag index for the file tree. Main has no syntax tree, so code is skipped
+// The tag index for the file tree. Only `#tag`s; `[label]`s are never indexed (D34). Main has no syntax tree, so code is skipped
 // by text rules: fenced blocks by their fences, inline code by its backticks.
 // See MARKDOWN_SPEC.md, "Indexing", and D27.
 
@@ -21,7 +21,7 @@ export function tagsInText(text: string): string[] {
     }
     if (inFence) continue
     const withoutCode = line.replace(INLINE_CODE, (code) => ' '.repeat(code.length))
-    for (const match of findTags(withoutCode)) tags.push(tagKey(match.tag))
+    for (const match of findTags(withoutCode)) tags.push(tagKey(match.word))
   }
   return tags
 }

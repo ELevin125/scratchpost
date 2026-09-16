@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "design-harness",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "5199", "--bind", "127.0.0.1", "--directory", "/tmp/claude-1000/-home-karelkat-CodingProjects-Other-scratchpost/d59f398f-5c33-4b43-9b04-7aaf6045ecbd/scratchpad/harness"],
+      "port": 5199
+    }
+  ]
+}

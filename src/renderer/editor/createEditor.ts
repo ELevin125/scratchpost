@@ -5,6 +5,7 @@ import { EditorSelection, EditorState, type Extension } from '@codemirror/state'
 import { drawSelection, EditorView, keymap, type ViewUpdate } from '@codemirror/view'
 import { Strikethrough, TaskList } from '@lezer/markdown'
 import { codeHighlighting, codeLanguages } from './codeLanguages'
+import { revealArmed } from './decorations'
 import { listKeymap } from './lists'
 import { livePreview } from './livePreview'
 import { renumberLists } from './renumber'
@@ -35,6 +36,7 @@ export function editorExtensions(onUpdate: (update: ViewUpdate) => void): Extens
     // Fences naming a bundled language are highlighted; see codeLanguages.ts.
     markdown({ extensions: [TaskList, Strikethrough], addKeymap: false, codeLanguages }),
     codeHighlighting,
+    revealArmed,
     livePreview,
     renumberLists,
     listKeymap,

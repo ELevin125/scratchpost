@@ -3,6 +3,7 @@ import { EditorView } from '@codemirror/view'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { FileMeta, FolderEntry, OpenRequest, SearchHit } from '../../preload/api'
 import type { EditorStats } from '../editor/createEditor'
+import { TAG_CLICK_EVENT } from '../editor/livePreview'
 import { CommandPalette } from './CommandPalette'
 import { ContextMenu, type MenuItem, type MenuState } from './ContextMenu'
 import { Editor, type Buffers } from './Editor'
@@ -96,6 +97,7 @@ export function App() {
   const [overlay, setOverlay] = useState<Overlay | null>(null)
   const [menu, setMenu] = useState<MenuState | null>(null)
   const [treeOpen, setTreeOpen] = useState(false) // hidden by default
+  const [tagFilter, setTagFilter] = useState<string | null>(null) // lowercased
   // When each file was last saved this session, so the tree's times and
   // recent-first order are current without re-reading the folder.
   const [savedAt, setSavedAt] = useState<Record<string, number>>({})
@@ -545,6 +547,19 @@ export function App() {
     }
   }, [])
 
+  // A tag clicked in a note filters the tree to the notes that share it (D34).
+  // The filter belongs to one folder and is cleared on switch.
+  useEffect(() => setTagFilter(null), [folderRoot])
+  useEffect(() => {
+    const onTag = (event: Event) => {
+      setTagFilter((event as CustomEvent<string>).detail)
+      setTreeOpen(true)
+      void refreshFolder()
+    }
+    window.addEventListener(TAG_CLICK_EVENT, onTag)
+    return () => window.removeEventListener(TAG_CLICK_EVENT, onTag)
+  }, [refreshFolder])
+
   const closeMenu = useCallback(() => setMenu(null), [])
 
   // --- Welcome note ---
@@ -760,6 +775,8 @@ export function App() {
             onFolderMenu={() => runById('folder.switch')}
             onUseScratch={() => runById('folder.scratch')}
             onEntryMenu={openEntryMenu}
+            tagFilter={tagFilter}
+            onTagFilter={setTagFilter}
           />
         )}
         <div className="main-column">
@@ -780,7 +797,7 @@ export function App() {
       <StatusBar
         folderLabel={folder.root ? shortPath(folder.root) : ''}
         folderPath={folder.root ?? ''}
-        stats={stats}
+        stats={active ? stats : null}
         message={statusMessage}
         onFolder={() => runById('folder.switch')}
         onPalette={() => runById('palette.open')}

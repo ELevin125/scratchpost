@@ -8,7 +8,7 @@ export interface StatusMessage {
 interface StatusBarProps {
   folderLabel: string // the end of the folder path, e.g. "Documents/Scratchpost"
   folderPath: string // the full path, as a tooltip
-  stats: EditorStats
+  stats: EditorStats | null // null when no tab is open
   message: StatusMessage | null
   onFolder: () => void
   onPalette: () => void
@@ -28,12 +28,16 @@ export function StatusBar({ folderLabel, folderPath, stats, message, onFolder, o
         {message?.text}
       </span>
       <span className="status-spacer" />
-      <span>
-        Ln {stats.line}, Col {stats.column}
-      </span>
-      <span>
-        {stats.words} {stats.words === 1 ? 'word' : 'words'}
-      </span>
+      {stats && (
+        <>
+          <span>
+            Ln {stats.line}, Col {stats.column}
+          </span>
+          <span>
+            {stats.words} {stats.words === 1 ? 'word' : 'words'}
+          </span>
+        </>
+      )}
       <button className="status-palette" title={paletteHint} onClick={onPalette}>
         Commands
       </button>

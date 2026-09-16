@@ -151,8 +151,9 @@ dropped silently.
 
 - Hidden by default. Toggled from the toolbar icon or `Ctrl+B`.
 - Lists `.md` and `.txt` files in the folder context, plus subdirectories.
-- Below the file list, a **tag index**: every tag found in the context with an
-  occurrence count. Clicking one filters to files containing it.
+- Below the file list, a **tag index**: every `#tag` found in the context
+  with an occurrence count. Clicking one, here or in a note, filters to files
+  containing it. `[labels]` are not indexed (D34).
 - Section labels are tracked uppercase with a count beside them (`NOTES 04`).
 - Empty state when no folder is open: a short line and a button, never a blank
   panel.
@@ -204,6 +205,10 @@ with its shortcut (D24). `Enter` and `Tab` are editor keys (D21).
 Getting this wrong makes the whole app feel broken.
 
 ## Visual language
+
+> **Being replaced.** D33 (Tint) supersedes this section and principle 4.
+> It describes the current build until tasks 2.23 to 2.26 land, then gets
+> rewritten.
 
 ### Typography
 

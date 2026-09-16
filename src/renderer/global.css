@@ -430,16 +430,26 @@ button:disabled {
   color: var(--ink-soft);
 }
 
-/* Tag pills: the only rounded shape on screen (DESIGN.md). The hue is seeded
-   from the tag text and set per pill as --tag-hue; saturation and lightness
-   come from the theme (D16). */
+/* Labels and tags (D34). The hue is seeded from the word and set per element
+   as --tag-hue; saturation and lightness come from the theme (D16). Labels are
+   pills, the only rounded shape on screen (DESIGN.md). Tags are coloured text
+   with their # showing, and filter the tree when clicked. */
 
-.cm-tag,
-.tag-pill {
+.cm-label {
   padding: 0 0.6ch;
   border-radius: 999px;
   color: hsl(var(--tag-hue) var(--tag-saturation) var(--tag-lightness));
   background: hsl(var(--tag-hue) var(--tag-saturation) var(--tag-lightness) / 0.14);
+}
+
+.cm-hashtag,
+.tag-word {
+  font-weight: 500;
+  color: hsl(var(--tag-hue) var(--tag-saturation) var(--tag-lightness));
+}
+
+.cm-hashtag {
+  cursor: pointer;
 }
 
 /* Folder search */

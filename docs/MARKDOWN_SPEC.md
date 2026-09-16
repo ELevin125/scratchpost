@@ -17,7 +17,8 @@ Every fixture below has a corresponding test.
 | Numbered | `1. text` | number shown, counts up automatically (see "List numbering"), hanging indent |
 | Checkbox, open | `- [ ] text` | empty square icon |
 | Checkbox, done | `- [x] text` | filled check icon in `--spot`, text struck through in `--ink-soft` |
-| Tag | `[word]` | rounded pill (see below) |
+| Label | `[word]` | rounded pill, brackets hidden (see "Labels and tags") |
+| Tag | `#word` | coloured text, `#` kept, clickable (see "Labels and tags") |
 | Emphasis | `*text*` / `_text_` | italic, markers hidden |
 | Strong | `**text**` | weight 500, markers hidden |
 | Strikethrough | `~~text~~` | struck through, markers hidden |
@@ -142,16 +143,28 @@ Details:
 - A selection spanning lines 3 to 7 reveals lines 3 and 7 only, not 4 to 6.
 - Reveal changes visibility, never layout beyond the reflow it causes. Heading
   size does not change when revealed.
+- A note opens **fully rendered**. Nothing reveals until the user acts in that
+  tab: a click, a keystroke, a cursor move or an editing command. Otherwise
+  the starting cursor line, usually the title, would always show its syntax.
+  Opening a search result selects the match without revealing its line.
 
-## Tags
+## Labels and tags
 
-### Pattern
+Two kinds of coloured word, split by D34 (which replaces the tag half of D27):
+
+- A **label**, `[word]`, marks something inside one note. It is never indexed.
+- A **tag**, `#word`, groups notes. The tag index collects it across the
+  folder context, and clicking one shows every note that uses it.
+
+Both take their colour from the word, so `[ideas]` and `#ideas` match.
+
+### Label pattern
 
 ```
 /(?<![\w\]])\[([A-Za-z0-9][A-Za-z0-9._-]*)\](?![(\[])/
 ```
 
-A tag is `[`, then a word, then `]`, where:
+A label is `[`, then a word, then `]`, where:
 
 - The word contains **no spaces**. Letters, digits, `.`, `_` and `-` only, and
   must start with a letter or digit.
@@ -159,51 +172,72 @@ A tag is `[`, then a word, then `]`, where:
 - It is **not followed by `[`** — that makes it a reference link.
 - It is **not preceded by `]`** — the second half of a reference link.
 
-### Why
+The no-spaces rule keeps ordinary bracketed prose from turning into pills. The
+lookahead exclusions let labels and links coexist. Checkbox handling takes
+precedence and is matched first.
 
-The no-spaces rule prevents ordinary bracketed prose from turning into pills by
-accident. The lookahead exclusions are what let tags and links coexist.
+### Tag pattern
+
+```
+/(?<=^|[\s(])#([A-Za-z][A-Za-z0-9_\/-]*)/
+```
+
+A tag is `#` followed by a word, where:
+
+- The word **starts with a letter**, so `#12` is not a tag, and `# Title` (with
+  its space) stays a heading.
+- It continues with letters, digits, `_`, `-` and `/` (`#project/site`). Any
+  other character, such as a full stop, ends it.
+- The `#` follows **whitespace, `(` or the line start**, so `C#`,
+  `page#anchor` and `##double` are not tags.
+- Known catch: a colour written as `#fff` is a tag.
 
 ### Fixtures
 
 | Input | Result |
 | --- | --- |
-| `[urgent]` | tag |
-| `[in-progress]` | tag |
-| `[v1.2]` | tag |
-| `[the docs](https://x.com)` | link, not a tag |
-| `[ref][1]` | reference link, not a tag |
+| `[urgent]` | label |
+| `[in-progress]` | label |
+| `[v1.2]` | label |
+| `[the docs](https://x.com)` | link |
+| `[ref][1]` | reference link |
 | `[see the note below]` | plain text (spaces) |
-| `- [ ] task` | checkbox, not a tag |
-| `- [x] task` | checkbox, not a tag |
-| `[-leading-dash]` | plain text (must start alphanumeric) |
-| `[]` | plain text (empty) |
-
-Checkbox handling takes precedence and is matched first, before the tag pass.
+| `- [ ] task` / `- [x] task` | checkbox |
+| `[-leading-dash]`, `[]` | plain text |
+| `#work` | tag |
+| `(#inside)` | tag |
+| `done #work.` | tag `work` |
+| `#project/site` | tag `project/site` |
+| `# Title #work` | heading containing tag `work` |
+| `# Title` | heading, no tag |
+| `issue #12` | plain text |
+| `C#`, `page#anchor`, `##nope` | plain text |
 
 ### Rendering
 
-A fully rounded pill. Brackets hidden when the line has no cursor, shown when it
-does, same as all other syntax.
-
-Colour is seeded from the tag text: a stable hash of the text picks a hue from
-0 to 359, so `[urgent]` is consistently the same colour without configuration
-and there is no fixed number of tag colours. The theme supplies saturation and
-lightness, which keeps every hue readable against `--paper` in both themes. See
-`THEMING.md` and D16 in `DECISIONS.md`.
+- **Labels** are fully rounded pills. Brackets are hidden when the line has no
+  cursor, and shown when it does, like all other syntax.
+- **Tags** are coloured text at weight 500 with the `#` always visible and no
+  pill, so the two never look alike. Clicking a tag on a line without a
+  cursor filters the file tree to the notes that use it and opens the tree. On
+  a line with a cursor, a click edits, as with links.
+- Colour: a stable hash of the word picks a hue from 0 to 359; the theme
+  supplies saturation and lightness. See `THEMING.md` and D16.
+- Neither renders inside fenced, indented or inline code, HTML, or URLs.
 
 ### Indexing
 
-The tag index scans `.md` and `.txt` files in the folder context using the same
-regex. Counts are occurrences, not files.
+The tag index scans `.md` and `.txt` files in the folder context for **tags
+only**. Counts are occurrences, not files.
 
-- Tags are case-insensitive: `[Urgent]` and `[urgent]` are one tag, with one
+- Tags are case-insensitive: `#Urgent` and `#urgent` are one tag, with one
   colour, listed lowercase.
-- Tags inside fenced code, indented code, inline code and HTML are not tags,
-  in the editor or the index.
-- Clicking a tag in the tree filters the notes list to the files containing it.
+- Tags inside fenced and inline code are skipped (by text rules; main has no
+  syntax tree).
+- Clicking a tag in the tree, or in a note, filters the notes list to the
+  files containing it. Clicking it again in the tree, or `×`, clears it.
 
-See D27.
+See D27 and D34.
 
 ## List continuation
 
