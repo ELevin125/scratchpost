@@ -12,9 +12,12 @@ export interface Listing {
   error: string | null // the folder couldn't be listed
 }
 
+const DEFAULT_SETTINGS: Settings = { folderContext: null, recentFolders: [], welcomed: false }
+
 // The folder context: which folder the file tree, quick switcher, search and
 // tag index cover. Defaults to the scratch folder and never touches open tabs.
-// See DESIGN.md, "Folder context", and D25.
+// Also owns settings.json for now, since the folder is most of it. See
+// DESIGN.md, "Folder context", and D25.
 export function useFolderContext(scratchDirPromise: Promise<string>, onNotice: (message: string) => void) {
   const [scratchDir, setScratchDir] = useState<string | null>(null)
   const [settings, setSettings] = useState<Settings | null>(null)
@@ -32,10 +35,14 @@ export function useFolderContext(scratchDirPromise: Promise<string>, onNotice: (
       settingsRef.current = loaded
       setSettings(loaded)
     }
-    api.getSettings().then(apply, () => apply({ folderContext: null, recentFolders: [] }))
+    api.getSettings().then(apply, () => apply(DEFAULT_SETTINGS))
   }, [scratchDirPromise])
 
-  const persist = useCallback((next: Settings) => {
+  // Every write keeps the fields it isn't changing.
+  const persist = useCallback((change: Partial<Settings>) => {
+    const current = settingsRef.current
+    if (!current) return
+    const next = { ...current, ...change }
     settingsRef.current = next
     setSettings(next)
     api.setSettings(next).catch(() => {}) // a lost write costs a remembered folder, never content
@@ -53,6 +60,10 @@ export function useFolderContext(scratchDirPromise: Promise<string>, onNotice: (
     },
     [persist]
   )
+
+  const markWelcomed = useCallback(() => {
+    if (settingsRef.current && !settingsRef.current.welcomed) persist({ welcomed: true })
+  }, [persist])
 
   const root = settings ? (settings.folderContext ?? scratchDir) : null
 
@@ -86,9 +97,11 @@ export function useFolderContext(scratchDirPromise: Promise<string>, onNotice: (
     scratchDir,
     isScratch: settings !== null && settings.folderContext === null,
     recentFolders: settings?.recentFolders ?? [],
+    welcomed: settings ? settings.welcomed : null, // null until settings load
     // A listing for a previous folder is never shown for the current one.
     listing: listing?.root === root ? listing : null,
     switchTo,
+    markWelcomed,
     refresh
   }
 }

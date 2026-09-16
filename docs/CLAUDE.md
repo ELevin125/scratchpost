@@ -86,7 +86,12 @@ object. Lint catches it; do not silence the rule.
 ## Keeping docs current
 
 If an implementation detail changes a documented behaviour, update the doc in
-the same change. If a decision is reversed, add an entry to `docs/DECISIONS.md`
+the same change.
+
+The welcome note, `src/main/welcome.md`, is the in-app tutorial (D30). When a
+feature it mentions changes, or a new feature is worth a line in it (file
+history, say), update it in the same change. Keep it short: only what a new
+user wouldn't guess. If a decision is reversed, add an entry to `docs/DECISIONS.md`
 rather than editing the old one — the history is the point.
 
 The open questions at the bottom of `DECISIONS.md` are genuinely open. Raise

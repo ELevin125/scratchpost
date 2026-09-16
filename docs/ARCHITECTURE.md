@@ -56,6 +56,8 @@ src/
     ipc.ts                handler registration, one place
     session.ts            session.json read, validation and atomic write
     settings.ts           settings.json read, validation and atomic write
+    external.ts           which links may open in the system browser
+    welcome.md            the welcome note's text, the in-app tutorial (D30)
     fs/
       read.ts             readFile with encoding + EOL + BOM detection
       write.ts            atomic write, preserving EOL and BOM
@@ -63,6 +65,7 @@ src/
       scan.ts             batched text reads for search and the tag index
       search.ts           folder-wide content search
       tags.ts             tag index for the file tree
+      welcome.ts          writes welcome.md into the scratch folder
       watch.ts            chokidar-based external change detection
   preload/
     index.ts              contextBridge exposure
@@ -137,6 +140,7 @@ interface ScratchpostAPI {
   writeFile(path: string, content: string, meta: FileMeta): Promise<void>
   getScratchDir(): Promise<string>
   createNote(scratchDir: string): Promise<string>
+  createWelcomeNote(onlyIfEmpty: boolean): Promise<string | null> // tutorial note; see D30
   renameFile(from: string, to: string): Promise<void> // same folder, never overwrites
   deleteIfEmpty(path: string): Promise<boolean> // scratch folder only; see D23
   trashFile(path: string): Promise<void> // .md and .txt files only, to the OS trash; see D29
@@ -173,6 +177,7 @@ interface FolderEntry {
 interface Settings {
   folderContext: string | null // null means the scratch folder
   recentFolders: string[] // most recent first, at most 8
+  welcomed: boolean // the welcome note has been offered; see D30
 }
 interface SearchHit { path: string; line: number; text: string } // line is 1-based
 interface TagSummary { tag: string; count: number; paths: string[] } // tag lowercased

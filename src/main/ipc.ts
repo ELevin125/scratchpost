@@ -10,14 +10,17 @@ import {
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { FileMeta } from '../preload/api'
+import { isExternalUrl } from './external'
 import { listFolder } from './fs/list'
 import { createNote, deleteIfEmpty, isNoteFile, renameNote } from './fs/note'
 import { readTextFile } from './fs/read'
 import { searchFolder } from './fs/search'
 import { indexTags } from './fs/tags'
+import { createWelcomeNote } from './fs/welcome'
 import { writeTextFile } from './fs/write'
 import { loadSession, saveSession } from './session'
 import { loadSettings, saveSettings } from './settings'
+import welcomeText from './welcome.md?raw'
 
 function assertString(value: unknown, name: string): asserts value is string {
   if (typeof value !== 'string') throw new TypeError(`${name} must be a string`)
@@ -34,18 +37,6 @@ async function pickPath(event: IpcMainInvokeEvent, options: OpenDialogOptions): 
   const win = BrowserWindow.fromWebContents(event.sender)
   const result = win ? await dialog.showOpenDialog(win, options) : await dialog.showOpenDialog(options)
   return result.canceled ? null : (result.filePaths[0] ?? null)
-}
-
-const EXTERNAL_PROTOCOLS = new Set(['http:', 'https:', 'mailto:'])
-
-// Links in notes are untrusted text. Only web and mail links reach the OS;
-// file:, javascript: and custom schemes never do.
-export function isExternalUrl(url: string): boolean {
-  try {
-    return EXTERNAL_PROTOCOLS.has(new URL(url).protocol)
-  } catch {
-    return false
-  }
 }
 
 // Every handler lives here. Channel names match ScratchpostAPI method names.
@@ -67,6 +58,10 @@ export function registerIpc(): void {
     assertString(scratchDir, 'scratchDir')
     return createNote(scratchDir)
   })
+
+  ipcMain.handle('createWelcomeNote', async (_event, onlyIfEmpty: unknown) =>
+    createWelcomeNote(await getScratchDir(), onlyIfEmpty === true, welcomeText)
+  )
 
   ipcMain.handle('renameFile', (_event, from: unknown, to: unknown) => {
     assertString(from, 'from')

@@ -50,6 +50,7 @@ export interface Session {
 export interface Settings {
   folderContext: string | null // null means the scratch folder
   recentFolders: string[] // most recent first, at most 8
+  welcomed: boolean // the first-launch welcome note has been offered; see D30
 }
 
 export interface ScratchpostAPI {
@@ -57,6 +58,9 @@ export interface ScratchpostAPI {
   writeFile(path: string, content: string, meta: FileMeta): Promise<void>
   getScratchDir(): Promise<string>
   createNote(scratchDir: string): Promise<string>
+  // Writes welcome.md into the scratch folder if missing and returns its path.
+  // onlyIfEmpty: null when the scratch folder already holds notes. See D30.
+  createWelcomeNote(onlyIfEmpty: boolean): Promise<string | null>
   renameFile(from: string, to: string): Promise<void> // same folder, never overwrites
   deleteIfEmpty(path: string): Promise<boolean> // scratch folder only; see D23
   trashFile(path: string): Promise<void> // .md and .txt files only, to the OS trash; see D29

@@ -40,7 +40,8 @@ identically. Tauri's system webviews (WebView2 and WebKitGTK) differ.
 
 The usual objections do not apply: bundle size matters for distribution, and
 this installs on two personal machines; memory matters when competing with a
-game, and this is a text editor. Cold start is mitigated by the tray in M3.
+game, and this is a text editor. Cold start was to be mitigated by a tray in M3;
+that was dropped (D31), and start-up time is accepted as it is.
 
 The security objection is retired by the posture in `ARCHITECTURE.md`: no remote
 content is ever loaded, so the attack surface is close to zero.
@@ -504,7 +505,8 @@ some the docs had ruled out. This entry records each reversal; the tasks are
 **Reversed:**
 
 - **Global capture shortcut** (D14): back, as task 3.7, once the tray (3.3)
-  keeps the app running so a system-wide key has something to show.
+  keeps the app running so a system-wide key has something to show. Later
+  dropped again with the tray, see D31.
 - **Syntax highlighting** (D20): allowed for a small bundled set of languages
   (2.21). Still no highlighting for anything else.
 - **Centred text column** (rejected visual idea): allowed as an optional
@@ -553,6 +555,47 @@ and sync.
   menu, with `← Scratch` when elsewhere; the folder menu offers the parent
   folder; the status bar shows the last two segments of the path.
 - **Window title** follows the active note.
+
+---
+
+## D30 — A welcome note doubles as the tutorial
+
+**Chosen:** a short note that teaches the non-obvious parts by using them:
+cursor reveal, a checklist of commands to try, every rendered construct, and a
+few things worth knowing. Its text is `src/main/welcome.md`.
+
+- It is a real file, `welcome.md` in the scratch folder, not a special built-in
+  tab, because every tab is a plain file.
+- It appears once, on a first launch with no session to restore and no notes
+  in the scratch folder. A scratch folder synced from another machine already
+  has notes, so it never appears there. A `welcomed` flag in `settings.json`
+  is set before the attempt, so it is never offered twice.
+- "Open welcome note" in the palette recreates it if missing, or opens it.
+- It never overwrites an existing `welcome.md`.
+
+This is the one file the app creates without a keystroke from the user.
+
+**Kept current:** the note only mentions what exists. `CLAUDE.md` says to
+update it when a feature it mentions changes or a new one earns a line (file
+history, for example).
+
+**Rejected:** dummy sample text (shows syntax but teaches nothing), and a
+read-only built-in tab (breaks "every tab is a real file").
+
+---
+
+## D31 — No tray, no global capture shortcut
+
+**Chosen:** drop task 3.3 (tray and hide-on-close) and task 3.7 (global capture
+shortcut). Closing the window quits, as it does now. This reverses the global
+shortcut part of D28 and leaves D14 standing.
+
+The global shortcut only made sense with the app kept alive in the tray, so the
+two go together. The author doesn't want either.
+
+**Kept:** 3.1 external change watching. It is what stops autosave from writing
+an open tab's stale text over a newer version synced from the other machine,
+so it matters more than the tray ever did.
 
 ---
 

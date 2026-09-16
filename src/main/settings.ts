@@ -22,7 +22,7 @@ export function sanitizeSettings(value: unknown): Settings {
         MAX_RECENT_FOLDERS
       )
     : []
-  return { folderContext, recentFolders }
+  return { folderContext, recentFolders, welcomed: raw.welcomed === true }
 }
 
 export async function loadSettings(): Promise<Settings> {

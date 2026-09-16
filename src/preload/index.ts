@@ -6,6 +6,7 @@ const api: ScratchpostAPI = {
   writeFile: (path, content, meta) => ipcRenderer.invoke('writeFile', path, content, meta),
   getScratchDir: () => ipcRenderer.invoke('getScratchDir'),
   createNote: (scratchDir) => ipcRenderer.invoke('createNote', scratchDir),
+  createWelcomeNote: (onlyIfEmpty) => ipcRenderer.invoke('createWelcomeNote', onlyIfEmpty),
   renameFile: (from, to) => ipcRenderer.invoke('renameFile', from, to),
   deleteIfEmpty: (path) => ipcRenderer.invoke('deleteIfEmpty', path),
   trashFile: (path) => ipcRenderer.invoke('trashFile', path),

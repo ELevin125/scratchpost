@@ -177,7 +177,7 @@ render and neither depends on 2.1–2.8.
 ### Added after the M2 review (D28)
 
 Batches, in order: 2.12–2.17; then 2.11 with 3.4 and 3.8; then 2.22; then
-2.18–2.21; then 3.1, 3.2 and 3.6; then 3.3, 3.7 and 3.5.
+2.18–2.21; then 3.1, 3.2 and 3.6; then 3.5. (3.3 and 3.7 dropped, D31.)
 
 - [ ] **2.12 Find in note**
   `Ctrl+F` opens CodeMirror's find and replace bar, styled with theme tokens.
@@ -255,10 +255,8 @@ Batches, in order: 2.12–2.17; then 2.11 with 3.4 and 3.8; then 2.22; then
   `archive/` subfolder.
   *Accept:* pinned state persists in session.
 
-- [ ] **3.3 Tray and hide-on-close**
-  Close hides to tray; quit is explicit. Makes cold start a once-per-boot cost.
-  *Accept:* closing the window keeps the process alive and restores state
-  instantly.
+- ~~**3.3 Tray and hide-on-close**~~ — dropped, see D31. Closing the window
+  quits.
 
 - [ ] **3.4 Settings UI**
   Scratch folder, theme, font size, texture on/off and opacity.
@@ -275,10 +273,7 @@ Batches, in order: 2.12–2.17; then 2.11 with 3.4 and 3.8; then 2.22; then
   snapshots and restores one.
   *Accept:* a paragraph deleted and saved yesterday can be restored today.
 
-- [ ] **3.7 Global capture shortcut**
-  A system-wide shortcut shows the window with a new note. Needs the tray
-  (3.3) keeping the app alive. Reverses D14; see D28.
-  *Accept:* the shortcut works with the window hidden in the tray.
+- ~~**3.7 Global capture shortcut**~~ — dropped with the tray, see D31.
 
 - [ ] **3.8 Reading width and system theme**
   An optional capped, centred text column (off by default), and a theme option

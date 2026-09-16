@@ -494,6 +494,34 @@ export function App() {
 
   const closeMenu = useCallback(() => setMenu(null), [])
 
+  // --- Welcome note ---
+  // Offered once, on a first launch with nothing to restore and no notes yet.
+  // The flag is set first, so a failure never retries on every launch. See D30.
+
+  const welcomeChecked = useRef(false)
+  const { welcomed, markWelcomed } = folder
+  useEffect(() => {
+    if (restoring || welcomed !== false || welcomeChecked.current) return
+    welcomeChecked.current = true
+    markWelcomed()
+    if (tabsRef.current.tabs.length > 0) return
+    api.createWelcomeNote(true).then(
+      (path) => {
+        if (path) void openPath(path)
+      },
+      () => {}
+    )
+  })
+
+  const openWelcome = () => {
+    api.createWelcomeNote(false).then(
+      (path) => {
+        if (path) void openPath(path)
+      },
+      (err) => setNotice(`couldn't open the welcome note: ${errorMessage(err)}`)
+    )
+  }
+
   // --- Commands ---
 
   const closeOverlay = () => {
@@ -505,6 +533,7 @@ export function App() {
   useEffect(() => {
     actionsRef.current = {
       openPalette: () => setOverlay('palette'),
+      openWelcome,
       openSwitcher: () => {
         void refreshFolder()
         setOverlay('switcher')

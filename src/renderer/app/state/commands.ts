@@ -24,6 +24,7 @@ export interface AppActions {
   openSearch(): void
   openFolderMenu(): void
   newNote(): void
+  openWelcome(): void
   openFile(): void
   openFolder(): void
   openParentFolder(): void
@@ -86,6 +87,7 @@ const hasTab = (ctx: CommandContext) => ctx.view !== null
 export const commands: readonly Command[] = [
   { id: 'palette.open', label: 'Command palette', shortcut: 'Ctrl+Shift+P', run: (ctx) => ctx.actions.openPalette() },
   { id: 'note.new', label: 'New note', shortcut: 'Ctrl+N', run: (ctx) => ctx.actions.newNote() },
+  { id: 'note.welcome', label: 'Open welcome note', run: (ctx) => ctx.actions.openWelcome() },
   { id: 'file.open', label: 'Open file…', shortcut: 'Ctrl+O', run: (ctx) => ctx.actions.openFile() },
   { id: 'switcher.open', label: 'Quick switcher', shortcut: 'Ctrl+P', run: (ctx) => ctx.actions.openSwitcher() },
   { id: 'search.open', label: 'Search in folder', shortcut: 'Ctrl+Shift+F', run: (ctx) => ctx.actions.openSearch() },
