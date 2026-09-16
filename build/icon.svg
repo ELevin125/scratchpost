@@ -1,0 +1,76 @@
+<svg viewBox="0 0 120 112" role="img" aria-label="The Scratchpost cat" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .cat-fill { fill: hsl(172 45% 72%); }
+    .cat-fill-stroke { fill: none; stroke: hsl(172 45% 72%); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+    .cat-belly { fill: hsl(172 40% 92%); }
+    .cat-pink { fill: hsl(2 70% 82%); }
+    .cat-ink { fill: hsl(172 45% 11%); }
+    .cat-shine { fill: hsl(172 30% 98%); }
+    .cat-gear { fill: hsl(172 15% 84%); }
+    .cat-line { fill: none; stroke: hsl(172 45% 11%); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .cat-ears { stroke: hsl(172 45% 72%); stroke-width: 2; stroke-linejoin: round; }
+    .cat-stripes { stroke: hsl(172 45% 11%); stroke-width: 2.5; stroke-linecap: round; opacity: 0.25; }
+    .cat-band { fill: none; stroke: hsl(172 15% 84%); stroke-width: 4; stroke-linecap: round; }
+    .cat-hidden { display: none; }
+  </style>
+
+  <title>Meow</title>
+  
+  <g transform="translate(0,12)">
+    <g data-part="cat" class="cat-all">
+      <!-- Tail -->
+      <path class="cat-tail cat-fill-stroke" d="M96 82 C114 80 116 60 104 52" />
+      
+      <!-- Body -->
+      <path data-part="body" class="cat-body cat-fill" d="M32 94 C18 94 16 72 22 56 C28 38 40 30 60 30 C80 30 92 38 98 56 C104 72 102 94 88 94 Z" />
+      
+      <!-- Belly -->
+      <ellipse class="cat-belly" cx="60" cy="78" rx="20" ry="14" />
+      
+      <!-- Ears -->
+      <path class="cat-fill cat-ears" d="M30 46 L33 20 L52 34 Z M90 46 L87 20 L68 34 Z" />
+      
+      <!-- Inner Ears (Pink) -->
+      <path class="cat-pink" d="M35 38 L36 27 L45 34 Z M85 38 L84 27 L75 34 Z" />
+      
+      <!-- Head Stripes -->
+      <path class="cat-stripes" d="M56 34 v6 M60 32 v8 M64 34 v6" />
+      
+      <!-- Eyes Open (Idle state default) -->
+      <g data-part="eyes-open" class="cat-eyes">
+        <circle class="cat-ink" cx="47" cy="57" r="4.2" />
+        <circle class="cat-ink" cx="73" cy="57" r="4.2" />
+        <circle class="cat-shine" cx="48.4" cy="55.6" r="1.4" />
+        <circle class="cat-shine" cx="74.4" cy="55.6" r="1.4" />
+      </g>
+      
+      <!-- Eyes Closed (Hidden in idle) -->
+      <path data-part="eyes-closed" class="cat-line cat-hidden" d="M43 57 q4 3.5 8 0 M69 57 q4 3.5 8 0" />
+      
+      <!-- Mouth -->
+      <path data-part="mouth" class="cat-line cat-mouth" d="M55 64 q2.5 3.5 5 0 q2.5 3.5 5 0" />
+      
+      <!-- Yawn (Hidden in idle) -->
+      <ellipse data-part="yawn" class="cat-ink cat-yawn cat-hidden" cx="60" cy="68" rx="4.2" ry="5" />
+      
+      <!-- Cheeks / Blush -->
+      <ellipse class="cat-pink cat-blush" cx="39" cy="66" rx="5" ry="2.8" />
+      <ellipse class="cat-pink cat-blush" cx="81" cy="66" rx="5" ry="2.8" />
+      
+      <!-- Paw (Hidden in idle) -->
+      <ellipse data-part="paw" class="cat-paw cat-hidden" cx="70" cy="72" rx="7" ry="5.5" />
+      
+      <!-- Headphones (Hidden in idle) -->
+      <g data-part="phones" class="cat-phones cat-hidden">
+        <path class="cat-band" d="M25 52 C22 8 98 8 95 52" />
+        <rect class="cat-gear" x="17" y="42" width="12" height="20" rx="5" />
+        <rect class="cat-gear" x="91" y="42" width="12" height="20" rx="5" />
+        <rect class="cat-pink" x="20" y="46" width="6" height="12" rx="3" />
+        <rect class="cat-pink" x="94" y="46" width="6" height="12" rx="3" />
+      </g>
+    </g>
+    
+    <!-- FX Layer -->
+    <g data-part="fx" />
+  </g>
+</svg>
