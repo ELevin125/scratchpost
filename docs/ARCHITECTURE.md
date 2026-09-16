@@ -154,6 +154,9 @@ interface ScratchpostAPI {
   trashFile(path: string): Promise<void> // .md and .txt files only, to the OS trash; see D29
   archiveFile(path: string): Promise<string> // into ./archive, returns the new path; see D36
   unarchiveFile(path: string): Promise<string> // back out of ./archive
+  historySnapshot(path: string, text: string): Promise<void> // local versions; see D38
+  historyList(path: string): Promise<HistoryEntry[]> // newest first
+  historyRead(path: string, id: string): Promise<string>
   showInFolder(path: string): Promise<void> // reveal in the file manager
   listFolder(path: string): Promise<FolderEntry[]> // recursive walk; see D25
   searchFolder(path: string, query: string): Promise<SearchHit[]> // see D27

@@ -16,6 +16,7 @@ const paths = {
   home: 'M3 9.5l7-6 7 6 M5 8v8.5h10V8',
   pin: 'M7.5 3h5l-.8 5 2.8 3H5.5l2.8-3z M10 11v6',
   archive: 'M3 4h14v3H3z M4.5 7v9h11V7 M8 10.5h4',
+  history: 'M3.5 10a6.5 6.5 0 1 0 1.9-4.6 M3.2 3.4v2.8H6 M10 6.5V10l2.5 1.5',
   chevronRight: 'M8 5l5 5-5 5',
   chevronDown: 'M5 8l5 5 5-5',
   sun: 'M13 10a3 3 0 1 1-6 0a3 3 0 1 1 6 0 M10 2v2 M10 16v2 M2 10h2 M16 10h2 M4.3 4.3l1.4 1.4 M14.3 14.3l1.4 1.4 M4.3 15.7l1.4-1.4 M14.3 5.7l1.4-1.4',

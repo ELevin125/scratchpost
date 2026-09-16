@@ -14,6 +14,7 @@ import { Editor, type Buffers } from './Editor'
 import { EmptyState } from './EmptyState'
 import { FileTree } from './FileTree'
 import { FolderMenu } from './FolderMenu'
+import { HistoryPanel } from './HistoryPanel'
 import { NoteHeader } from './NoteHeader'
 import { QuickSwitcher } from './QuickSwitcher'
 import { RenameDialog } from './RenameDialog'
@@ -69,11 +70,12 @@ const NOTE_EXTENSION = /\.(md|markdown|txt)$/i
 // Changes on disk are gathered for this long before the notes and tags panels
 // re-read the folder.
 const LISTING_REFRESH_MS = 500
+const SNAPSHOT_EVERY_MS = 5 * 60 * 1000
 
 // Ctrl+Shift+T remembers this many closed tabs.
 const MAX_CLOSED = 20
 
-type Overlay = 'palette' | 'switcher' | 'search' | 'folders' | 'rename' | 'colours' | 'settings'
+type Overlay = 'palette' | 'switcher' | 'search' | 'folders' | 'rename' | 'colours' | 'settings' | 'history'
 
 // A note that changed on disk while it had unsaved edits, or was deleted.
 type External = 'conflict' | 'deleted'
@@ -249,6 +251,7 @@ export function App() {
           buffers.scroll.set(id, Math.min(saved.scroll, content.length))
           metas.set(id, meta)
           diskText.set(id, content)
+          void api.historySnapshot(saved.path, content).catch(() => {})
           lines[id] = firstContentLine(content.split('\n'))
           restored.push({
             id,
@@ -310,6 +313,31 @@ export function App() {
     [buffers, metas, diskText, writing, setExternal, updateTabs]
   )
 
+  // --- Version history (3.6, D38) ---
+  // A snapshot on open, every five minutes while the text changes, on close
+  // and quit, and before anything replaces the text. Main skips repeats.
+  const snapshotted = useRef(new Map<string, string>()).current
+  const snapshot = useCallback(
+    (id: string, text?: string): Promise<void> => {
+      const path = tabsRef.current.tabs.find((t) => t.id === id)?.path
+      const value = text ?? buffers.states.get(id)?.doc.toString() ?? buffers.initial.get(id)?.doc
+      if (!path || value === undefined || snapshotted.get(path) === value) return Promise.resolve()
+      snapshotted.set(path, value)
+      return api.historySnapshot(path, value).catch(() => {
+        snapshotted.delete(path)
+      })
+    },
+    [buffers, snapshotted]
+  )
+  const snapshotAll = useCallback(
+    () => Promise.all(tabsRef.current.tabs.map((tab) => snapshot(tab.id))).then(() => {}),
+    [snapshot]
+  )
+  useEffect(() => {
+    const timer = setInterval(() => void snapshotAll(), SNAPSHOT_EVERY_MS)
+    return () => clearInterval(timer)
+  }, [snapshotAll])
+
   // The cat notices typing, a finished checklist and "meow" (3.9).
   const taskCounts = useRef(new Map<string, TaskCount>()).current
   const tellCat = useCallback(
@@ -345,13 +373,13 @@ export function App() {
     window.addEventListener('blur', onBlur)
     const offBeforeClose = api.onBeforeClose(async () => {
       await autosave.flushAll()
-      await saveSessionNow()
+      await Promise.all([saveSessionNow(), snapshotAll()])
     })
     return () => {
       window.removeEventListener('blur', onBlur)
       offBeforeClose()
     }
-  }, [autosave, saveSessionNow])
+  }, [autosave, saveSessionNow, snapshotAll])
 
   // --- Folder listing refresh ---
   // No watching until 3.1, so the tree, switcher and tag index re-read the
@@ -409,6 +437,7 @@ export function App() {
     }
     const tab = tabsRef.current.tabs.find((t) => t.id === id)
     const text = buffers.states.get(id)?.doc.toString() ?? buffers.initial.get(id)?.doc
+    void snapshot(id, text)
     discardTab(id)
     if (!tab?.path) return
 
@@ -474,6 +503,7 @@ export function App() {
       setFirstLines((prev) => ({ ...prev, [id]: firstContentLine(content.split('\n')) }))
       flushActive()
       updateTabs((s) => openTab(s, { id, path, scratch: dir !== null && isInside(path, dir) }))
+      void api.historySnapshot(path, content).catch(() => {})
     } catch (err) {
       setNotice(`couldn't open ${fileName(path)}: ${errorMessage(err)}`)
     }
@@ -614,6 +644,11 @@ export function App() {
             menuItem('file.rename', () => {
               activate(tab.id)
               setOverlay('rename')
+            }),
+            menuItem('file.history', () => {
+              activate(tab.id)
+              void snapshot(tab.id)
+              setOverlay('history')
             })
           ]
         : []),
@@ -711,6 +746,7 @@ export function App() {
 
   // Puts disk text into a tab, keeping the cursor where the text is unchanged.
   const loadFromDisk = (id: string, content: string, meta: FileMeta) => {
+    void snapshot(id)
     metas.set(id, meta)
     diskText.set(id, content)
     const view = viewRef.current
@@ -793,6 +829,28 @@ export function App() {
   const keepMine = (id: string) => {
     setExternal(id, null)
     autosave.schedule(id, true)
+  }
+
+  // History panel data for the active note. Restoring is an ordinary edit, so
+  // Ctrl+Z undoes it; the text it replaces is snapshotted first.
+  const historyPath = tabsState.tabs.find((t) => t.id === tabsState.activeId)?.path ?? null
+  const listHistory = useCallback(
+    () => (historyPath ? api.historyList(historyPath) : Promise.resolve([])),
+    [historyPath]
+  )
+  const readHistory = useCallback(
+    (versionId: string) => (historyPath ? api.historyRead(historyPath, versionId) : Promise.reject(new Error('no note'))),
+    [historyPath]
+  )
+  const restoreVersion = (text: string) => {
+    const id = tabsRef.current.activeId
+    const view = viewRef.current
+    if (!id || !view) return
+    void snapshot(id)
+    const spec = replaceDocSpec(view.state, text)
+    if (spec) view.dispatch({ ...spec, userEvent: 'input.restore', scrollIntoView: true })
+    closeOverlay()
+    setNotice('restored the version; Ctrl+Z undoes it')
   }
 
   // --- Settings (3.4) ---
@@ -921,6 +979,12 @@ export function App() {
       unarchiveActive: () => {
         const path = activeTab()?.path
         if (path) void moveArchive(path, true)
+      },
+      openHistory: () => {
+        const tab = activeTab()
+        if (!tab?.path) return
+        void snapshot(tab.id)
+        setOverlay('history')
       }
     }
   })
@@ -1119,6 +1183,7 @@ export function App() {
               [
                 { command: 'tree.toggle', icon: 'notes', pressed: treeOpen },
                 { command: 'search.open', icon: 'search' },
+                ...(active?.path ? [{ command: 'file.history', icon: 'history' as const }] : []),
                 { command: 'file.open', icon: 'open' },
                 { command: 'folder.switch', icon: 'folder' }
               ],
@@ -1214,6 +1279,22 @@ export function App() {
           onCat={(on) => void folder.persist({ cat: on })}
           onPickScratch={() => void pickScratchDir()}
           onDefaultScratch={() => void changeScratchDir(null)}
+          onClose={closeOverlay}
+        />
+      )}
+      {overlay === 'history' && active?.path && (
+        <HistoryPanel
+          name={nameOf(active)}
+          current={currentText(active.id) ?? ''}
+          list={listHistory}
+          read={readHistory}
+          onRestore={restoreVersion}
+          onCopy={(text) =>
+            navigator.clipboard.writeText(text).then(
+              () => setNotice('copied the version'),
+              () => setNotice("couldn't copy the version")
+            )
+          }
           onClose={closeOverlay}
         />
       )}

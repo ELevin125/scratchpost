@@ -28,6 +28,9 @@ const api: ScratchpostAPI = {
       ipcRenderer.removeListener('openPaths', listener)
     }
   },
+  historySnapshot: (path, text) => ipcRenderer.invoke('historySnapshot', path, text),
+  historyList: (path) => ipcRenderer.invoke('historyList', path),
+  historyRead: (path, id) => ipcRenderer.invoke('historyRead', path, id),
   watch: (folder, files) => ipcRenderer.invoke('watch', folder, files),
   onWatchEvent: (cb) => {
     const listener = (_event: Electron.IpcRendererEvent, change: WatchEvent) => cb(change)

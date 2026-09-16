@@ -1267,3 +1267,134 @@ kbd {
     transition: none;
   }
 }
+
+/* Version history (3.6) */
+
+.overlay.history {
+  width: min(860px, calc(100% - 32px));
+  height: calc(100vh - 128px);
+  padding: 6px 8px 10px;
+  outline: none;
+}
+
+.history-name {
+  flex: 1;
+  min-width: 0;
+  margin: 0 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--soft);
+}
+
+.history-body {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) 1fr;
+  gap: 8px;
+  min-height: 0;
+  flex: 1;
+  margin-top: 6px;
+}
+
+.history-list,
+.history-list ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.history-list {
+  overflow-y: auto;
+  padding: 0 4px;
+}
+
+.history-list h3 {
+  margin: 10px 8px 4px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--soft);
+}
+
+.history-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 10px;
+  color: var(--body);
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.history-item:hover {
+  background: var(--surface);
+}
+
+.history-item.selected {
+  color: var(--chip-ink);
+  background: var(--chip);
+}
+
+.history-time {
+  font: 500 13px var(--font-mono);
+}
+
+.history-meta {
+  font: 11px var(--font-mono);
+  opacity: 0.75;
+}
+
+.history-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+  padding: 10px;
+  background: var(--surface);
+  border-radius: 16px;
+}
+
+.history-summary {
+  font-size: 12px;
+  color: var(--soft);
+}
+
+.history-text {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 8px 0;
+  overflow: auto;
+  font: var(--note-size) / 1.6 var(--font-mono);
+  color: var(--body);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: var(--sunken);
+  border-radius: 12px;
+}
+
+.history-text > span {
+  display: block;
+  padding: 0 12px;
+  border-left: 3px solid transparent;
+}
+
+.history-text > .changed {
+  color: var(--ink);
+  background: var(--selection);
+  border-left-color: var(--chip);
+}
+
+.history-preview .setting-actions button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+@media (max-width: 640px) {
+  .history-body {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(120px, 30%) 1fr;
+  }
+}

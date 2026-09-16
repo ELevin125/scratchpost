@@ -853,6 +853,34 @@ wants it visible), speech bubbles and sound.
 
 ---
 
+## D38 — Local version history
+
+**Decision:** every note gets a quiet history, kept on this machine only
+(3.6).
+
+- **Storage:** `<userData>/history/<id>/`, where the id is a hash of the note's
+  path. Each version is a plain `<time>-<words>-<lines>.md` file, so listing
+  needs no reading; `meta.json` names the note. Renaming or archiving moves the
+  folder along. Nothing is written next to the notes, so synced folders stay
+  clean.
+- **When:** on open, every five minutes while the text changes, on close and
+  quit, and before anything replaces the text (a disk reload, a restore). Main
+  skips text identical to the newest version, empty first versions and notes
+  over 1 MB. Writes run one at a time.
+- **Pruning:** everything from the last day, the newest per hour for a week,
+  the newest per day for 90 days; older versions go. Once per launch the whole
+  store is also capped at 200 MB, oldest first.
+- **UI:** "Note history…" in the palette, the pill menu and the dock. Versions
+  are grouped by day with time, words and line change; the preview marks lines
+  that aren't in the note now. "Restore this version" is an ordinary edit, so
+  `Ctrl+Z` undoes it; "Copy text" copies without restoring.
+
+**Rejected:** history beside the notes or synced (clutters folders, conflicts
+across machines), git, and a full side-by-side diff (more than a scratchpad
+needs).
+
+---
+
 ## Open questions
 
 Not yet decided. Do not guess; raise them.

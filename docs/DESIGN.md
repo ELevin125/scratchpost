@@ -109,6 +109,13 @@ syntax degrades gracefully in other editors.
 tab; "Move out of archive" moves it back. Archived notes leave the recent list
 but stay findable everywhere else. Nothing is ever overwritten (D36).
 
+### History
+
+Each note keeps versions on this machine (D38). "Note history…" opens a panel:
+versions by day on the left, the selected one on the right with the lines that
+differ from the note now marked. "Restore this version" replaces the text as
+one undoable edit; "Copy text" leaves the note alone.
+
 ### New notes
 
 1. User triggers "new note". A tab appears immediately with an empty buffer and
@@ -234,6 +241,7 @@ Standard CodeMirror 6 keymap plus:
 | Delete note, show in file manager, copy path | palette and right-click menus |
 | Pin tab, close other tabs, close all tabs | palette and right-click menus |
 | Archive note, move out of archive | palette and right-click menus |
+| Note history | palette, pill menu and dock |
 
 Every binding above is a command in the registry and appears in the palette
 with its shortcut (D24). `Enter` and `Tab` are editor keys (D21).

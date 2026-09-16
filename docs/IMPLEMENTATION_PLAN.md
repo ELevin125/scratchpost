@@ -297,10 +297,10 @@ Batches, in order: 2.12–2.17; then 2.11 with 3.4 and 3.8; then 2.22; then
   the argument handling already exists (2.18).
   *Accept:* a clean checkout builds on both platforms.
 
-- [ ] **3.6 Local version history**
+- [x] **3.6 Local version history**
   Quiet snapshots of each note in userData, on close and at most every few
   minutes while editing, pruned over time. A "History" command lists a note's
-  snapshots and restores one.
+  snapshots and restores one. See D38.
   *Accept:* a paragraph deleted and saved yesterday can be restored today.
 
 - ~~**3.7 Global capture shortcut**~~ — dropped with the tray, see D31.

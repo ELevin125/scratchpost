@@ -38,6 +38,8 @@ const answer = 42
 - `Ctrl+Shift+T` reopens the tab you just closed.
 - Right-click a note's pill to pin it, so it stays at the left and survives
   "Close all tabs", or to archive it into an `archive` folder.
+- Every note keeps its own history on this computer. Click the clock at the
+  bottom to see older versions and bring one back; `Ctrl+Z` undoes that.
 - Notes are plain files in `Documents/Scratchpost`. `Ctrl+O` opens any file
   from anywhere, and so does dropping it on the window.
 - Select a word and paste a link to turn the word into a link.

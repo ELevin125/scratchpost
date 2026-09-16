@@ -46,6 +46,7 @@ export interface AppActions {
   closeAll(): void
   archiveActive(): void
   unarchiveActive(): void
+  openHistory(): void
 }
 
 export interface CommandContext {
@@ -130,6 +131,7 @@ export const commands: readonly Command[] = [
   { id: 'settings.open', label: 'Settings…', shortcut: 'Ctrl+,', run: (ctx) => ctx.actions.openSettings() },
 
   { id: 'file.rename', label: 'Rename file…', shortcut: 'F2', run: (ctx) => ctx.actions.renameActive(), when: hasFile },
+  { id: 'file.history', label: 'Note history…', run: (ctx) => ctx.actions.openHistory(), when: hasFile },
   { id: 'file.reveal', label: 'Show in file manager', run: (ctx) => ctx.actions.revealActive(), when: hasFile },
   { id: 'file.copyPath', label: 'Copy path', run: (ctx) => ctx.actions.copyActivePath(), when: hasFile },
   {

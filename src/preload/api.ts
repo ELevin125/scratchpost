@@ -67,6 +67,14 @@ export interface Settings {
   cat: boolean // the mascot (3.9), on by default
 }
 
+// One saved version of a note (3.6); id is opaque, time in ms.
+export interface HistoryEntry {
+  id: string
+  time: number
+  words: number
+  lines: number
+}
+
 export interface ScratchpostAPI {
   readFile(path: string): Promise<FilePayload>
   writeFile(path: string, content: string, meta: FileMeta): Promise<void>
@@ -82,6 +90,11 @@ export interface ScratchpostAPI {
   // new path. Never overwrites: a taken name gets -2, -3. See D36.
   archiveFile(path: string): Promise<string>
   unarchiveFile(path: string): Promise<string>
+  // Local version history, this machine only; see D38. snapshot skips text
+  // identical to the newest version and notes over 1 MB.
+  historySnapshot(path: string, text: string): Promise<void>
+  historyList(path: string): Promise<HistoryEntry[]> // newest first
+  historyRead(path: string, id: string): Promise<string>
   showInFolder(path: string): Promise<void> // reveal in the file manager
   listFolder(path: string): Promise<FolderEntry[]> // recursive walk; see D25
   searchFolder(path: string, query: string): Promise<SearchHit[]> // see D27

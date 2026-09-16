@@ -11,6 +11,7 @@ import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { FileMeta } from '../preload/api'
 import { isExternalUrl } from './external'
+import { HistoryStore } from './fs/history'
 import { listFolder } from './fs/list'
 import { archiveNote, createNote, deleteIfEmpty, isNoteFile, renameNote, unarchiveNote } from './fs/note'
 import { readTextFile } from './fs/read'
@@ -43,6 +44,9 @@ async function pickPath(event: IpcMainInvokeEvent, options: OpenDialogOptions): 
 
 // Every handler lives here. Channel names match ScratchpostAPI method names.
 export function registerIpc(): void {
+  const history = new HistoryStore(join(app.getPath('userData'), 'history'))
+  setTimeout(() => void history.pruneAll().catch(() => {}), 10_000)
+
   ipcMain.handle('readFile', (_event, path: unknown) => {
     assertString(path, 'path')
     return readTextFile(path)
@@ -65,10 +69,11 @@ export function registerIpc(): void {
     createWelcomeNote(await getScratchDir(), onlyIfEmpty === true, welcomeText)
   )
 
-  ipcMain.handle('renameFile', (_event, from: unknown, to: unknown) => {
+  ipcMain.handle('renameFile', async (_event, from: unknown, to: unknown) => {
     assertString(from, 'from')
     assertString(to, 'to')
-    return renameNote(from, to)
+    await renameNote(from, to)
+    await history.move(from, to).catch(() => {})
   })
 
   // The scratch folder comes from main, never the renderer, so this can only
@@ -87,13 +92,34 @@ export function registerIpc(): void {
   ipcMain.handle('archiveFile', async (_event, path: unknown) => {
     assertString(path, 'path')
     if (!(await isNoteFile(path))) throw new Error('only .md and .txt files can be archived')
-    return archiveNote(path)
+    const to = await archiveNote(path)
+    await history.move(path, to).catch(() => {})
+    return to
   })
 
   ipcMain.handle('unarchiveFile', async (_event, path: unknown) => {
     assertString(path, 'path')
     if (!(await isNoteFile(path))) throw new Error('only .md and .txt files can be moved')
-    return unarchiveNote(path)
+    const to = await unarchiveNote(path)
+    await history.move(path, to).catch(() => {})
+    return to
+  })
+
+  ipcMain.handle('historySnapshot', async (_event, path: unknown, text: unknown) => {
+    assertString(path, 'path')
+    assertString(text, 'text')
+    await history.snapshot(path, text)
+  })
+
+  ipcMain.handle('historyList', (_event, path: unknown) => {
+    assertString(path, 'path')
+    return history.list(path)
+  })
+
+  ipcMain.handle('historyRead', (_event, path: unknown, id: unknown) => {
+    assertString(path, 'path')
+    assertString(id, 'id')
+    return history.read(path, id)
   })
 
   ipcMain.handle('showInFolder', (_event, path: unknown) => {
