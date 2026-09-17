@@ -202,6 +202,7 @@ interface Settings {
   scratchDir: string | null // null means ~/Documents/Scratchpost
   fontSize: number // note text in px, 10 to 24
   cat: boolean // the mascot, on by default; see D37
+  pinnedNotes: string[] // absolute paths, atop the notes panel (4.7)
 }
 interface OpenRequest {
   files: string[] // open as tabs

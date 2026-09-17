@@ -15,7 +15,7 @@ export const editorTheme = EditorView.theme({
   '.cm-scroller': { fontFamily: 'var(--font-mono)', lineHeight: '1.75' },
   // Capped at 80 characters (D33), so notes hard-wrapped at 80 never wrap
   // twice; the bottom room keeps the last line clear of the dock.
-  '.cm-content': { maxWidth: 'calc(80ch + 80px)', padding: '4px 40px 140px', caretColor: 'var(--ink)' },
+  '.cm-content': { maxWidth: 'calc(80ch + 80px)', padding: '18px 40px 140px', caretColor: 'var(--ink)' },
   // No default line padding, so hanging indents in ch line up exactly.
   '.cm-line': { padding: '0' },
   '.cm-cursor, .cm-dropCursor': { borderLeftColor: 'var(--ink)' },
@@ -52,11 +52,23 @@ export const editorTheme = EditorView.theme({
     flexWrap: 'wrap',
     alignItems: 'center',
     gap: '6px 8px',
-    padding: '10px 20px 6px 40px',
+    // Two rows as wide as the text column (Plex Mono is 0.6em per character):
+    // find, its buttons and close; then replace, its buttons and the options.
+    maxWidth: 'min(100%, calc(var(--note-size) * 48 + 80px))',
+    boxSizing: 'border-box',
+    padding: '10px 40px 6px',
     fontFamily: 'var(--font-sans)',
     fontSize: '12px'
   },
-  '& .cm-panel.cm-search br': { flexBasis: '100%', height: '0' },
+  '& .cm-panel.cm-search br': { display: 'none' },
+  '& .cm-panel.cm-search::before': { content: '""', order: '5', flexBasis: '100%', height: '0' },
+  '& .cm-panel.cm-search input[name=search]': { order: '1', flex: '1 1 160px' },
+  '& .cm-panel.cm-search [name=next], & .cm-panel.cm-search [name=prev], & .cm-panel.cm-search [name=select]': {
+    order: '2'
+  },
+  '& .cm-panel.cm-search [name=close]': { order: '3' },
+  '& .cm-panel.cm-search input[name=replace]': { order: '6', flex: '1 1 160px' },
+  '& .cm-panel.cm-search button[name=replace], & .cm-panel.cm-search button[name=replaceAll]': { order: '7' },
   '& .cm-panel.cm-search .cm-textfield': {
     font: 'inherit',
     color: 'var(--ink)',
@@ -77,7 +89,7 @@ export const editorTheme = EditorView.theme({
     margin: '0'
   },
   '& .cm-panel.cm-search .cm-button:hover': { color: 'var(--chip-ink)', backgroundColor: 'var(--chip)' },
-  '& .cm-panel.cm-search label': { display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--soft)' },
+  '& .cm-panel.cm-search label': { order: '8', display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--soft)' },
   '& .cm-panel.cm-search button[name=close]': {
     position: 'static',
     marginLeft: 'auto',

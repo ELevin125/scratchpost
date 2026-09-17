@@ -77,7 +77,9 @@ Changed your mind? `Ctrl+Z` undoes a restore too.
 
 Close a tab and `Ctrl+Shift+T` brings it back.
 
-Pin a note if you want it to stay at the left. Pinned notes also survive **Close all tabs**.
+Pin a tab if you want it to stay at the left. Pinned tabs also survive **Close all tabs**.
+
+Right-click a note in the notes list and choose **Pin note to notes panel** to keep it at the top of the list, whichever folder is open.
 
 Archive a note when you're done with it and Scratchpost moves it into an `archive` folder instead of throwing it away.
 
@@ -91,9 +93,7 @@ That means syncing the folder between machines works too.
 
 ## Make it yours
 
-The buttons along the bottom let you switch between light and dark mode and change the theme colour.
-
-Open Settings with `Ctrl+,` to change the scratch folder and other preferences.
+Open Settings with `Ctrl+,` to switch between light and dark mode, change the theme colour, the scratch folder and other preferences.
 
 Scratchpost works offline and keeps everything on your computer.
 

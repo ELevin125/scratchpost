@@ -12,6 +12,7 @@ const DEFAULT_SEED = 172 // teal; matches themes/index.ts
 const MIN_FONT_SIZE = 10
 const MAX_FONT_SIZE = 24
 const DEFAULT_FONT_SIZE = 13
+const MAX_PINNED_NOTES = 30
 
 const settingsPath = () => join(app.getPath('userData'), 'settings.json')
 
@@ -42,7 +43,13 @@ export function sanitizeSettings(value: unknown): Settings {
     // Only an absolute path can be a scratch folder.
     scratchDir: typeof raw.scratchDir === 'string' && isAbsolute(raw.scratchDir) ? raw.scratchDir : null,
     fontSize,
-    cat: raw.cat !== false
+    cat: raw.cat !== false,
+    pinnedNotes: Array.isArray(raw.pinnedNotes)
+      ? [...new Set(raw.pinnedNotes.filter((p): p is string => typeof p === 'string' && isAbsolute(p)))].slice(
+          0,
+          MAX_PINNED_NOTES
+        )
+      : []
   }
 }
 

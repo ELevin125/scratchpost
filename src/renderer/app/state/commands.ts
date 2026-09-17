@@ -47,6 +47,7 @@ export interface AppActions {
   archiveActive(): void
   unarchiveActive(): void
   openHistory(): void
+  pinNoteActive(pinned: boolean): void
 }
 
 export interface CommandContext {
@@ -56,6 +57,7 @@ export interface CommandContext {
   mode: 'light' | 'dark' // the current theme mode, for the toggle's label
   activePinned: boolean
   activeArchived: boolean // the active note sits in an archive folder
+  activeNotePinned: boolean // the active note is pinned in the notes panel (4.7)
   tabCount: number
   actions: AppActions
 }
@@ -132,6 +134,18 @@ export const commands: readonly Command[] = [
 
   { id: 'file.rename', label: 'Rename file…', shortcut: 'F2', run: (ctx) => ctx.actions.renameActive(), when: hasFile },
   { id: 'file.history', label: 'Note history…', run: (ctx) => ctx.actions.openHistory(), when: hasFile },
+  {
+    id: 'note.pin',
+    label: 'Pin note to notes panel',
+    run: (ctx) => ctx.actions.pinNoteActive(true),
+    when: (ctx) => hasFile(ctx) && !ctx.activeNotePinned
+  },
+  {
+    id: 'note.unpin',
+    label: 'Unpin note from notes panel',
+    run: (ctx) => ctx.actions.pinNoteActive(false),
+    when: (ctx) => hasFile(ctx) && ctx.activeNotePinned
+  },
   { id: 'file.reveal', label: 'Show in file manager', run: (ctx) => ctx.actions.revealActive(), when: hasFile },
   { id: 'file.copyPath', label: 'Copy path', run: (ctx) => ctx.actions.copyActivePath(), when: hasFile },
   {

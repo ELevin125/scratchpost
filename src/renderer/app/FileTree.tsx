@@ -26,6 +26,7 @@ interface FileTreeProps {
   onEntryMenu: (entry: FolderEntry, at: Point) => void
   tagFilter: string | null // lowercased; clicking a tag in a note sets it too
   onTagFilter: (tag: string | null) => void
+  pinned: FolderEntry[] // pinned notes, from any folder (4.7)
 }
 
 // The scratch folder shows this many recent notes until "Show all".
@@ -51,7 +52,8 @@ export function FileTree({
   onUseScratch,
   onEntryMenu,
   tagFilter,
-  onTagFilter
+  onTagFilter,
+  pinned
 }: FileTreeProps) {
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set())
   const [showAll, setShowAll] = useState(false)
@@ -71,9 +73,15 @@ export function FileTree({
   const tree = useMemo(() => (listing ? buildTree(listing.root, entries, order) : []), [listing, entries, order])
   const files = useMemo(() => entries.filter((entry) => !entry.isDir), [entries])
   // Archived notes stay out of the recent list; "Show all" still has them.
+  // Pinned notes sit above it instead.
+  const pinnedPaths = useMemo(() => new Set(pinned.map((entry) => entry.path)), [pinned])
   const recent = useMemo(
-    () => sortRecent(files.filter((file) => !isArchivedPath(file.path))).slice(0, RECENT_COUNT),
-    [files]
+    () =>
+      sortRecent(files.filter((file) => !isArchivedPath(file.path) && !pinnedPaths.has(file.path))).slice(
+        0,
+        RECENT_COUNT
+      ),
+    [files, pinnedPaths]
   )
   const tags = listing?.tags ?? []
   const activeTag = tags.find((t) => t.tag === tagFilter) ?? null
@@ -205,7 +213,18 @@ export function FileTree({
             <Icon name="x" size={14} />
           </button>
         )}
-        <div className="panel-scroll">{body}</div>
+        <div className="panel-scroll">
+          {pinned.length > 0 && !activeTag && (
+            <div className="pinned-notes">
+              <div className="panel-subtitle">
+                <Icon name="pin" size={13} />
+                <span>Pinned</span>
+              </div>
+              {flat(pinned)}
+            </div>
+          )}
+          {body}
+        </div>
         {!activeTag && collapsible && (
           <button className="show-all" onClick={() => setShowAll(!showAll)}>
             {showAll ? 'Show recent' : `Show all · ${files.length}`}

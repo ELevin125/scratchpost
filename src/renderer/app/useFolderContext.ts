@@ -19,7 +19,8 @@ const DEFAULT_SETTINGS: Settings = {
   theme: { seed: 172, mode: 'dark' },
   scratchDir: null,
   fontSize: 13,
-  cat: true
+  cat: true,
+  pinnedNotes: []
 }
 
 // The folder context: which folder the file tree, quick switcher, search and

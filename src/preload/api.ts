@@ -65,6 +65,7 @@ export interface Settings {
   scratchDir: string | null // null means ~/Documents/Scratchpost
   fontSize: number // note text in px, 10 to 24
   cat: boolean // the mascot (3.9), on by default
+  pinnedNotes: string[] // absolute paths, shown atop the notes panel in any folder (4.7)
 }
 
 // One saved version of a note (3.6); id is opaque, time in ms.

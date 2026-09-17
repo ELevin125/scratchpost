@@ -552,6 +552,7 @@ export function App() {
     closedPaths.current = closedPaths.current.filter((p) => p !== path)
     try {
       await api.trashFile(path)
+      movePinned(path, null)
       setNotice(`moved ${fileName(path)} to the trash`)
     } catch (err) {
       setNotice(`couldn't delete ${fileName(path)}: ${errorMessage(err)}`)
@@ -609,6 +610,7 @@ export function App() {
       closedPaths.current = closedPaths.current.filter((p) => p !== tab.path)
       updateTabs((s) => setTabPath(s, tab.id, to))
       setExternal(tab.id, null) // the old path's unlink is ours
+      movePinned(tab.path, to)
     } catch (err) {
       setNotice(`couldn't rename ${oldName}: ${errorMessage(err)}`)
     }
@@ -628,6 +630,7 @@ export function App() {
     try {
       const to = out ? await api.unarchiveFile(path) : await api.archiveFile(path)
       closedPaths.current = closedPaths.current.filter((p) => p !== path)
+      movePinned(path, to)
       if (tab && out) {
         updateTabs((s) => setTabPath(s, tab.id, to))
         setExternal(tab.id, null)
@@ -642,6 +645,23 @@ export function App() {
     }
   }
 
+  // Notes pinned to the notes panel (4.7), kept in settings by path.
+  const pinnedNotes = folder.settings?.pinnedNotes ?? []
+  const setNotePinned = (path: string, pinned: boolean) => {
+    const current = folder.settings?.pinnedNotes ?? []
+    const next = pinned ? [...current.filter((p) => p !== path), path] : current.filter((p) => p !== path)
+    void folder.persist({ pinnedNotes: next })
+  }
+  const movePinned = (from: string, to: string | null) => {
+    const current = folder.settings?.pinnedNotes ?? []
+    if (!current.includes(from)) return
+    void folder.persist({ pinnedNotes: current.flatMap((p) => (p !== from ? [p] : to ? [to] : [])) })
+  }
+  const pinNoteItem = (path: string): MenuItem =>
+    pinnedNotes.includes(path)
+      ? menuItem('note.unpin', () => setNotePinned(path, false))
+      : menuItem('note.pin', () => setNotePinned(path, true))
+
   const archiveItem = (path: string): MenuItem =>
     isArchivedPath(path)
       ? menuItem('file.unarchive', () => void moveArchive(path, true))
@@ -650,6 +670,7 @@ export function App() {
   // --- Context menus ---
 
   const pathItems = (path: string): MenuItem[] => [
+    pinNoteItem(path),
     archiveItem(path),
     menuItem('file.reveal', () => revealPath(path)),
     menuItem('file.copyPath', () => copyPath(path)),
@@ -1002,6 +1023,10 @@ export function App() {
         const path = activeTab()?.path
         if (path) void moveArchive(path, true)
       },
+      pinNoteActive: (pinned) => {
+        const path = activeTab()?.path
+        if (path) setNotePinned(path, pinned)
+      },
       openHistory: () => {
         const tab = activeTab()
         if (!tab?.path) return
@@ -1011,6 +1036,8 @@ export function App() {
     }
   })
 
+  const pinnedNotesRef = useRef(pinnedNotes)
+  pinnedNotesRef.current = pinnedNotes
   const isScratchContext = folder.isScratch
   const commandContext = useCallback((): CommandContext => {
     const tab = activeTab()
@@ -1021,6 +1048,7 @@ export function App() {
       mode: themeMode,
       activePinned: Boolean(tab?.pinned),
       activeArchived: tab?.path ? isArchivedPath(tab.path) : false,
+      activeNotePinned: tab?.path ? pinnedNotesRef.current.includes(tab.path) : false,
       tabCount: tabsRef.current.tabs.length,
       actions: actionsRef.current!
     }
@@ -1161,6 +1189,15 @@ export function App() {
             onEntryMenu={openEntryMenu}
             tagFilter={tagFilter}
             onTagFilter={setTagFilter}
+            pinned={pinnedNotes.map((path) => ({
+              path,
+              name: fileName(path),
+              isDir: false,
+              firstLine: openFirstLines.has(path)
+                ? openFirstLines.get(path)!
+                : (entriesByPath.get(path)?.firstLine ?? null),
+              modified: entriesByPath.get(path)?.modified ?? null
+            }))}
           />
         )}
         <main className={party ? 'note-panel parrot-party' : 'note-panel'}>
@@ -1210,8 +1247,6 @@ export function App() {
                 { command: 'folder.switch', icon: 'folder' }
               ],
               [
-                { command: themeMode === 'dark' ? 'theme.light' : 'theme.dark', icon: themeMode === 'dark' ? 'sun' : 'moon' },
-                { command: 'theme.colour', icon: 'palette' },
                 { command: 'settings.open', icon: 'settings' },
                 { command: 'palette.open', icon: 'command' }
               ]

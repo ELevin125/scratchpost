@@ -341,10 +341,10 @@ the easter egg, improvements and features.
   Typing `parrotparty` or `parrot party` toggles moving rainbow text in the
   note panel, and the cat puts its headphones on. Not saved; no motion under
   reduced motion. See D39.
-- [ ] **4.5 Tidier dock:** light/dark and theme colour leave the dock (they
+- [x] **4.5 Tidier dock:** light/dark and theme colour leave the dock (they
   stay in Settings and the palette).
-- [ ] **4.6 Find bar layout:** the editor's find bar stops wrapping awkwardly.
-- [ ] **4.7 Pinned notes:** pin a note to the top of the notes panel, shown
+- [x] **4.6 Find bar layout:** the editor's find bar stops wrapping awkwardly.
+- [x] **4.7 Pinned notes:** pin a note to the top of the notes panel, shown
   whatever folder is open.
 - [ ] **4.8 Formatting shortcuts:** `Ctrl+B`, `Ctrl+I` and friends, toggling
   on the selection or the word at the cursor.

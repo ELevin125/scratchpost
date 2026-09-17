@@ -103,6 +103,13 @@ syntax degrades gracefully in other editors.
 - **Pinned** tabs sit at the left with a pin and no `×`, and survive "Close
   other tabs" and "Close all tabs". Pinned state persists (D36).
 
+### Pinned notes
+
+"Pin note to notes panel" (right-click a note or its pill, or the palette)
+keeps a note at the top of the notes panel under "Pinned", whichever folder is
+open. Pinned notes leave the recent list; renaming or archiving keeps the pin,
+deleting removes it. Stored as paths in `settings.json` (4.7).
+
 ### Archive
 
 "Archive note" moves a note into an `archive` folder beside it and closes its
@@ -200,8 +207,9 @@ The status bar is gone (D33). Its jobs moved:
   day it last changed. The date floats beside the text column so it never
   pushes the note down, and hides when the window is too narrow for it.
 - **Dock**, floating at the bottom of the note panel: notes panel, folder
-  search, open file, switch folder; then light or dark mode, theme colour,
-  settings, and the command palette. Every button's tooltip is its command's label and
+  search, note history, open file, switch folder; then settings and the
+  command palette. Light or dark mode and the theme colour live in Settings
+  and the palette. Every button's tooltip is its command's label and
   shortcut.
 - **Toasts**, above the dock, for notices that aren't about saving. They
   dismiss themselves.
