@@ -8,7 +8,7 @@ import { useEffect, useRef } from 'react'
 export type CatMood = 'awake' | 'asleep' // asleep: the empty state's cat
 
 // Things the app tells the cat, sent as a window event.
-export type CatSignal = 'typing' | 'checklist' | 'meow'
+export type CatSignal = 'typing' | 'checklist' | 'meow' | 'party'
 export const CAT_EVENT = 'scratchpost:cat'
 export const signalCat = (signal: CatSignal) => window.dispatchEvent(new CustomEvent(CAT_EVENT, { detail: signal }))
 
@@ -292,6 +292,8 @@ export function Cat({ mood, className }: CatProps) {
         void run('hop')
       } else if (signal === 'meow') {
         void wake().then(() => run('stretch'))
+      } else if (signal === 'party') {
+        void wake().then(() => run('headphones'))
       }
     }
     const onClick = () => void run('purr')

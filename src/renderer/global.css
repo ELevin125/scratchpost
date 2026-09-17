@@ -488,7 +488,7 @@ kbd {
   flex-shrink: 0;
   align-items: flex-start;
   gap: 16px;
-  padding: 18px 20px 0 40px;
+  padding: 14px 20px 0 40px;
 }
 
 .note-meta {
@@ -510,8 +510,14 @@ kbd {
 }
 
 .date-block {
+  /* Floats in the empty space right of the capped text column, so it never
+     pushes the note down. Hidden where that space runs out. */
+  position: absolute;
+  top: 14px;
+  right: 28px;
+  z-index: 2;
   display: grid;
-  flex-shrink: 0;
+  pointer-events: none;
   text-align: center;
   font-family: var(--font-title);
   font-weight: 600;
@@ -1396,5 +1402,56 @@ kbd {
   .history-body {
     grid-template-columns: 1fr;
     grid-template-rows: minmax(120px, 30%) 1fr;
+  }
+}
+
+@media (max-width: 1080px) {
+  .date-block {
+    display: none;
+  }
+}
+
+/* Parrot party: typing "parrot party" makes every line a moving rainbow. */
+
+@property --party-hue {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+@keyframes party-hue {
+  to {
+    --party-hue: 360;
+  }
+}
+
+.parrot-party .cm-content {
+  animation: party-hue 2.4s linear infinite;
+}
+
+.parrot-party .cm-line {
+  --party-s: calc(var(--tag-saturation) + 35%);
+  color: transparent;
+  background-image: linear-gradient(
+    90deg,
+    hsl(var(--party-hue) var(--party-s) var(--tag-lightness)),
+    hsl(calc(var(--party-hue) + 90) var(--party-s) var(--tag-lightness)),
+    hsl(calc(var(--party-hue) + 180) var(--party-s) var(--tag-lightness)),
+    hsl(calc(var(--party-hue) + 270) var(--party-s) var(--tag-lightness)),
+    hsl(calc(var(--party-hue) + 360) var(--party-s) var(--tag-lightness))
+  );
+  background-size: 60ch 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.parrot-party .cm-line * {
+  color: transparent !important;
+  background-color: transparent !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .parrot-party .cm-content {
+    animation: none;
   }
 }

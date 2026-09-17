@@ -881,6 +881,21 @@ needs).
 
 ---
 
+## D39 — Parrot party
+
+**Decision:** one easter egg. Typing `parrotparty` or `parrot party` toggles
+rainbow text that cycles through hues in the note panel; the cat puts on its
+headphones. Typing it again turns it off; it is never saved.
+
+- The colours come from custom properties (`--party-hue` animated through a
+  registered `@property`, the tag saturation and lightness), so the colour
+  rule holds.
+- Under reduced motion the rainbow stays still.
+
+**Rejected:** saving it as a setting, confetti, anything that changes the file.
+
+---
+
 ## Open questions
 
 Not yet decided. Do not guess; raise them.

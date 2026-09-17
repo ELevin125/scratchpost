@@ -197,7 +197,8 @@ The status bar is gone (D33). Its jobs moved:
 - **Note header**, above the text: the note's folder, when it was last edited,
   its word count, and a save problem if there is one. On the right, the note's
   date set large: the day a timestamp-named note was created, otherwise the
-  day it last changed.
+  day it last changed. The date floats beside the text column so it never
+  pushes the note down, and hides when the window is too narrow for it.
 - **Dock**, floating at the bottom of the note panel: notes panel, folder
   search, open file, switch folder; then light or dark mode, theme colour,
   settings, and the command palette. Every button's tooltip is its command's label and

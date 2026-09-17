@@ -71,6 +71,8 @@ const NOTE_EXTENSION = /\.(md|markdown|txt)$/i
 // re-read the folder.
 const LISTING_REFRESH_MS = 500
 const SNAPSHOT_EVERY_MS = 5 * 60 * 1000
+const RECENT_WRITES = 8
+const PARTY_WORDS = ['parrotparty', 'parrot party']
 
 // Ctrl+Shift+T remembers this many closed tabs.
 const MAX_CLOSED = 20
@@ -134,6 +136,7 @@ export function App() {
   // When each file was last saved this session, so the tree's times and
   // recent-first order are current without re-reading the folder.
   const [savedAt, setSavedAt] = useState<Record<string, number>>({})
+  const [party, setParty] = useState(false) // typing "parrot party" toggles rainbow text
 
   const buffers = useRef<Buffers>({ states: new Map(), initial: new Map(), scroll: new Map() }).current
   const metas = useRef(new Map<string, FileMeta>()).current
@@ -157,6 +160,15 @@ export function App() {
   // flight is writing. External changes are told apart from our own by these.
   const diskText = useRef(new Map<string, string>()).current
   const writing = useRef(new Map<string, string>()).current
+  // The last few texts each tab wrote, so a late watcher event for one of our
+  // own writes (or the empty file a new note starts as) is never a conflict.
+  const recentWrites = useRef(new Map<string, string[]>()).current
+  const rememberWrite = useCallback(
+    (id: string, text: string) => {
+      recentWrites.set(id, [...(recentWrites.get(id) ?? []), text].slice(-RECENT_WRITES))
+    },
+    [recentWrites]
+  )
   const externalRef = useRef<Record<string, External>>({})
   const [external, setExternalState] = useState<Record<string, External>>({})
   const setExternal = useCallback((id: string, value: External | null) => {
@@ -290,6 +302,7 @@ export function App() {
           if (!path) {
             // First keystroke in a new note: the file is created now, never before.
             const created = await api.createNote(await scratchDirRef.current)
+            rememberWrite(id, '')
             updateTabs((s) => setTabPath(s, id, created))
             path = created
           }
@@ -297,6 +310,7 @@ export function App() {
           if (!state) return
           const text = state.doc.toString()
           writing.set(id, text)
+          rememberWrite(id, text)
           try {
             await api.writeFile(path, text, metas.get(id) ?? NEW_NOTE_META)
           } finally {
@@ -310,7 +324,7 @@ export function App() {
         (id, event) =>
           setSaveStates((prev) => (event.kind === 'ok' ? without(prev, id) : { ...prev, [id]: event }))
       ),
-    [buffers, metas, diskText, writing, setExternal, updateTabs]
+    [buffers, metas, diskText, writing, rememberWrite, setExternal, updateTabs]
   )
 
   // --- Version history (3.6, D38) ---
@@ -349,6 +363,12 @@ export function App() {
       if (before.open > 0 && count.open === 0 && count.done > before.done) signalCat('checklist')
       const head = state.selection.main.head
       if (state.sliceDoc(head - 4, head).toLowerCase() === 'meow') signalCat('meow')
+      const typed = (word: string) => state.sliceDoc(head - word.length, head).toLowerCase() === word
+      const grew = state.doc.length > previous.doc.length
+      if (grew && PARTY_WORDS.some(typed)) {
+        setParty((on) => !on)
+        signalCat('party')
+      }
     },
     [taskCounts]
   )
@@ -424,6 +444,7 @@ export function App() {
     buffers.initial.delete(id)
     metas.delete(id)
     diskText.delete(id)
+    recentWrites.delete(id)
     setExternal(id, null)
     setSaveStates((prev) => without(prev, id))
   }
@@ -793,7 +814,8 @@ export function App() {
     const { content, meta } = payload
     const current = currentText(tab.id)
     const known = diskText.get(tab.id)
-    if (content === known || content === writing.get(tab.id) || content === current) {
+    const ours = recentWrites.get(tab.id)?.includes(content) ?? false
+    if (content === known || ours || content === writing.get(tab.id) || content === current) {
       // Our own write, or the same text: nothing to do.
       if (content === current) diskText.set(tab.id, content)
       if (externalRef.current[tab.id] === 'deleted') setExternal(tab.id, null)
@@ -1141,7 +1163,7 @@ export function App() {
             onTagFilter={setTagFilter}
           />
         )}
-        <main className="note-panel">
+        <main className={party ? 'note-panel parrot-party' : 'note-panel'}>
           {active && <NoteHeader meta={meta} problem={problem?.text ?? null} problemIsError={problem?.error ?? false} date={date} />}
           {active && external[active.id] === 'conflict' && (
             <div className="note-conflict" role="alert">

@@ -323,6 +323,40 @@ Batches, in order: 2.12–2.17; then 2.11 with 3.4 and 3.8; then 2.22; then
 
 ---
 
+## Milestone 4 — After first use
+
+From the author's list after a day of real use (2026-09-17). Bugs first, then
+the easter egg, improvements and features.
+
+- [x] **4.1 Bold that looks bold**
+  `**text**` used weight 500, barely different in Plex Mono. Now 700, with the
+  700 faces bundled.
+- [x] **4.2 No false "changed on disk" on new notes**
+  The empty file a new note starts as, and late watcher events for the app's
+  own writes, are recognised as the app's own (the last 8 writes per tab).
+- [x] **4.3 Less space above the note**
+  The date block floats right of the text column instead of pushing the note
+  down; it hides when the window is too narrow for it.
+- [x] **4.4 Parrot party**
+  Typing `parrotparty` or `parrot party` toggles moving rainbow text in the
+  note panel, and the cat puts its headphones on. Not saved; no motion under
+  reduced motion. See D39.
+- [ ] **4.5 Tidier dock:** light/dark and theme colour leave the dock (they
+  stay in Settings and the palette).
+- [ ] **4.6 Find bar layout:** the editor's find bar stops wrapping awkwardly.
+- [ ] **4.7 Pinned notes:** pin a note to the top of the notes panel, shown
+  whatever folder is open.
+- [ ] **4.8 Formatting shortcuts:** `Ctrl+B`, `Ctrl+I` and friends, toggling
+  on the selection or the word at the cursor.
+- [ ] **4.9 Editor right-click menu:** formatting, headings, label and list
+  type for the selection.
+- [ ] **4.10 Label picker:** a shortcut and menu that insert a label from a
+  list defined in Settings.
+- [ ] **4.11 Switch list type:** turn the selected lines or list into bullets,
+  a checklist or a numbered list.
+
+---
+
 ## Parked ideas
 
 Liked, not scheduled. Each needs a decision before it becomes a task:
