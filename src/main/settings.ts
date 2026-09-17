@@ -13,6 +13,8 @@ const MIN_FONT_SIZE = 10
 const MAX_FONT_SIZE = 24
 const DEFAULT_FONT_SIZE = 13
 const MAX_PINNED_NOTES = 30
+const MAX_LABELS = 50
+const LABEL_WORD = /^[A-Za-z0-9][A-Za-z0-9._-]*$/
 
 const settingsPath = () => join(app.getPath('userData'), 'settings.json')
 
@@ -44,6 +46,12 @@ export function sanitizeSettings(value: unknown): Settings {
     scratchDir: typeof raw.scratchDir === 'string' && isAbsolute(raw.scratchDir) ? raw.scratchDir : null,
     fontSize,
     cat: raw.cat !== false,
+    labels: Array.isArray(raw.labels)
+      ? [...new Set(raw.labels.filter((w): w is string => typeof w === 'string' && LABEL_WORD.test(w)))].slice(
+          0,
+          MAX_LABELS
+        )
+      : [],
     pinnedNotes: Array.isArray(raw.pinnedNotes)
       ? [...new Set(raw.pinnedNotes.filter((p): p is string => typeof p === 'string' && isAbsolute(p)))].slice(
           0,

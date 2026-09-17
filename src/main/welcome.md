@@ -16,6 +16,8 @@ You can write first and worry about formatting later.
 * [ ] Press `Ctrl+Shift+P` to open the command palette
 * [ ] Right-click this note's pill at the top to rename, pin, or close it
 * [ ] Select a word, then paste a URL to turn it into a link
+* [ ] Select a word and press `Ctrl+B`, or right-click it for more formatting
+* [ ] Press `Ctrl+L` to add a label like [idea]; set your usual labels in Settings
 
 ## Markdown, without the ceremony
 
@@ -31,6 +33,8 @@ You can write first and worry about formatting later.
   * Just keep typing
 
 * [x] Checked things stay checked
+
+Turn any list into bullets, a checklist or a numbered list with `Ctrl+Shift+8`, `Ctrl+Shift+9` or `Ctrl+Shift+7`.
 
 ### Code gets a little help
 

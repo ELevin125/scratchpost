@@ -103,6 +103,14 @@ syntax degrades gracefully in other editors.
 - **Pinned** tabs sit at the left with a pin and no `×`, and survive "Close
   other tabs" and "Close all tabs". Pinned state persists (D36).
 
+### Right-click in a note
+
+Cut, copy and paste; bold, italic, strikethrough, inline code, link and
+"Insert label…"; headings 1 to 3 and normal text; bullet list, checklist and
+numbered list. Right-clicking outside the selection moves the cursor there
+first, so word commands act on the clicked word. Every entry is a registry
+command with its shortcut shown (4.9).
+
 ### Pinned notes
 
 "Pin note to notes panel" (right-click a note or its pill, or the palette)
@@ -185,7 +193,7 @@ dropped silently.
 
 ### Notes panel
 
-- The left column (D33). Shown by default; toggled from the dock or `Ctrl+B`.
+- The left column (D33). Shown by default; toggled from the dock or `Ctrl+Shift+B`.
 - Headed by the folder name, which opens the folder menu, and a home button
   when the context isn't the scratch folder.
 - The scratch folder shows its six most recent notes, with "Show all" for the
@@ -236,7 +244,12 @@ Standard CodeMirror 6 keymap plus:
 | Command palette | `Ctrl+Shift+P` |
 | Quick switcher | `Ctrl+P` |
 | Search in folder | `Ctrl+Shift+F` |
-| Toggle notes panel | `Ctrl+B` |
+| Toggle notes panel | `Ctrl+Shift+B` |
+| Bold / italic / strikethrough | `Ctrl+B` / `Ctrl+I` / `Ctrl+Shift+X` |
+| Inline code / link | `Ctrl+E` / `Ctrl+K` |
+| Insert label | `Ctrl+L` |
+| Heading 1–3 / normal text | `Ctrl+1`–`Ctrl+3` / `Ctrl+0` |
+| Bullet list / checklist / numbered list | `Ctrl+Shift+8` / `Ctrl+Shift+9` / `Ctrl+Shift+7` |
 | Settings | `Ctrl+,` |
 | New note | `Ctrl+N` |
 | Open file | `Ctrl+O` |

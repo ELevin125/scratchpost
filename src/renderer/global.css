@@ -1475,3 +1475,51 @@ kbd {
   text-transform: uppercase;
   color: var(--soft);
 }
+
+.menu-item.divider {
+  margin-top: 5px;
+  box-shadow: 0 -3px 0 -2px var(--line);
+}
+
+/* Label list in Settings (4.10) */
+
+.label-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.label-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 4px 2px 10px;
+  font: 12px var(--font-mono);
+  color: hsl(var(--tag-hue) var(--tag-saturation) var(--tag-lightness));
+  background: hsl(var(--tag-hue) var(--tag-saturation) var(--tag-lightness) / 0.14);
+  border-radius: 999px;
+}
+
+.label-chip button {
+  display: inline-flex;
+  padding: 3px;
+  color: inherit;
+  border-radius: 999px;
+}
+
+.label-chip button:hover {
+  background: hsl(var(--tag-hue) var(--tag-saturation) var(--tag-lightness) / 0.2);
+}
+
+.label-input {
+  flex: 1 1 10ch;
+  min-width: 10ch;
+  padding: 4px 10px;
+  font: 12px var(--font-mono);
+  color: var(--ink);
+  background: var(--sunken);
+  border: 0;
+  border-radius: 999px;
+  outline: none;
+}

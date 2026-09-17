@@ -144,7 +144,7 @@ render and neither depends on 2.1–2.8.
   *Accept:* switching to a project `docs/` folder leaves open tabs untouched.
 
 - [x] **2.5 File tree**
-  `Ctrl+B` and toolbar toggle. `.md` and `.txt`, subdirectories, tracked-caps
+  `Ctrl+B` (now `Ctrl+Shift+B`, D40) and toolbar toggle. `.md` and `.txt`, subdirectories, tracked-caps
   section labels with counts, empty state.
   *Accept:* opens a repo `docs/` folder and lists it correctly.
 
@@ -346,13 +346,13 @@ the easter egg, improvements and features.
 - [x] **4.6 Find bar layout:** the editor's find bar stops wrapping awkwardly.
 - [x] **4.7 Pinned notes:** pin a note to the top of the notes panel, shown
   whatever folder is open.
-- [ ] **4.8 Formatting shortcuts:** `Ctrl+B`, `Ctrl+I` and friends, toggling
+- [x] **4.8 Formatting shortcuts:** `Ctrl+B`, `Ctrl+I` and friends, toggling
   on the selection or the word at the cursor.
-- [ ] **4.9 Editor right-click menu:** formatting, headings, label and list
+- [x] **4.9 Editor right-click menu:** formatting, headings, label and list
   type for the selection.
-- [ ] **4.10 Label picker:** a shortcut and menu that insert a label from a
+- [x] **4.10 Label picker:** a shortcut and menu that insert a label from a
   list defined in Settings.
-- [ ] **4.11 Switch list type:** turn the selected lines or list into bullets,
+- [x] **4.11 Switch list type:** turn the selected lines or list into bullets,
   a checklist or a numbered list.
 
 ---

@@ -37,7 +37,7 @@ const hueStyle = (tag: string) => ({ '--tag-hue': tagHue(tag) }) as CSSPropertie
 
 // The left column (D33): a notes panel for the folder context and a tags
 // panel below it. The scratch folder opens on its most recent notes; other
-// folders show their tree. Toggled with Ctrl+B. App keys this by folder, so
+// folders show their tree. Toggled with Ctrl+Shift+B. App keys this by folder, so
 // expansion resets on switch; App owns the tag filter and clears it then too.
 export function FileTree({
   folderName,

@@ -304,6 +304,26 @@ from the list's start. See D22.
 `Ctrl+Enter`, a click on the rendered checkbox, or the toggle command flips
 `- [ ]` to `- [x]` and back. Clicking the checkbox does not move the cursor.
 
+## Formatting
+
+Commands in the registry (4.8–4.11), from shortcuts, the palette and the
+right-click menu. Each is one undoable edit.
+
+- **Bold, italic, strikethrough, inline code** (`**`, `*`, `~~`, `` ` ``) wrap
+  the selection, or the word at an empty cursor. Already wrapped (markers just
+  outside the range, or the selection includes them) unwraps. Outside a word an
+  empty pair is inserted with the cursor inside. A `*` beside `**` belongs to
+  bold, so italic on `**word**` gives `***word***`.
+- **Link** makes `[text]()` with the cursor in the parentheses.
+- **Label** wraps a selection as `[selection]` (spaces become `_`), or inserts
+  `[word]` after the word at the cursor, adding spaces where needed.
+- **Headings** set every selected line to that level; the same level again, or
+  "Normal text", removes it.
+- **List types** convert the selected lines, or the whole list around an empty
+  cursor (continuation lines untouched), to `- `, `- [ ] ` or `1. `, keeping
+  indentation and ticks and numbering each indent level from 1. If every line
+  already has that type, the markers are removed.
+
 ## Copy and paste
 
 - **Copying** yields the markdown source, not the rendered text. A copied

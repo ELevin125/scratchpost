@@ -1,5 +1,7 @@
-import { useEffect, useRef, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import type { Settings } from '../../preload/api'
+import { tagHue } from '../../shared/tags'
+import { labelWord } from '../editor/format'
 import { seeds } from '../themes'
 import { Icon } from './Icon'
 
@@ -12,11 +14,13 @@ interface SettingsPanelProps {
   theme: ThemeSettings
   fontSize: number
   cat: boolean
+  labels: string[]
   scratchDir: string // the folder in use, custom or default
   customScratch: boolean // false when the default folder is in use
   onTheme: (theme: ThemeSettings) => void
   onFontSize: (size: number) => void
   onCat: (on: boolean) => void
+  onLabels: (labels: string[]) => void
   onPickScratch: () => void
   onDefaultScratch: () => void
   onClose: () => void
@@ -36,16 +40,25 @@ export function SettingsPanel({
   theme,
   fontSize,
   cat,
+  labels,
   scratchDir,
   customScratch,
   onTheme,
   onFontSize,
   onCat,
+  onLabels,
   onPickScratch,
   onDefaultScratch,
   onClose
 }: SettingsPanelProps) {
   const panel = useRef<HTMLDivElement>(null)
+  const [newLabel, setNewLabel] = useState('')
+  const addLabel = () => {
+    const word = labelWord(newLabel)
+    if (!word) return
+    if (!labels.some((l) => l.toLowerCase() === word.toLowerCase())) onLabels([...labels, word])
+    setNewLabel('')
+  }
 
   useEffect(() => {
     panel.current?.focus()
@@ -182,6 +195,41 @@ export function SettingsPanel({
             >
               <span className="switch-knob" />
             </button>
+          </div>
+        </section>
+
+        <section className="settings-section">
+          <h3>Labels</h3>
+          <div className="setting setting-stack">
+            <p className="setting-note">
+              Offered first by Insert label (Ctrl+L) and the right-click menu, in every note.
+            </p>
+            <div className="label-list">
+              {labels.map((word) => (
+                <span key={word} className="label-chip" style={{ '--tag-hue': tagHue(word) } as CSSProperties}>
+                  {word}
+                  <button aria-label={`Remove ${word}`} title="Remove" onClick={() => onLabels(labels.filter((l) => l !== word))}>
+                    <Icon name="x" size={12} />
+                  </button>
+                </span>
+              ))}
+              <input
+                id="setting-label-new"
+                className="label-input"
+                placeholder="Add a label"
+                autoComplete="off"
+                spellCheck={false}
+                value={newLabel}
+                onChange={(event) => setNewLabel(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault()
+                    addLabel()
+                  }
+                }}
+                onBlur={addLabel}
+              />
+            </div>
           </div>
         </section>
 

@@ -15,6 +15,10 @@ import { EmptyState } from './EmptyState'
 import { FileTree } from './FileTree'
 import { FolderMenu } from './FolderMenu'
 import { HistoryPanel } from './HistoryPanel'
+import { Picker, type PickerItem } from './Picker'
+import { findLabels, tagHue, tagKey } from '../../shared/tags'
+import { insertLabel, labelWord } from '../editor/format'
+import { linkForPaste } from '../editor/typing'
 import { NoteHeader } from './NoteHeader'
 import { QuickSwitcher } from './QuickSwitcher'
 import { RenameDialog } from './RenameDialog'
@@ -77,7 +81,7 @@ const PARTY_WORDS = ['parrotparty', 'parrot party']
 // Ctrl+Shift+T remembers this many closed tabs.
 const MAX_CLOSED = 20
 
-type Overlay = 'palette' | 'switcher' | 'search' | 'folders' | 'rename' | 'colours' | 'settings' | 'history'
+type Overlay = 'palette' | 'switcher' | 'search' | 'folders' | 'rename' | 'colours' | 'settings' | 'history' | 'labels'
 
 // A note that changed on disk while it had unsaved edits, or was deleted.
 type External = 'conflict' | 'deleted'
@@ -704,6 +708,90 @@ export function App() {
     setMenu({ ...at, items })
   }
 
+  // Right-click in the note (4.9): clipboard, formatting, label, headings and
+  // list types, all from the registry. A click outside the selection moves the
+  // cursor there first, so word commands act on the clicked word.
+  const openEditorMenu = (event: React.MouseEvent) => {
+    const view = viewRef.current
+    if (!view || !(event.target instanceof Element) || !event.target.closest('.cm-content')) return
+    event.preventDefault()
+    const pos = view.posAtCoords({ x: event.clientX, y: event.clientY })
+    const inSelection = view.state.selection.ranges.some((r) => !r.empty && pos !== null && pos >= r.from && pos <= r.to)
+    if (pos !== null && !inSelection) view.dispatch({ selection: { anchor: pos } })
+    const hasSelection = view.state.selection.ranges.some((r) => !r.empty)
+    const clipboard = (action: 'cut' | 'copy') => () => {
+      view.focus()
+      document.execCommand(action)
+    }
+    const paste = () => {
+      view.focus()
+      navigator.clipboard.readText().then(
+        (text) => {
+          const insert = linkForPaste(view.state, text) ?? text
+          view.dispatch(view.state.replaceSelection(insert), { userEvent: 'input.paste', scrollIntoView: true })
+        },
+        () => setNotice("couldn't read the clipboard")
+      )
+    }
+    const run = (id: string) => menuItem(id, () => runById(id))
+    const items: MenuItem[] = [
+      ...(hasSelection
+        ? [
+            { label: 'Cut', hint: 'Ctrl+X', run: clipboard('cut') },
+            { label: 'Copy', hint: 'Ctrl+C', run: clipboard('copy') }
+          ]
+        : []),
+      { label: 'Paste', hint: 'Ctrl+V', run: paste },
+      { ...run('format.bold'), divider: true },
+      run('format.italic'),
+      run('format.strike'),
+      run('format.code'),
+      run('format.link'),
+      run('label.insert'),
+      { ...run('heading.1'), divider: true },
+      run('heading.2'),
+      run('heading.3'),
+      run('heading.none'),
+      { ...run('list.bullet'), divider: true },
+      run('list.task'),
+      run('list.ordered')
+    ]
+    setMenu({ x: event.clientX, y: event.clientY, items })
+  }
+
+  // The label picker's list: your labels from Settings, then the ones already
+  // in this note (4.10). Typing a new word inserts it.
+  const labelItems = (): PickerItem[] => {
+    const own = folder.settings?.labels ?? []
+    const seen = new Set(own.map(tagKey))
+    const inNote: string[] = []
+    const doc = viewRef.current?.state.doc
+    if (doc) {
+      for (const line of doc.iterLines()) {
+        for (const match of findLabels(line)) {
+          if (seen.has(tagKey(match.word))) continue
+          seen.add(tagKey(match.word))
+          inNote.push(match.word)
+        }
+      }
+    }
+    return [
+      ...own.map((word) => ({ id: word, label: word, detail: 'your labels', swatch: tagHue(word) })),
+      ...inNote.map((word) => ({ id: word, label: word, detail: 'in this note', swatch: tagHue(word) }))
+    ]
+  }
+  const newLabelItem = useCallback((query: string): PickerItem | null => {
+    const word = labelWord(query)
+    return word ? { id: word, label: word, detail: 'new label', swatch: tagHue(word) } : null
+  }, [])
+  const pickLabel = (item: PickerItem) => {
+    setOverlay(null)
+    const view = viewRef.current
+    if (!view) return
+    insertLabel(item.id)(view)
+    view.focus()
+  }
+
   const openEntryMenu = (entry: FolderEntry, at: { x: number; y: number }) => {
     const items: MenuItem[] = entry.isDir
       ? [
@@ -1027,6 +1115,9 @@ export function App() {
         const path = activeTab()?.path
         if (path) setNotePinned(path, pinned)
       },
+      openLabels: () => {
+        if (viewRef.current) setOverlay('labels')
+      },
       openHistory: () => {
         const tab = activeTab()
         if (!tab?.path) return
@@ -1200,7 +1291,7 @@ export function App() {
             }))}
           />
         )}
-        <main className={party ? 'note-panel parrot-party' : 'note-panel'}>
+        <main className={party ? 'note-panel parrot-party' : 'note-panel'} onContextMenu={openEditorMenu}>
           {active && <NoteHeader meta={meta} problem={problem?.text ?? null} problemIsError={problem?.error ?? false} date={date} />}
           {active && external[active.id] === 'conflict' && (
             <div className="note-conflict" role="alert">
@@ -1333,6 +1424,8 @@ export function App() {
           onTheme={(next) => void folder.setTheme(next)}
           onFontSize={(size) => void folder.persist({ fontSize: size })}
           cat={catOn}
+          labels={folder.settings.labels}
+          onLabels={(labels) => void folder.persist({ labels })}
           onCat={(on) => void folder.persist({ cat: on })}
           onPickScratch={() => void pickScratchDir()}
           onDefaultScratch={() => void changeScratchDir(null)}
@@ -1352,6 +1445,18 @@ export function App() {
               () => setNotice("couldn't copy the version")
             )
           }
+          onClose={closeOverlay}
+        />
+      )}
+      {overlay === 'labels' && active && (
+        <Picker
+          items={labelItems()}
+          placeholder={
+            (folder.settings?.labels.length ?? 0) > 0 ? 'Label…' : 'Label… (add your usual ones in Settings)'
+          }
+          ariaLabel="Insert label"
+          create={newLabelItem}
+          onPick={pickLabel}
           onClose={closeOverlay}
         />
       )}

@@ -11,6 +11,7 @@ import { findNext, findPrevious, openSearchPanel, selectNextOccurrence } from '@
 import type { StateCommand } from '@codemirror/state'
 import type { EditorView } from '@codemirror/view'
 import { toggleTasksAtSelection } from '../../editor/checkbox'
+import { insertLink, setHeading, setListKind, toggleMarker } from '../../editor/format'
 import { formatShortcut, matchesShortcut, type KeyEventLike } from './shortcuts'
 
 // The command registry. Every user action is registered here once; the
@@ -47,6 +48,7 @@ export interface AppActions {
   archiveActive(): void
   unarchiveActive(): void
   openHistory(): void
+  openLabels(): void
   pinNoteActive(pinned: boolean): void
 }
 
@@ -106,7 +108,7 @@ export const commands: readonly Command[] = [
   { id: 'file.open', label: 'Open file…', shortcut: 'Ctrl+O', run: (ctx) => ctx.actions.openFile() },
   { id: 'switcher.open', label: 'Quick switcher', shortcut: 'Ctrl+P', run: (ctx) => ctx.actions.openSwitcher() },
   { id: 'search.open', label: 'Search in folder', shortcut: 'Ctrl+Shift+F', run: (ctx) => ctx.actions.openSearch() },
-  { id: 'tree.toggle', label: 'Toggle notes panel', shortcut: 'Ctrl+B', run: (ctx) => ctx.actions.toggleTree() },
+  { id: 'tree.toggle', label: 'Toggle notes panel', shortcut: 'Ctrl+Shift+B', run: (ctx) => ctx.actions.toggleTree() },
   { id: 'folder.switch', label: 'Switch folder…', run: (ctx) => ctx.actions.openFolderMenu() },
   { id: 'folder.open', label: 'Open folder…', run: (ctx) => ctx.actions.openFolder() },
   { id: 'folder.parent', label: 'Open parent folder', run: (ctx) => ctx.actions.openParentFolder() },
@@ -215,7 +217,22 @@ export const commands: readonly Command[] = [
     ...editorCommand(selectNextOccurrence)
   },
   { id: 'checkbox.toggle', label: 'Toggle checkbox', shortcut: 'Ctrl+Enter', ...editorCommand(toggleTasksAtSelection) },
-  { id: 'date.insert', label: 'Insert date', ...editorCommand(insertDate) }
+  { id: 'date.insert', label: 'Insert date', ...editorCommand(insertDate) },
+
+  // Formatting (4.8, 4.10, 4.11)
+  { id: 'format.bold', label: 'Bold', shortcut: 'Ctrl+B', ...editorCommand(toggleMarker('**')) },
+  { id: 'format.italic', label: 'Italic', shortcut: 'Ctrl+I', ...editorCommand(toggleMarker('*')) },
+  { id: 'format.strike', label: 'Strikethrough', shortcut: 'Ctrl+Shift+X', ...editorCommand(toggleMarker('~~')) },
+  { id: 'format.code', label: 'Inline code', shortcut: 'Ctrl+E', ...editorCommand(toggleMarker('`')) },
+  { id: 'format.link', label: 'Link', shortcut: 'Ctrl+K', ...editorCommand(insertLink) },
+  { id: 'label.insert', label: 'Insert label…', shortcut: 'Ctrl+L', run: (ctx) => ctx.actions.openLabels(), when: hasTab },
+  { id: 'heading.1', label: 'Heading 1', shortcut: 'Ctrl+1', ...editorCommand(setHeading(1)) },
+  { id: 'heading.2', label: 'Heading 2', shortcut: 'Ctrl+2', ...editorCommand(setHeading(2)) },
+  { id: 'heading.3', label: 'Heading 3', shortcut: 'Ctrl+3', ...editorCommand(setHeading(3)) },
+  { id: 'heading.none', label: 'Normal text', shortcut: 'Ctrl+0', ...editorCommand(setHeading(0)) },
+  { id: 'list.bullet', label: 'Bullet list', shortcut: 'Ctrl+Shift+Digit8', ...editorCommand(setListKind('bullet')) },
+  { id: 'list.task', label: 'Checklist', shortcut: 'Ctrl+Shift+Digit9', ...editorCommand(setListKind('task')) },
+  { id: 'list.ordered', label: 'Numbered list', shortcut: 'Ctrl+Shift+Digit7', ...editorCommand(setListKind('ordered')) }
 ]
 
 export function availableCommands(list: readonly Command[], ctx: CommandContext): Command[] {

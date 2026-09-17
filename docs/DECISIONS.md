@@ -896,6 +896,27 @@ headphones. Typing it again turns it off; it is never saved.
 
 ---
 
+## D40 — Formatting commands and the label list
+
+**Decision:** formatting is a set of registry commands, reachable from
+shortcuts, the palette and a right-click menu in the note (4.8–4.11).
+
+- `Ctrl+B` is bold, as in every editor; the notes panel moved to
+  `Ctrl+Shift+B`.
+- List shortcuts name the physical key (`Ctrl+Shift+Digit8`), since Shift
+  changes the typed character by keyboard layout.
+- The label picker (`Ctrl+L`, which CodeMirror used for select line) lists the
+  labels saved in Settings first, then the ones already in the note; typing a
+  new word inserts it without saving it to the list. Labels are used across
+  notes, so the list is the author's own rather than an index of the folder.
+- No markdown autocorrect: `[]` could be a label in the making, and a wrong
+  correction costs more than the list commands save.
+
+**Rejected:** a formatting toolbar, indexing labels across the folder,
+rebindable shortcuts for now (the registry keeps that possible later).
+
+---
+
 ## Open questions
 
 Not yet decided. Do not guess; raise them.

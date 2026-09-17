@@ -15,6 +15,8 @@ interface PickerProps {
   ariaLabel: string
   onPick: (item: PickerItem) => void
   onClose: () => void
+  // An extra item for what was typed, shown after the matches; null for none.
+  create?: (query: string) => PickerItem | null
 }
 
 // Rendering thousands of rows per keystroke is wasted work; the best matches
@@ -23,19 +25,19 @@ const MAX_SHOWN = 100
 
 // The shared overlay behind the command palette, quick switcher and folder
 // menu: fuzzy filter, arrow keys, Enter, Escape.
-export function Picker({ items, placeholder, ariaLabel, onPick, onClose }: PickerProps) {
+export function Picker({ items, placeholder, ariaLabel, onPick, onClose, create }: PickerProps) {
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState(0)
   const list = useRef<HTMLUListElement>(null)
 
-  const results = useMemo(
-    () =>
-      fuzzyFilter(items, query, (item) => (item.detail ? `${item.label} ${item.detail}` : item.label)).slice(
-        0,
-        MAX_SHOWN
-      ),
-    [items, query]
-  )
+  const results = useMemo(() => {
+    const matches = fuzzyFilter(items, query, (item) => (item.detail ? `${item.label} ${item.detail}` : item.label)).slice(
+      0,
+      MAX_SHOWN
+    )
+    const extra = query.trim() ? create?.(query) : null
+    return extra && !matches.some((item) => item.id === extra.id) ? [...matches, extra] : matches
+  }, [items, query, create])
   const index = Math.min(selected, Math.max(0, results.length - 1))
 
   useEffect(() => {

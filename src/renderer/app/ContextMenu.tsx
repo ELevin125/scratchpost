@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from
 export interface MenuItem {
   label: string
   hint?: string // shortcut, from the registry
+  divider?: boolean // a line above this item
   run: () => void
 }
 
@@ -89,7 +90,7 @@ export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
             key={item.label}
             role="menuitem"
             tabIndex={-1}
-            className={i === selected ? 'menu-item selected' : 'menu-item'}
+            className={['menu-item', i === selected && 'selected', item.divider && 'divider'].filter(Boolean).join(' ')}
             onMouseMove={() => setSelected(i)}
             onClick={() => choose(item)}
           >

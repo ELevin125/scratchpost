@@ -3,6 +3,7 @@
 
 export interface KeyEventLike {
   key: string
+  code?: string
   ctrlKey: boolean
   shiftKey: boolean
   altKey: boolean
@@ -16,8 +17,10 @@ export function matchesShortcut(shortcut: string, event: KeyEventLike): boolean 
   const parts = shortcut.split('+')
   const key = parts.pop()!
   const modifiers = new Set(parts)
+  // "Digit8" names the physical key, since Shift changes event.key there.
+  const keyMatches = key.startsWith('Digit') ? event.code === key : normaliseKey(event.key) === normaliseKey(key)
   return (
-    normaliseKey(event.key) === normaliseKey(key) &&
+    keyMatches &&
     event.ctrlKey === modifiers.has('Ctrl') &&
     event.shiftKey === modifiers.has('Shift') &&
     event.altKey === modifiers.has('Alt') &&
@@ -35,6 +38,6 @@ const KEY_LABELS: Record<string, string> = {
 export function formatShortcut(shortcut: string): string {
   return shortcut
     .split('+')
-    .map((part) => KEY_LABELS[part] ?? part)
+    .map((part) => KEY_LABELS[part] ?? part.replace(/^Digit/, ''))
     .join('+')
 }
