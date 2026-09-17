@@ -20,6 +20,7 @@ const DEFAULT_SETTINGS: Settings = {
   scratchDir: null,
   fontSize: 13,
   cat: true,
+  catSpot: 'dock',
   keybindings: {},
   labels: [],
   pinnedNotes: []

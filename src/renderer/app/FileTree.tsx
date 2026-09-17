@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties, type MouseEvent } from 'react'
+import { useMemo, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react'
 import type { FolderEntry } from '../../preload/api'
 import { tagHue } from '../../shared/tags'
 import { Icon } from './Icon'
@@ -27,6 +27,7 @@ interface FileTreeProps {
   tagFilter: string | null // lowercased; clicking a tag in a note sets it too
   onTagFilter: (tag: string | null) => void
   pinned: FolderEntry[] // pinned notes, from any folder (4.7)
+  onTags?: ReactNode // Bean, when it sits on the tags panel (D42)
 }
 
 // The scratch folder shows this many recent notes until "Show all".
@@ -53,7 +54,8 @@ export function FileTree({
   onEntryMenu,
   tagFilter,
   onTagFilter,
-  pinned
+  pinned,
+  onTags
 }: FileTreeProps) {
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set())
   const [showAll, setShowAll] = useState(false)
@@ -233,28 +235,31 @@ export function FileTree({
       </section>
 
       {listing && !listing.error && (
-        <section className="panel tags-panel">
-          <div className="panel-title">
-            <Icon name="tag" size={14} />
-            <span>Tags</span>
-            <span className="panel-count">{tags.length}</span>
-          </div>
-          {tags.length === 0 && <p className="panel-hint">Write #word in a note to tag it.</p>}
-          <div className="tag-chips">
-            {tags.map((tag) => (
-              <button
-                key={tag.tag}
-                className={tag.tag === tagFilter ? 'tag-chip selected' : 'tag-chip'}
-                style={hueStyle(tag.tag)}
-                aria-pressed={tag.tag === tagFilter}
-                onClick={() => onTagFilter(tag.tag === tagFilter ? null : tag.tag)}
-              >
-                <span className="tag-word">#{tag.tag}</span>
-                <span className="tag-count">{tag.count}</span>
-              </button>
-            ))}
-          </div>
-        </section>
+        <div className="tags-wrap">
+          {onTags}
+          <section className="panel tags-panel">
+            <div className="panel-title">
+              <Icon name="tag" size={14} />
+              <span>Tags</span>
+              <span className="panel-count">{tags.length}</span>
+            </div>
+            {tags.length === 0 && <p className="panel-hint">Write #word in a note to tag it.</p>}
+            <div className="tag-chips">
+              {tags.map((tag) => (
+                <button
+                  key={tag.tag}
+                  className={tag.tag === tagFilter ? 'tag-chip selected' : 'tag-chip'}
+                  style={hueStyle(tag.tag)}
+                  aria-pressed={tag.tag === tagFilter}
+                  onClick={() => onTagFilter(tag.tag === tagFilter ? null : tag.tag)}
+                >
+                  <span className="tag-word">#{tag.tag}</span>
+                  <span className="tag-count">{tag.count}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+        </div>
       )}
     </aside>
   )

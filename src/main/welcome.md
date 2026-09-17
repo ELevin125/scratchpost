@@ -101,6 +101,8 @@ Don't like a shortcut? Change it under **Keyboard shortcuts** in Settings.
 
 Open Settings with `Ctrl+,` to switch between light and dark mode, change the theme colour, the scratch folder and other preferences.
 
+The cat is called Bean. Click for a purr, and pick where Bean sits, or turn Bean off, in Settings.
+
 Scratchpost works offline and keeps everything on your computer.
 
 ## One last thing

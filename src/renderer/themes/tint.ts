@@ -35,6 +35,7 @@ export function tintTheme(seed: number, mode: ThemeMode): Theme {
         catInk: hsl(h, 45, 12),
         catPink: hsl(2, 60, 78),
         catShine: hsl(h, 30, 98),
+        catShade: hsl(h, 45, 18),
         catGear: hsl(h, 40, 20)
       },
       tagColor: { saturation: 50, lightness: 36 }
@@ -64,6 +65,7 @@ export function tintTheme(seed: number, mode: ThemeMode): Theme {
       catInk: hsl(h, 45, 11),
       catPink: hsl(2, 70, 82),
       catShine: hsl(h, 30, 98),
+      catShade: hsl(h, 32, 58),
       catGear: hsl(h, 15, 84)
     },
     tagColor: { saturation: 50, lightness: 72 }

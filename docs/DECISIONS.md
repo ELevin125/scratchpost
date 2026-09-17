@@ -939,6 +939,32 @@ Tab, Backspace; D21, D32), per-folder keymaps.
 
 ---
 
+## D42 — Bean
+
+**Decision:** the cat is called **Bean**, gets a second pass at its drawing and
+animations, and can sit in one of five places (4.13).
+
+- **Name:** Bean, after its shape. It appears in Settings and its tooltip,
+  never in a note.
+- **Drawing:** the same round bean, now with whiskers, a nose, bigger eyes with
+  two glints, a shaded lower body, striped forehead and a two-tone tail. No
+  paws except while grooming: paws on the body read as a different animal.
+- **Petting** replaced the old shake, which read as a shiver: happy eyes, an
+  ear flick, two slow squishes, purr waves from the cheeks and a heart.
+- **Grooming** is new: a paw fades in, rises to the mouth and gets four licks.
+- **Headphones** nod to the beat instead of tilting; **hop** squashes on
+  take-off and landing; **sleep** droops the ears.
+- **Spots** (`catSpot` in `settings.json`): the dock, the note's top edge, the
+  date, the note's bottom-right corner, or the tags panel. The same Bean is
+  used everywhere, sitting on an edge; only its position changes. On the date
+  the date block moves down to make room, and both hide on narrow windows; the
+  tags spot falls back to the dock when the notes column is closed.
+
+**Rejected:** a different drawing per spot (a peeking head over edges), paws on
+the idle body, and a bigger cat.
+
+---
+
 ## Open questions
 
 Not yet decided. Do not guess; raise them.

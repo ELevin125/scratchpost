@@ -13,6 +13,7 @@ const MIN_FONT_SIZE = 10
 const MAX_FONT_SIZE = 24
 const DEFAULT_FONT_SIZE = 13
 const MAX_PINNED_NOTES = 30
+const CAT_SPOTS = ['dock', 'top', 'date', 'corner', 'tags'] as const
 const MAX_LABELS = 50
 const MAX_KEYBINDINGS = 200
 const COMMAND_ID = /^[a-z][A-Za-z0-9.]{0,40}$/
@@ -49,6 +50,7 @@ export function sanitizeSettings(value: unknown): Settings {
     scratchDir: typeof raw.scratchDir === 'string' && isAbsolute(raw.scratchDir) ? raw.scratchDir : null,
     fontSize,
     cat: raw.cat !== false,
+    catSpot: CAT_SPOTS.find((spot) => spot === raw.catSpot) ?? 'dock',
     keybindings: Object.fromEntries(
       Object.entries(typeof raw.keybindings === 'object' && raw.keybindings !== null ? raw.keybindings : {})
         .filter(

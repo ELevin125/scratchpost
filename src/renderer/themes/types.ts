@@ -25,6 +25,7 @@ export interface Theme {
     catInk: string // the cat's eyes, mouth, stripes and headphones
     catPink: string // the cat's ears, blush and headphone cushions
     catShine: string // the glint in the cat's eyes
+    catShade: string // the shading low on the cat's body, and its stripes
     catGear: string // the cat's headphones, which sit against the ground
   }
   // Label and tag hues are seeded from the word; the theme fixes the rest so

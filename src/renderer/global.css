@@ -226,6 +226,7 @@ kbd {
 /* Workspace: the left column beside the note. */
 
 .workspace {
+  position: relative;
   display: flex;
   flex: 1;
   gap: var(--gap);
@@ -1065,25 +1066,22 @@ kbd {
   background: var(--sunken);
 }
 
-/* The cat (3.9). Body in --chip, the rest from the --cat-* tokens. */
+/* Bean, the cat (3.9, D42). Body in --chip, the rest from the --cat-* tokens. */
 
 .cat {
   overflow: visible;
   cursor: pointer;
 }
 
-.cat-all,
-.cat-body,
-.cat-tail,
-.cat-yawn,
-.cat-paw,
-.cat-phones,
-.cat-eyes {
+.cat g,
+.cat ellipse,
+.cat path {
   transform-box: fill-box;
 }
 
 .cat-all,
-.cat-body {
+.cat-body,
+.cat-ears {
   transform-origin: 50% 100%;
 }
 
@@ -1095,16 +1093,36 @@ kbd {
   animation-duration: 6s;
 }
 
-.cat-tail {
-  fill: none;
-  stroke: var(--chip);
-  stroke-width: 8;
-  stroke-linecap: round;
-  transform-origin: 0% 100%;
-  animation: cat-flick 3.4s ease-in-out infinite;
+.cat-ears {
+  transition: transform 0.6s ease;
 }
 
-.cat-yawn {
+.cat-ears.droop {
+  transform: scaleY(0.9);
+}
+
+.cat-tail {
+  transform-origin: 0% 100%;
+  animation: cat-sway 4.2s ease-in-out infinite;
+}
+
+.cat-tail-body,
+.cat-tail-tip {
+  fill: none;
+  stroke-width: 9;
+  stroke-linecap: round;
+}
+
+.cat-tail-body {
+  stroke: var(--chip);
+}
+
+.cat-tail-tip {
+  stroke: var(--cat-belly);
+}
+
+.cat-yawn,
+.cat-tongue {
   transform-origin: 50% 0%;
 }
 
@@ -1116,10 +1134,9 @@ kbd {
   fill: var(--chip);
 }
 
-.cat-ears {
-  stroke: var(--chip);
-  stroke-width: 4;
-  stroke-linejoin: round;
+.cat-shade {
+  fill: var(--cat-shade);
+  opacity: 0.55;
 }
 
 .cat-belly {
@@ -1131,14 +1148,15 @@ kbd {
 }
 
 .cat-blush {
-  opacity: 0.75;
+  opacity: 0.65;
+  transition: opacity 0.4s;
 }
 
 .cat-stripes {
-  stroke: var(--cat-ink);
-  stroke-width: 2;
+  fill: none;
+  stroke: var(--cat-shade);
+  stroke-width: 2.4;
   stroke-linecap: round;
-  opacity: 0.45;
 }
 
 .cat-ink {
@@ -1154,10 +1172,19 @@ kbd {
   stroke: var(--cat-ink);
   stroke-width: 2.2;
   stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .cat-mouth {
-  stroke-width: 2;
+  stroke-width: 1.8;
+}
+
+.cat-whiskers {
+  fill: none;
+  stroke: var(--cat-ink);
+  stroke-width: 1.2;
+  stroke-linecap: round;
+  opacity: 0.45;
 }
 
 .cat-hidden {
@@ -1165,9 +1192,12 @@ kbd {
 }
 
 .cat-paw {
-  fill: var(--cat-belly);
-  stroke: var(--chip);
-  stroke-width: 1.5;
+  transform-origin: 50% 100%;
+}
+
+.cat-paw-outline {
+  stroke: var(--cat-shade);
+  stroke-width: 1;
 }
 
 .cat-gear {
@@ -1177,42 +1207,42 @@ kbd {
 .cat-band {
   fill: none;
   stroke: var(--cat-gear);
-  stroke-width: 4.5;
+  stroke-width: 4;
   stroke-linecap: round;
 }
 
-.cat-note {
-  fill: var(--soft);
+.cat-fx-note {
+  fill: none;
   stroke: var(--soft);
   stroke-width: 1.6;
+  stroke-linecap: round;
 }
 
-.cat-z {
+.cat-fx-z {
   font: 500 12px var(--font-sans);
   fill: var(--soft);
 }
 
+.cat-fx-heart {
+  fill: var(--cat-pink);
+}
+
+.cat-fx-purr {
+  fill: none;
+  stroke: var(--chip);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
 @keyframes cat-breathe {
-  0%,
-  100% {
-    transform: scaleY(1);
-  }
   50% {
-    transform: scaleY(1.035);
+    transform: scale(1.015, 1.03);
   }
 }
 
-@keyframes cat-flick {
-  0%,
-  70%,
-  100% {
-    transform: rotate(0);
-  }
-  80% {
-    transform: rotate(-16deg);
-  }
-  90% {
-    transform: rotate(6deg);
+@keyframes cat-sway {
+  50% {
+    transform: rotate(7deg);
   }
 }
 
@@ -1223,18 +1253,56 @@ kbd {
   }
 }
 
-/* Perched on the dock's right end, sitting on its top edge. */
-.dock-cat {
+/* Bean's spots (D42). Every spot shows the same Bean, sitting on an edge. */
+
+.cat-spot {
   position: absolute;
-  right: 12px;
-  bottom: calc(100% - 8px);
+  z-index: 3;
   width: 56px;
-  height: 52px;
+  height: 47px;
+}
+
+/* On the dock's right end. */
+.cat-spot-dock {
+  right: 12px;
+  bottom: calc(100% - 7px);
+}
+
+/* On the note panel's top edge, left of the find field (up to 320px) and the
+   new-note button. */
+.cat-spot-top {
+  top: -40px;
+  right: calc(320px + 38px + 2 * var(--gap) + 12px);
+}
+
+/* On top of the date block, which moves down to make room; hidden with it on
+   narrow windows. */
+.bean-on-date .date-block {
+  top: 52px;
+}
+
+.cat-spot-date {
+  top: -41px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: auto;
+}
+
+/* The note's bottom-right corner. */
+.cat-spot-corner {
+  right: 22px;
+  bottom: 14px;
+}
+
+/* On the tags panel's top edge. */
+.cat-spot-tags {
+  top: -40px;
+  right: 14px;
 }
 
 .empty-cat {
   width: 104px;
-  height: 97px;
+  height: 87px;
   margin-bottom: -4px;
 }
 
@@ -1628,4 +1696,17 @@ kbd {
 
 .shortcut-footer {
   padding: 8px 12px 0;
+}
+
+.tags-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 auto;
+  max-height: 40%;
+  min-height: 0;
+}
+
+.tags-wrap .tags-panel {
+  max-height: none;
 }

@@ -202,6 +202,7 @@ export function App() {
 
   const fontSize = folder.settings?.fontSize ?? 13
   const catOn = folder.settings?.cat ?? true
+  const catSpot = folder.settings?.catSpot ?? 'dock'
   useEffect(() => {
     document.documentElement.style.setProperty('--note-size', `${fontSize}px`)
     viewRef.current?.requestMeasure()
@@ -1250,6 +1251,12 @@ export function App() {
 
   const contextName = folder.root ? folderName(folder.root) : ''
 
+  // Bean sits in one spot while a note is open (D42). The tags spot needs the
+  // notes column; without it Bean goes back to the dock.
+  const beanSpot = catSpot === 'tags' && !treeOpen ? 'dock' : catSpot
+  const beanAt = (spot: typeof catSpot) =>
+    catOn && active && beanSpot === spot ? <Cat key={spot} mood="awake" className={`cat-spot cat-spot-${spot}`} /> : null
+
   return (
     <div className="app">
       <TopBar
@@ -1287,6 +1294,7 @@ export function App() {
             onEntryMenu={openEntryMenu}
             tagFilter={tagFilter}
             onTagFilter={setTagFilter}
+            onTags={beanAt('tags')}
             pinned={pinnedNotes.map((path) => ({
               path,
               name: fileName(path),
@@ -1298,8 +1306,22 @@ export function App() {
             }))}
           />
         )}
-        <main className={party ? 'note-panel parrot-party' : 'note-panel'} onContextMenu={openEditorMenu}>
-          {active && <NoteHeader meta={meta} problem={problem?.text ?? null} problemIsError={problem?.error ?? false} date={date} />}
+        <main
+          className={['note-panel', party && 'parrot-party', beanSpot === 'date' && catOn && 'bean-on-date']
+            .filter(Boolean)
+            .join(' ')}
+          onContextMenu={openEditorMenu}
+        >
+          {active && (
+            <NoteHeader
+              meta={meta}
+              problem={problem?.text ?? null}
+              problemIsError={problem?.error ?? false}
+              date={date}
+              onDate={beanAt('date')}
+            />
+          )}
+          {beanAt('corner')}
           {active && external[active.id] === 'conflict' && (
             <div className="note-conflict" role="alert">
               <span>This note changed on disk while you had unsaved edits.</span>
@@ -1351,10 +1373,11 @@ export function App() {
             ]}
             onRun={runById}
           >
-            {catOn && active && <Cat mood="awake" className="dock-cat" />}
+            {beanAt('dock')}
           </Dock>
           {notice && <Toast text={notice} onDismiss={dismissNotice} />}
         </main>
+        {beanAt('top')}
       </div>
 
       {overlay === 'palette' && (
@@ -1431,6 +1454,8 @@ export function App() {
           onTheme={(next) => void folder.setTheme(next)}
           onFontSize={(size) => void folder.persist({ fontSize: size })}
           cat={catOn}
+          catSpot={catSpot}
+          onCatSpot={(spot) => void folder.persist({ catSpot: spot })}
           labels={folder.settings.labels}
           onLabels={(labels) => void folder.persist({ labels })}
           onShortcuts={() => setOverlay('shortcuts')}

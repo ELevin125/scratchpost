@@ -222,13 +222,15 @@ The status bar is gone (D33). Its jobs moved:
 - **Toasts**, above the dock, for notices that aren't about saving. They
   dismiss themselves.
 
-### The cat
+### Bean, the cat
 
-A round cat perches on the dock and naps in the empty state (D37). It idles,
-now and then puts on headphones and headbangs, yawns, grooms, looks around or
-naps, hops when a checklist is finished, purrs when clicked, and stretches
-when you type `meow`. It never makes a sound, never talks, and pauses while
-the window is hidden. On by default; Settings has a switch.
+A round cat called Bean sits in the app and naps in the empty state (D37,
+D42). It idles, and now and then puts on headphones and nods along, yawns,
+grooms a paw, looks around or naps. It hops when a checklist is finished,
+purrs when petted, and stretches when you type `meow`. It never makes a sound,
+never talks, and pauses while the window is hidden. On by default; Settings has
+a switch and a choice of where it sits: the dock, the note's top edge, the
+date, the note's corner, or the tags panel.
 
 ### Editing
 

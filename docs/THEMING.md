@@ -47,6 +47,7 @@ interface Theme {
     catInk: string       // its eyes, mouth and stripes
     catPink: string      // its ears, blush and headphone cushions
     catShine: string     // the glint in its eyes
+    catShade: string     // shading low on its body, and its stripes
     catGear: string      // its headphones, which sit against the ground
   }
   tagColor: {            // percentages, 0 to 100
@@ -89,6 +90,7 @@ All values are HSL around the seed hue `h`:
 | catInk | `h 45% 11%` | `h 45% 12%` |
 | catPink | `2 70% 82%` | `2 60% 78%` |
 | catShine | `h 30% 98%` | `h 30% 98%` |
+| catShade | `h 32% 58%` | `h 45% 18%` |
 | catGear | `h 15% 84%` | `h 40% 20%` |
 | tag saturation, lightness | 50%, 72% | 50%, 36% |
 

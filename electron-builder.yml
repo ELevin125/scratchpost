@@ -5,7 +5,10 @@ directories:
   output: dist
 files:
   - out/**
+  - resources/**
   - package.json
+asarUnpack:
+  - resources/**
 fileAssociations:
   - ext: md
     name: Markdown note
@@ -15,12 +18,14 @@ fileAssociations:
     role: Editor
 win:
   target: nsis
+  icon: build/icon.png
 nsis:
   oneClick: false
   perMachine: false
   allowToChangeInstallationDirectory: true
 linux:
   target: [AppImage, deb]
+  icon: build/icons
   category: Utility
   syncDesktopName: true
   mimeTypes: [text/markdown, text/plain]

@@ -64,7 +64,8 @@ export interface Settings {
   theme: { seed: number; mode: 'light' | 'dark' | 'system' }
   scratchDir: string | null // null means ~/Documents/Scratchpost
   fontSize: number // note text in px, 10 to 24
-  cat: boolean // the mascot (3.9), on by default
+  cat: boolean // Bean, the mascot (3.9), on by default
+  catSpot: 'dock' | 'top' | 'date' | 'corner' | 'tags' // where Bean sits; see D42
   // Rebound shortcuts: command id to shortcut, '' for none (4.12).
   keybindings: Record<string, string>
   labels: string[] // the label picker's list, see 4.10

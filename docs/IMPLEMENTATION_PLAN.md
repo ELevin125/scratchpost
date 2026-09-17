@@ -354,6 +354,8 @@ the easter egg, improvements and features.
   list defined in Settings.
 - [x] **4.11 Switch list type:** turn the selected lines or list into bullets,
   a checklist or a numbered list.
+- [x] **4.13 Bean:** the cat gets a name, a second pass at its drawing and
+  animations (a real purr, grooming), and a setting for where it sits. See D42.
 - [x] **4.12 Rebindable shortcuts:** change, remove or reset any command's
   shortcut from Settings or the palette. See D41.
 
@@ -364,6 +366,8 @@ the easter egg, improvements and features.
 Liked, not scheduled. Each needs a decision before it becomes a task:
 `[[note]]` links opened through the quick switcher, and tabs in the title bar
 (D17). The mascot idea became task 3.9.
+"Copy note as image" was considered on 2026-09-17 and skipped; "Copy as rich
+text" is the lighter alternative if sharing formatted notes comes up.
 
 ---
 

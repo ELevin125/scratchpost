@@ -3,6 +3,7 @@ import type { Settings } from '../../preload/api'
 import { tagHue } from '../../shared/tags'
 import { labelWord } from '../editor/format'
 import { seeds } from '../themes'
+import { CAT_NAME, type CatSpot } from './Cat'
 import { Icon } from './Icon'
 
 export const MIN_FONT_SIZE = 10
@@ -14,12 +15,14 @@ interface SettingsPanelProps {
   theme: ThemeSettings
   fontSize: number
   cat: boolean
+  catSpot: CatSpot
   labels: string[]
   scratchDir: string // the folder in use, custom or default
   customScratch: boolean // false when the default folder is in use
   onTheme: (theme: ThemeSettings) => void
   onFontSize: (size: number) => void
   onCat: (on: boolean) => void
+  onCatSpot: (spot: CatSpot) => void
   onLabels: (labels: string[]) => void
   onShortcuts: () => void
   onPickScratch: () => void
@@ -33,6 +36,14 @@ const MODES: { value: ThemeSettings['mode']; label: string }[] = [
   { value: 'dark', label: 'Dark' }
 ]
 
+const CAT_SPOTS: { value: CatSpot; label: string; title: string }[] = [
+  { value: 'dock', label: 'Dock', title: 'On the dock' },
+  { value: 'top', label: 'Top', title: 'On the top edge of the note' },
+  { value: 'date', label: 'Date', title: 'On the date (hidden on narrow windows)' },
+  { value: 'corner', label: 'Corner', title: "In the note's bottom-right corner" },
+  { value: 'tags', label: 'Tags', title: 'On the tags panel' }
+]
+
 const hueStyle = (hue: number) => ({ '--swatch-hue': hue }) as CSSProperties
 
 // Settings (3.4). Every change applies and saves at once; there is no Save
@@ -41,12 +52,14 @@ export function SettingsPanel({
   theme,
   fontSize,
   cat,
+  catSpot,
   labels,
   scratchDir,
   customScratch,
   onTheme,
   onFontSize,
   onCat,
+  onCatSpot,
   onLabels,
   onShortcuts,
   onPickScratch,
@@ -186,7 +199,7 @@ export function SettingsPanel({
 
           <div className="setting">
             <label className="setting-label" htmlFor="setting-cat">
-              The cat
+              {CAT_NAME}, the cat
             </label>
             <button
               id="setting-cat"
@@ -198,6 +211,29 @@ export function SettingsPanel({
               <span className="switch-knob" />
             </button>
           </div>
+
+          {cat && (
+            <div className="setting">
+              <span className="setting-label" id="setting-cat-spot">
+                {CAT_NAME} sits
+              </span>
+              <div className="segmented" role="radiogroup" aria-labelledby="setting-cat-spot">
+                {CAT_SPOTS.map((spot) => (
+                  <button
+                    key={spot.value}
+                    id={`setting-cat-spot-${spot.value}`}
+                    role="radio"
+                    title={spot.title}
+                    aria-checked={catSpot === spot.value}
+                    className={catSpot === spot.value ? 'on' : undefined}
+                    onClick={() => onCatSpot(spot.value)}
+                  >
+                    {spot.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </section>
 
         <section className="settings-section">

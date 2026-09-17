@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import { flushBeforeClose, registerIpc } from './ipc'
 import { handleOpenRequests } from './launch'
 import { loadWindowState, trackWindowState } from './window'
+import iconPath from '../../resources/icon.png?asset'
 
 const devUrl = process.env.ELECTRON_RENDERER_URL
 
@@ -20,6 +21,8 @@ function createWindow(): void {
     width: state.width,
     height: state.height,
     minWidth: 480,
+    // Windows and macOS take the icon from the package; Linux needs it here.
+    ...(process.platform === 'linux' ? { icon: iconPath } : {}),
     minHeight: 320,
     show: false,
     webPreferences: {
