@@ -917,6 +917,28 @@ rebindable shortcuts for now (the registry keeps that possible later).
 
 ---
 
+## D41 — Rebindable shortcuts
+
+**Decision:** every registry command's shortcut can be changed (4.12),
+reversing the "for now" in D40.
+
+- "Keyboard shortcuts…" (Settings and the palette) lists every command. Click
+  a shortcut and press the new keys; Escape cancels.
+- A shortcut needs Ctrl, Alt or Meta, except function keys, so typing is never
+  captured.
+- A shortcut already in use names its command and offers "Use it here", which
+  leaves the other command without one.
+- Only changes are stored, as `keybindings` in `settings.json` (command id to
+  shortcut, `''` for none). A rebound command drops its hidden extra shortcuts
+  (like `Ctrl+Y` for redo). Reset per command, or reset all.
+- The registry stays the one source: the keymap, palette, menus and tooltips
+  all read the shortcut through `shortcutOf`.
+
+**Rejected:** chords (`Ctrl+K Ctrl+S`), rebinding editor typing keys (Enter,
+Tab, Backspace; D21, D32), per-folder keymaps.
+
+---
+
 ## Open questions
 
 Not yet decided. Do not guess; raise them.

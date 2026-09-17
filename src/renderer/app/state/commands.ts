@@ -49,6 +49,7 @@ export interface AppActions {
   unarchiveActive(): void
   openHistory(): void
   openLabels(): void
+  openShortcuts(): void
   pinNoteActive(pinned: boolean): void
 }
 
@@ -132,6 +133,7 @@ export const commands: readonly Command[] = [
     when: (ctx) => ctx.mode === 'light'
   },
   { id: 'theme.colour', label: 'Change theme colour…', run: (ctx) => ctx.actions.openColours() },
+  { id: 'shortcuts.open', label: 'Keyboard shortcuts…', run: (ctx) => ctx.actions.openShortcuts() },
   { id: 'settings.open', label: 'Settings…', shortcut: 'Ctrl+,', run: (ctx) => ctx.actions.openSettings() },
 
   { id: 'file.rename', label: 'Rename file…', shortcut: 'F2', run: (ctx) => ctx.actions.renameActive(), when: hasFile },
@@ -239,8 +241,31 @@ export function availableCommands(list: readonly Command[], ctx: CommandContext)
   return list.filter((command) => !command.when || command.when(ctx))
 }
 
+// Rebound shortcuts from settings (4.12): command id to shortcut, or '' for
+// none. App sets these on every render, before anything reads them.
+let overrides: Readonly<Record<string, string>> = {}
+export function setShortcutOverrides(map: Readonly<Record<string, string>>): void {
+  overrides = map
+}
+
+// The shortcut a command answers to and shows, after rebinding.
+export function shortcutOf(command: Command): string | undefined {
+  const rebound = overrides[command.id]
+  return rebound === undefined ? command.shortcut : rebound || undefined
+}
+
 export function allShortcuts(command: Command): string[] {
-  return [...(command.shortcut ? [command.shortcut] : []), ...(command.extraShortcuts ?? [])]
+  const main = shortcutOf(command)
+  const extra = overrides[command.id] === undefined ? (command.extraShortcuts ?? []) : []
+  return [...(main ? [main] : []), ...extra]
+}
+
+// The command already using a shortcut, other than the one given.
+export function shortcutOwner(shortcut: string, except: string): Command | null {
+  const key = shortcut.toLowerCase()
+  return (
+    commands.find((c) => c.id !== except && allShortcuts(c).some((s) => s.toLowerCase() === key)) ?? null
+  )
 }
 
 export function commandForEvent(list: readonly Command[], event: KeyEventLike, ctx: CommandContext): Command | null {
@@ -257,5 +282,6 @@ export function commandForEvent(list: readonly Command[], event: KeyEventLike, c
 export function commandHint(id: string): string {
   const command = commands.find((c) => c.id === id)
   if (!command) return ''
-  return command.shortcut ? `${command.label} (${formatShortcut(command.shortcut)})` : command.label
+  const shortcut = shortcutOf(command)
+  return shortcut ? `${command.label} (${formatShortcut(shortcut)})` : command.label
 }

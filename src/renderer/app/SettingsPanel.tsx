@@ -21,6 +21,7 @@ interface SettingsPanelProps {
   onFontSize: (size: number) => void
   onCat: (on: boolean) => void
   onLabels: (labels: string[]) => void
+  onShortcuts: () => void
   onPickScratch: () => void
   onDefaultScratch: () => void
   onClose: () => void
@@ -47,6 +48,7 @@ export function SettingsPanel({
   onFontSize,
   onCat,
   onLabels,
+  onShortcuts,
   onPickScratch,
   onDefaultScratch,
   onClose
@@ -194,6 +196,17 @@ export function SettingsPanel({
               onClick={() => onCat(!cat)}
             >
               <span className="switch-knob" />
+            </button>
+          </div>
+        </section>
+
+        <section className="settings-section">
+          <h3>Keyboard</h3>
+          <div className="setting">
+            <span className="setting-label">Shortcuts</span>
+            <button id="setting-shortcuts" className="pill-button" onClick={onShortcuts}>
+              <Icon name="command" size={16} />
+              Change shortcuts…
             </button>
           </div>
         </section>

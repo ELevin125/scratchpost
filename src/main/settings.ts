@@ -14,6 +14,9 @@ const MAX_FONT_SIZE = 24
 const DEFAULT_FONT_SIZE = 13
 const MAX_PINNED_NOTES = 30
 const MAX_LABELS = 50
+const MAX_KEYBINDINGS = 200
+const COMMAND_ID = /^[a-z][A-Za-z0-9.]{0,40}$/
+const SHORTCUT = /^(?:(?:Ctrl|Shift|Alt|Meta)\+)*[^+\s]{1,12}$/
 const LABEL_WORD = /^[A-Za-z0-9][A-Za-z0-9._-]*$/
 
 const settingsPath = () => join(app.getPath('userData'), 'settings.json')
@@ -46,6 +49,14 @@ export function sanitizeSettings(value: unknown): Settings {
     scratchDir: typeof raw.scratchDir === 'string' && isAbsolute(raw.scratchDir) ? raw.scratchDir : null,
     fontSize,
     cat: raw.cat !== false,
+    keybindings: Object.fromEntries(
+      Object.entries(typeof raw.keybindings === 'object' && raw.keybindings !== null ? raw.keybindings : {})
+        .filter(
+          (entry): entry is [string, string] =>
+            COMMAND_ID.test(entry[0]) && typeof entry[1] === 'string' && (entry[1] === '' || SHORTCUT.test(entry[1]))
+        )
+        .slice(0, MAX_KEYBINDINGS)
+    ),
     labels: Array.isArray(raw.labels)
       ? [...new Set(raw.labels.filter((w): w is string => typeof w === 'string' && LABEL_WORD.test(w)))].slice(
           0,

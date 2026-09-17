@@ -15,6 +15,7 @@ import { EmptyState } from './EmptyState'
 import { FileTree } from './FileTree'
 import { FolderMenu } from './FolderMenu'
 import { HistoryPanel } from './HistoryPanel'
+import { ShortcutsPanel } from './ShortcutsPanel'
 import { Picker, type PickerItem } from './Picker'
 import { findLabels, tagHue, tagKey } from '../../shared/tags'
 import { insertLabel, labelWord } from '../editor/format'
@@ -30,6 +31,8 @@ import {
   availableCommands,
   commandForEvent,
   commandHint,
+  setShortcutOverrides,
+  shortcutOf,
   commands,
   type AppActions,
   type Command,
@@ -76,12 +79,13 @@ const NOTE_EXTENSION = /\.(md|markdown|txt)$/i
 const LISTING_REFRESH_MS = 500
 const SNAPSHOT_EVERY_MS = 5 * 60 * 1000
 const RECENT_WRITES = 8
+const NO_KEYBINDINGS: Record<string, string> = {}
 const PARTY_WORDS = ['parrotparty', 'parrot party']
 
 // Ctrl+Shift+T remembers this many closed tabs.
 const MAX_CLOSED = 20
 
-type Overlay = 'palette' | 'switcher' | 'search' | 'folders' | 'rename' | 'colours' | 'settings' | 'history' | 'labels'
+type Overlay = 'palette' | 'switcher' | 'search' | 'folders' | 'rename' | 'colours' | 'settings' | 'history' | 'labels' | 'shortcuts'
 
 // A note that changed on disk while it had unsaved edits, or was deleted.
 type External = 'conflict' | 'deleted'
@@ -120,7 +124,7 @@ function menuItem(id: string, run: () => void): MenuItem {
   const command = commands.find((c) => c.id === id)
   return {
     label: command?.label ?? id,
-    hint: command?.shortcut ? formatShortcut(command.shortcut) : undefined,
+    hint: command && shortcutOf(command) ? formatShortcut(shortcutOf(command)!) : undefined,
     run
   }
 }
@@ -1115,6 +1119,7 @@ export function App() {
         const path = activeTab()?.path
         if (path) setNotePinned(path, pinned)
       },
+      openShortcuts: () => setOverlay('shortcuts'),
       openLabels: () => {
         if (viewRef.current) setOverlay('labels')
       },
@@ -1127,6 +1132,8 @@ export function App() {
     }
   })
 
+  const keybindings = folder.settings?.keybindings ?? NO_KEYBINDINGS
+  setShortcutOverrides(keybindings)
   const pinnedNotesRef = useRef(pinnedNotes)
   pinnedNotesRef.current = pinnedNotes
   const isScratchContext = folder.isScratch
@@ -1426,6 +1433,7 @@ export function App() {
           cat={catOn}
           labels={folder.settings.labels}
           onLabels={(labels) => void folder.persist({ labels })}
+          onShortcuts={() => setOverlay('shortcuts')}
           onCat={(on) => void folder.persist({ cat: on })}
           onPickScratch={() => void pickScratchDir()}
           onDefaultScratch={() => void changeScratchDir(null)}
@@ -1457,6 +1465,13 @@ export function App() {
           ariaLabel="Insert label"
           create={newLabelItem}
           onPick={pickLabel}
+          onClose={closeOverlay}
+        />
+      )}
+      {overlay === 'shortcuts' && (
+        <ShortcutsPanel
+          keybindings={keybindings}
+          onChange={(next) => void folder.persist({ keybindings: next })}
           onClose={closeOverlay}
         />
       )}

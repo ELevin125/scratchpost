@@ -97,6 +97,8 @@ That means syncing the folder between machines works too.
 
 ## Make it yours
 
+Don't like a shortcut? Change it under **Keyboard shortcuts** in Settings.
+
 Open Settings with `Ctrl+,` to switch between light and dark mode, change the theme colour, the scratch folder and other preferences.
 
 Scratchpost works offline and keeps everything on your computer.

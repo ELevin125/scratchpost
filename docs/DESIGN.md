@@ -266,7 +266,8 @@ Standard CodeMirror 6 keymap plus:
 | Note history | palette, pill menu and dock |
 
 Every binding above is a command in the registry and appears in the palette
-with its shortcut (D24). `Enter` and `Tab` are editor keys (D21).
+with its shortcut (D24). All of them can be changed under "Keyboard
+shortcuts…" in Settings or the palette (D41). `Enter` and `Tab` are editor keys (D21).
 
 **Auto-continue lists** is mandatory and not optional polish:
 

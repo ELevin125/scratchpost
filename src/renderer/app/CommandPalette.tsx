@@ -1,5 +1,5 @@
 import { Picker } from './Picker'
-import type { Command } from './state/commands'
+import { shortcutOf, type Command } from './state/commands'
 import { formatShortcut } from './state/shortcuts'
 
 interface CommandPaletteProps {
@@ -20,7 +20,7 @@ export function CommandPalette({ commands: all, onRun, onClose }: CommandPalette
       items={commands.map((command) => ({
         id: command.id,
         label: command.label,
-        hint: command.shortcut ? formatShortcut(command.shortcut) : undefined
+        hint: shortcutOf(command) ? formatShortcut(shortcutOf(command)!) : undefined
       }))}
       onPick={(item) => {
         const command = commands.find((c) => c.id === item.id)

@@ -1523,3 +1523,109 @@ kbd {
   border-radius: 999px;
   outline: none;
 }
+
+/* Keyboard shortcuts (4.12) */
+
+.overlay.shortcuts {
+  width: min(620px, calc(100% - 32px));
+  overflow: hidden;
+}
+
+.shortcut-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0 4px 4px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.shortcut-row {
+  display: grid;
+  grid-template-columns: 1fr auto 76px;
+  align-items: center;
+  gap: 10px;
+  padding: 3px 8px;
+  border-radius: 10px;
+}
+
+.shortcut-row:hover {
+  background: var(--surface);
+}
+
+.shortcut-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--body);
+}
+
+.shortcut-key {
+  min-width: 90px;
+  padding: 4px 10px;
+  font: 12px var(--font-mono);
+  text-align: center;
+  color: var(--ink);
+  background: var(--sunken);
+  border: 0;
+  border-radius: 8px;
+}
+
+.shortcut-key:hover {
+  color: var(--chip-ink);
+  background: var(--chip);
+}
+
+.shortcut-key.empty {
+  color: var(--soft);
+}
+
+.shortcut-key.recording {
+  width: 190px;
+  color: var(--chip-ink);
+  background: var(--chip);
+  outline: none;
+}
+
+.shortcut-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+}
+
+.shortcut-conflict {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 8px 6px;
+  padding: 6px 6px 6px 14px;
+  color: var(--ink);
+  background: var(--surface);
+  border-radius: 999px;
+}
+
+.shortcut-conflict span {
+  flex: 1;
+  min-width: 16ch;
+}
+
+.shortcut-conflict button {
+  padding: 5px 12px;
+  border-radius: 999px;
+}
+
+.shortcut-conflict .primary {
+  font-weight: 500;
+  color: var(--chip-ink);
+  background: var(--chip);
+}
+
+.shortcut-hint {
+  margin: 0 16px 6px;
+}
+
+.shortcut-footer {
+  padding: 8px 12px 0;
+}

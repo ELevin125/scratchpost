@@ -354,6 +354,8 @@ the easter egg, improvements and features.
   list defined in Settings.
 - [x] **4.11 Switch list type:** turn the selected lines or list into bullets,
   a checklist or a numbered list.
+- [x] **4.12 Rebindable shortcuts:** change, remove or reset any command's
+  shortcut from Settings or the palette. See D41.
 
 ---
 

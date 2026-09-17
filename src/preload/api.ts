@@ -65,6 +65,8 @@ export interface Settings {
   scratchDir: string | null // null means ~/Documents/Scratchpost
   fontSize: number // note text in px, 10 to 24
   cat: boolean // the mascot (3.9), on by default
+  // Rebound shortcuts: command id to shortcut, '' for none (4.12).
+  keybindings: Record<string, string>
   labels: string[] // the label picker's list, see 4.10
   pinnedNotes: string[] // absolute paths, shown atop the notes panel in any folder (4.7)
 }
