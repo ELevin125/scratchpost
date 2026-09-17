@@ -2,11 +2,7 @@
 
 A nicer Notepad. That's the whole idea.
 
-This is a plain-text scratchpad that happens to understand Markdown.
-
-Click on this heading and its `#` appears. Click somewhere else and it disappears. Keep typing and the Markdown stays out of your way.
-
-You can write first and worry about formatting later.
+This is a plain-text scratchpad that happens to understand Markdown. Click on this heading and its `#` appears; click somewhere else and it goes away again. Keep typing and the Markdown stays out of your way, so you can write first and worry about formatting later.
 
 ## Try these
 
@@ -21,96 +17,65 @@ You can write first and worry about formatting later.
 
 ## Markdown, without the ceremony
 
-**Bold**, *italic*, ~~struck through~~ and `inline code`.
+**Bold**, *italic*, ~~struck through~~ and `inline code` all work as you'd expect, [links](https://commonmark.org/help/) open in your browser, and quotes get a line down the side:
 
-[Links](https://commonmark.org/help/) open in your browser.
+> Like this one.
 
-> Quotes get a line down the side.
+Lists work normally, nested ones too:
 
-* Lists work normally
+* Just keep typing
 
-  * Nested lists too
-  * Just keep typing
+  * and indent where you need to
 
 * [x] Checked things stay checked
 
-Turn any list into bullets, a checklist or a numbered list with `Ctrl+Shift+8`, `Ctrl+Shift+9` or `Ctrl+Shift+7`.
+You rarely have to type the syntax yourself. `Ctrl+B` and `Ctrl+I` cover bold and italic, `Ctrl+1` to `Ctrl+3` make headings, and `Ctrl+Shift+8`, `Ctrl+Shift+9` or `Ctrl+Shift+7` turn whatever you're on into a bullet list, a checklist or a numbered list.
 
 ### Code gets a little help
 
-Name a language after the fence and Scratchpost highlights it.
+Name a language after the fence and Scratchpost highlights it:
 
 ```js
 const answer = 42;
 console.log("hello, Scratchpost");
 ```
 
-It works with JavaScript, TypeScript, JSON, Python, CSS, HTML and shell.
+JavaScript, TypeScript, JSON, Python, CSS, HTML and shell are all included.
 
 ## Notes are just files
 
-A new note becomes a file when you start typing.
+A new note becomes a file the moment you start typing, and its first line becomes the filename, so there's nothing to fill in before you write. Press `F2` later if it deserves a better name. Open a note, never type in it, and nothing is left behind.
 
-Its first line becomes the filename, so you can start writing immediately. Press `F2` later if you want to give it a better name.
-
-If you open a new note and never type anything, nothing gets left behind.
-
-Notes live in `Documents/Scratchpost` by default. You can change that in Settings, open files from anywhere with `Ctrl+O`, or drag a `.md` or `.txt` file onto the window.
-
-There is no database to maintain and no special format to export. Your notes are just files.
+Notes live in `Documents/Scratchpost` unless you move them in Settings. `Ctrl+O` opens a file from anywhere, and dragging a `.md` or `.txt` file onto the window works too. There's no database to maintain and no special format to export from: your notes are just files.
 
 ## A few useful tricks
 
 ### Tags and labels
 
-Write #ideas and Scratchpost knows it's a tag. Tags gather notes together so you can quickly find everything related to one.
-
-Write [urgent] or [maybe] and it becomes a little coloured label inside the note.
-
-They look similar, but they do different jobs.
+Write #ideas and Scratchpost treats it as a tag, gathering every note that mentions it so you can find them together. Write [urgent] or [maybe] and you get a small coloured label that stays in this note and means nothing anywhere else. They look similar, but they do different jobs.
 
 ### History
 
-Every note keeps its own local history.
-
-Click the clock at the bottom to look back through older versions, compare changes, or restore one.
-
-Changed your mind? `Ctrl+Z` undoes a restore too.
+Every note quietly keeps its own history on this computer. Click the clock at the bottom to look through older versions and see which lines changed, then bring one back if you want it. Changed your mind? `Ctrl+Z` undoes a restore like any other edit.
 
 ### Tabs
 
-Close a tab and `Ctrl+Shift+T` brings it back.
-
-Pin a tab if you want it to stay at the left. Pinned tabs also survive **Close all tabs**.
-
-Right-click a note in the notes list and choose **Pin note to notes panel** to keep it at the top of the list, whichever folder is open.
-
-Archive a note when you're done with it and Scratchpost moves it into an `archive` folder instead of throwing it away.
+Close a tab and `Ctrl+Shift+T` brings it back. Pin one if you want it to stay at the left, safe from **Close all tabs**. A note you keep returning to can also be pinned to the top of the notes list, whichever folder is open: right-click it and choose **Pin note to notes panel**. When you're finished with a note, archive it and Scratchpost moves it into an `archive` folder instead of throwing it away.
 
 ### Working with other programs
 
-Scratchpost watches your notes on disk.
-
-Change a file somewhere else and Scratchpost reloads it. If you've also been editing the note, it'll ask which version you want to keep.
-
-That means syncing the folder between machines works too.
+Scratchpost watches your notes on disk. Change one somewhere else and it reloads here; if you'd been editing it too, you get to pick which version to keep. That also means syncing the folder between machines is fine.
 
 ## Make it yours
 
-Don't like a shortcut? Change it under **Keyboard shortcuts** in Settings.
+`Ctrl+,` opens Settings, where you can switch between light and dark, pick the colour everything else is built from, change the note text size and choose where new notes are kept. If a shortcut sits wrong under your fingers, **Keyboard shortcuts** will change it.
 
-Open Settings with `Ctrl+,` to switch between light and dark mode, change the theme colour, the scratch folder and other preferences.
+The cat is called Bean. Click for a purr, or use Settings to move Bean somewhere else, or turn Bean off if you'd rather write alone.
 
-The cat is called Bean. Click for a purr, and pick where Bean sits, or turn Bean off, in Settings.
-
-Scratchpost works offline and keeps everything on your computer.
+Everything runs offline and stays on your computer.
 
 ## One last thing
 
-You don't need to remember all of this.
-
-If you forget a shortcut, open `Ctrl+Shift+P` and search for what you want to do.
-
-And if you ever close this note, just use the command palette and choose **Open welcome note**.
+You don't need to remember any of this. If you forget a shortcut, press `Ctrl+Shift+P` and search for what you want to do, and if you ever close this note, the command palette has **Open welcome note**.
 
 Now go write something.

@@ -1,38 +1,40 @@
-# Scratchpost
-
-A small, single-window Markdown scratchpad for people who just want to write things down.
-
-Your notes are shown as tabs across the top, with the editor taking up the rest of the window. Markdown renders as you type, changes are saved automatically, and files can be opened from anywhere on your computer.
-
-![Scratchpost in dark mode](docs/screenshots/dark.png)
+<div align="center">
+  <img src="build/icon.png" alt="" width="120">
+  <h1>Scratchpost</h1>
+  <p><strong>A small, single-window Markdown scratchpad for people who just want to write things down.</strong></p>
+  <p>Notes as tabs across the top, the editor below. Markdown renders as you type, changes save themselves, and any file on your computer can be opened.</p>
+  <img src="docs/screenshots/dark.png" alt="Scratchpost in dark mode" width="920">
+</div>
 
 ## Why Scratchpost?
 
-There are plenty of good note-taking apps, but most of them are built around the idea of managing notes.
+There are plenty of good note-taking apps, but most of them are built around managing notes.
 
 Scratchpost isn't.
 
-It's meant for the notes you leave open for a few days, the text file you keep coming back to, or the bit of Markdown you don't want to turn into a whole project.
+It's for the note you leave open for a few days, the text file you keep coming back to, and the bit of Markdown you don't want to turn into a whole project.
 
-It works with normal `.md` and `.txt` files. There are no vaults, databases, plugins, accounts, or sync services. Just open a file and start writing.
+It works with normal `.md` and `.txt` files. No vaults, databases, plugins, accounts or sync services. Open a file and start writing.
 
-## Features
+## Writing in it
 
-* **Live Markdown** — headings, lists, checklists, links, quotes, and code are rendered directly in the editor. Markdown syntax is only shown on the line you're currently editing.
-* **Code highlighting** — fenced code blocks support JavaScript, TypeScript, JSON, Python, CSS, HTML, and shell.
-* **Automatic saving** — changes are saved as you type. New notes are created on the first keystroke and use the first line as their filename. Empty notes aren't saved.
-* **Normal files** — notes are stored in `Documents/Scratchpost` by default, or in a folder you choose. You can also open `.md` and `.txt` files from anywhere on disk.
-* **Open with / drag and drop** — files can be opened from your file manager, dropped onto the window, or opened through Scratchpost's menu.
-* **Quick search** — `Ctrl+P` searches your notes, `Ctrl+Shift+F` searches their contents, and `Ctrl+Shift+P` opens the command palette.
-* **Tags** — add `#tags` to a note to make it available from the tags panel and use tags to filter the note list.
-* **Labels** — `[labels]` are displayed as coloured pills while remaining part of the note itself.
-* **File watching** — changes made to a file outside Scratchpost are detected automatically. If you've also edited the note, Scratchpost lets you choose which version to keep.
-* **Version history** — notes keep a local history of previous versions. You can compare changes line-by-line and restore an older version. Restoring can be undone with `Ctrl+Z`.
-* **Pinning and archiving** — pinned notes stay at the left of the tab bar. Archived notes are moved into an `archive` folder.
-* **Themes** — choose light, dark, or system themes. Colours are generated from a single accent colour.
-* **Offline** — everything runs locally. Scratchpost makes no network requests.
+Headings, lists, checklists, links, quotes and code render straight in the editor, and the Markdown syntax only shows on the line you're working on. Fenced code blocks are highlighted for JavaScript, TypeScript, JSON, Python, CSS, HTML and shell.
+
+You don't have to type the syntax. `Ctrl+B` and `Ctrl+I` handle bold and italic, `Ctrl+1` to `Ctrl+3` set headings, and `Ctrl+Shift+8`, `9` and `7` turn whatever you're on into a bullet list, a checklist or a numbered list. Right-click in a note for the same things. If a shortcut sits wrong under your fingers, change it under Keyboard shortcuts in Settings.
+
+Two kinds of words get their own colour, taken from the word itself. A `#tag` collects notes: every tag in the folder shows up in the tags panel, and clicking one filters the list. A `[label]` stays where you wrote it, useful for marking a line as `[bug]` or `[idea]` without it meaning anything elsewhere. `Ctrl+L` inserts one from your own list of labels.
+
+## Keeping track of things
+
+New notes save themselves from the first keystroke and take their name from the first line. Notes you never typed in leave nothing behind.
+
+`Ctrl+P` jumps to a note by name, `Ctrl+Shift+F` searches inside all of them, and `Ctrl+Shift+P` opens the command palette, which lists everything the app can do along with its shortcut. Notes you keep coming back to can be pinned to the top of the list, whatever folder is open, and ones you're done with can be archived into an `archive` folder beside them.
+
+Every note also keeps a history on your computer. You can look through older versions, see which lines changed, and bring one back; `Ctrl+Z` undoes the restore if you change your mind.
 
 ![Version history](docs/screenshots/history.png)
+
+Because notes are ordinary files, other programs can change them. Scratchpost notices and reloads the note; if you'd been editing it too, it asks which version to keep. That makes syncing the folder between machines safe enough.
 
 ## Running from source
 
@@ -43,41 +45,15 @@ npm ci
 npm run dev
 ```
 
-The usual checks are also available:
-
-```bash
-npm run typecheck
-npm run lint
-npm run build
-```
+The usual checks are `npm run typecheck`, `npm run lint` and `npm run build`.
 
 ## Building installers
 
-Windows:
+`npm run dist:win` builds `dist/Scratchpost Setup <version>.exe`, a NSIS installer. Building it on Linux needs Wine.
 
-```bash
-npm run dist:win
-```
+`npm run dist:linux` builds an AppImage and a `.deb` in `dist/`.
 
-This produces:
-
-```text
-dist/Scratchpost Setup <version>.exe
-```
-
-The Windows build uses NSIS. Building it on Linux requires Wine.
-
-Linux:
-
-```bash
-npm run dist:linux
-```
-
-This produces an AppImage and a `.deb` package in `dist/`.
-
-The installers register Scratchpost as a handler for `.md` and `.txt` files, so they can be opened directly from your file manager.
-
-The installers are currently unsigned, so Windows SmartScreen will show a warning the first time you run the application.
+Both register Scratchpost for `.md` and `.txt` files, so notes can be opened from your file manager. They're unsigned, so Windows SmartScreen warns the first time you run one. To update an installed copy, run the new installer over it; your notes, settings and history are kept.
 
 ## Tech stack
 
@@ -88,4 +64,4 @@ The installers are currently unsigned, so Windows SmartScreen will show a warnin
 * [electron-builder](https://www.electron.build/) — application packaging
 * [chokidar](https://github.com/paulmillr/chokidar) — filesystem watching
 
-IBM Plex fonts are bundled with the application. Scratchpost does not need an internet connection to run.
+IBM Plex fonts are bundled with the application. Scratchpost makes no network requests at all, and everything it saves stays on your computer.
