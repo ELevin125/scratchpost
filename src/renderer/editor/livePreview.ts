@@ -127,10 +127,12 @@ export const livePreview = ViewPlugin.fromClass(
           return true
         }
 
-        // A label filters this note down to its own lines (5.5). On a revealed
-        // line a click edits instead, as with tags and links.
+        // A label filters this note down to its own lines (5.5). The word
+        // itself always filters, revealed or not, so a label never sometimes
+        // takes the click and sometimes the cursor; the brackets around it are
+        // ordinary text, so clicking those still puts the cursor in.
         const label = target.closest<HTMLElement>('.cm-label')?.dataset.label
-        if (label && !revealedLines(view.state).has(view.state.doc.lineAt(view.posAtDOM(target)).number)) {
+        if (label) {
           event.preventDefault()
           applyLabelFilter(view, labelFilterOf(view.state) === label ? null : label)
           return true

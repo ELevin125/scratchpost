@@ -239,7 +239,10 @@ A tag is `#` followed by a word, where:
   cursor filters the file tree to the notes that use it and opens the tree. On
   a line with a cursor, a click edits, as with links.
 - **Clicking a label** filters the note to the lines carrying it (5.5, D44);
-  clicking it again, or the bar above the note, shows everything. Renaming a
+  clicking it again, or the bar above the note, shows everything. The word
+  takes the click whether or not the line is revealed, so a label always acts
+  the same; its brackets are ordinary text, so clicking those puts the cursor
+  in to edit the word. Renaming a
   label, from the right-click menu or the palette, changes it in the note or
   in every note in the folder, skipping code (5.6).
 - Colour: a stable hash of the word picks a hue from 0 to 359; the theme

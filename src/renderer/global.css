@@ -458,6 +458,7 @@ kbd {
 
 .cm-label {
   padding: 0 0.6ch;
+  cursor: pointer;
   color: hsl(var(--tag-hue) var(--tag-saturation) var(--tag-lightness));
   background: hsl(var(--tag-hue) var(--tag-saturation) var(--tag-lightness) / 0.16);
   border-radius: 999px;
@@ -1041,6 +1042,8 @@ kbd {
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+  width: fit-content;
+  max-width: min(100% - 60px, calc(var(--note-size) * 48 + 80px));
   margin: 10px 20px 0 40px;
   padding: 6px 6px 6px 14px;
   color: var(--ink);
@@ -1720,6 +1723,8 @@ kbd {
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+  width: fit-content;
+  max-width: min(100% - 60px, calc(var(--note-size) * 48 + 80px));
   margin: 10px 20px 0 40px;
   padding: 6px 6px 6px 14px;
   color: var(--ink);
@@ -1727,9 +1732,8 @@ kbd {
   border-radius: 999px;
 }
 
-.note-filter span {
-  flex: 1;
-  min-width: 12ch;
+.note-filter > span {
+  min-width: 0;
 }
 
 .note-filter button {

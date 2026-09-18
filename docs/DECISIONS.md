@@ -983,7 +983,10 @@ Cursors are unchanged: a cursor reveals its own line.
 
 **Decision:** labels get the two actions they were missing (5.5, 5.6).
 
-- **Click a label** and the note shows only the lines carrying it. Runs of
+- **Click a label** and the note shows only the lines carrying it. Unlike a
+  tag, the word takes the click even when its line is revealed: a control that
+  sometimes takes the click and sometimes drops a cursor is worse than one
+  that always acts. The brackets stay ordinary text for editing the word. Runs of
   other lines collapse into a "12 lines" marker; clicking one, the bar above
   the note, or the same label again brings everything back. The filter is a
   view state, not an edit: the file, history and undo never see it, and each
