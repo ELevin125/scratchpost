@@ -44,9 +44,21 @@ function decorateLink(ctx: Context, node: SyntaxNode): void {
   if (!ctx.revealedAt(close.from)) ctx.add(`link-rest:${close.from}`, hidden.range(close.from, node.to))
 }
 
+// A URL written on its own, with no markdown around it (5.4). GFM autolinking
+// finds them; `[label](url)` handles its own URL, so those are skipped.
+function decorateAutolink(ctx: Context, node: SyntaxNode): void {
+  const parent = node.parent?.name
+  if (parent === 'Link' || parent === 'Image') return
+  const text = ctx.state.sliceDoc(node.from, node.to)
+  const href = /^[a-z][\w+.-]*:/i.test(text) ? text : text.includes('@') ? `mailto:${text}` : `https://${text}`
+  const mark = Decoration.mark({ class: 'cm-link', attributes: { 'data-href': href } })
+  ctx.add(`autolink:${node.from}`, mark.range(node.from, node.to))
+}
+
 export function decorateInline(ctx: Context, node: SyntaxNode): void {
   if (node.name === 'InlineCode') return decorateInlineCode(ctx, node)
   if (node.name === 'Link') return decorateLink(ctx, node)
+  if (node.name === 'URL') return decorateAutolink(ctx, node)
   const style = styles[node.name]
   if (!style) return
   ctx.add(`${node.name}:${node.from}`, style.mark.range(node.from, node.to))

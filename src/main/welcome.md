@@ -17,9 +17,11 @@ This is a plain-text scratchpad that happens to understand Markdown. Click on th
 
 ## Markdown, without the ceremony
 
-**Bold**, *italic*, ~~struck through~~ and `inline code` all work as you'd expect, [links](https://commonmark.org/help/) open in your browser, and quotes get a line down the side:
+**Bold**, *italic*, ~~struck through~~ and `inline code` all work as you'd expect, and quotes get a line down the side:
 
 > Like this one.
+
+[Links](https://commonmark.org/help/) open in your browser, and so does a URL you just paste in: https://commonmark.org/help/
 
 Lists work normally, nested ones too:
 

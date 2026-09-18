@@ -3,7 +3,7 @@ import { markdown } from '@codemirror/lang-markdown'
 import { closeSearchPanel, search } from '@codemirror/search'
 import { EditorSelection, EditorState, type Extension, type Text, type TransactionSpec } from '@codemirror/state'
 import { drawSelection, EditorView, keymap, type ViewUpdate } from '@codemirror/view'
-import { Strikethrough, TaskList } from '@lezer/markdown'
+import { Autolink, Strikethrough, TaskList } from '@lezer/markdown'
 import { codeHighlighting, codeLanguages } from './codeLanguages'
 import { revealArmed } from './decorations'
 import { listKeymap } from './lists'
@@ -31,10 +31,11 @@ export function editorExtensions(onUpdate: (update: ViewUpdate) => void): Extens
     history(),
     drawSelection(),
     EditorView.lineWrapping,
-    // CommonMark plus GFM task lists and strikethrough; see MARKDOWN_SPEC.md.
+    // CommonMark plus GFM task lists, strikethrough and autolinks (a bare URL
+    // is a link); see MARKDOWN_SPEC.md.
     // The package's own Enter handling is off: lists.ts implements the spec's.
     // Fences naming a bundled language are highlighted; see codeLanguages.ts.
-    markdown({ extensions: [TaskList, Strikethrough], addKeymap: false, codeLanguages }),
+    markdown({ extensions: [TaskList, Strikethrough, Autolink], addKeymap: false, codeLanguages }),
     codeHighlighting,
     revealArmed,
     livePreview,

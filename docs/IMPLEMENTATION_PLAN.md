@@ -334,7 +334,8 @@ links, labels, then notes.
 - [x] **5.2 Tab inserts in pickers:** `Tab` picks the highlighted row, like
   `Enter`, so the label picker doesn't jump focus to some control.
 - [x] **5.3 A selection reveals every line it covers.** See D43.
-- [ ] **5.4 A pasted link is clickable.**
+- [x] **5.4 A pasted link is clickable:** a URL on its own renders and opens
+  like a markdown link, through GFM autolinking.
 - [ ] **5.5 Click a label to see only the lines that carry it.**
 - [ ] **5.6 Rename a label** in the note, across the folder, and in your list.
 - [ ] **5.7 Move a selection into a new note.**

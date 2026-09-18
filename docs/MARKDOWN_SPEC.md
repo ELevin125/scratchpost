@@ -24,6 +24,7 @@ Every fixture below has a corresponding test.
 | Strikethrough | `~~text~~` | struck through, markers hidden |
 | Inline code | `` `text` `` | `--sunken` background, markers hidden |
 | Link | `[label](url)` | label in `--chip`, underlined; URL and brackets hidden |
+| Bare link | `https://x.org` | the URL itself in `--chip`, underlined, clickable (5.4) |
 | Block quote | `> text` | `>` markers hidden, 2px `--line` left border |
 | Fenced code block | ` ``` ` … ` ``` ` | `--sunken` background with rounded ends, fences hidden, contents verbatim, highlighted for a few languages |
 | Horizontal rule | `---` / `***` / `___` | hairline `--line` across the line, characters hidden |
@@ -119,6 +120,16 @@ Parsed as plain text, rendered with no decoration, never transformed:
 
 These must not throw, must not corrupt on save, and must round-trip unchanged.
 A user pasting a table into a note should get a table back out of the file.
+
+### Bare links
+
+A URL written on its own is a link, with nothing to type around it (5.4): it
+is coloured and underlined like a markdown link and opens in the browser when
+clicked. GFM autolinking finds them, so `www.x.org` and an email address work
+too, opening as `https://` and `mailto:`. There is no syntax to hide, so the
+line looks the same whether or not the cursor is on it; a click on the line
+the cursor is already on edits instead of opening, as with markdown links.
+Inside code, nothing is linked.
 
 ## Cursor reveal
 
@@ -341,7 +352,8 @@ right-click menu. Each is one undoable edit.
   clipboard holds a single `http`, `https` or `mailto` URL with no spaces and
   balanced parentheses, and the selection is one range on one line, contains
   no `[` or `]`, isn't itself a URL, and isn't inside code. A URL pasted with
-  nothing selected is inserted verbatim. See D28 and D32.
+  nothing selected is inserted verbatim, and renders as a link of its own
+  (below). See D28 and D32.
 
 ## Typing helpers
 
