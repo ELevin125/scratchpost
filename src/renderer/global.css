@@ -166,8 +166,9 @@ kbd {
 .tab-close {
   display: grid;
   place-items: center;
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
+  margin: -2px -3px -2px 0;
   border-radius: 999px;
   opacity: 0;
 }
@@ -292,10 +293,11 @@ kbd {
 }
 
 .icon-button {
+  flex-shrink: 0;
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   color: var(--soft);
   border-radius: 999px;
 }
@@ -444,7 +446,7 @@ kbd {
   display: inline-flex;
   align-items: baseline;
   gap: 6px;
-  padding: 2px 10px;
+  padding: 5px 10px;
   font-size: 12px;
   background: hsl(var(--tag-hue) var(--tag-saturation) var(--tag-lightness) / 0.14);
   border-radius: 999px;
@@ -1571,7 +1573,7 @@ kbd {
 
 .label-chip button {
   display: inline-flex;
-  padding: 3px;
+  padding: 5px;
   color: inherit;
   border-radius: 999px;
 }

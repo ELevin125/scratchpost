@@ -323,6 +323,25 @@ Batches, in order: 2.12–2.17; then 2.11 with 3.4 and 3.8; then 2.22; then
 
 ---
 
+## Milestone 5 — After a week of use
+
+From the author's second list (2026-09-18), in four batches: editing feel,
+links, labels, then notes.
+
+- [x] **5.1 Bigger hit targets:** checkboxes, tab close buttons, icon buttons,
+  tag chips and label chips grew their clickable area without changing how
+  they look.
+- [x] **5.2 Tab inserts in pickers:** `Tab` picks the highlighted row, like
+  `Enter`, so the label picker doesn't jump focus to some control.
+- [x] **5.3 A selection reveals every line it covers.** See D43.
+- [ ] **5.4 A pasted link is clickable.**
+- [ ] **5.5 Click a label to see only the lines that carry it.**
+- [ ] **5.6 Rename a label** in the note, across the folder, and in your list.
+- [ ] **5.7 Move a selection into a new note.**
+- [ ] **5.8 Auto-archive old notes.**
+
+---
+
 ## Milestone 4 — After first use
 
 From the author's list after a day of real use (2026-09-17). Bugs first, then

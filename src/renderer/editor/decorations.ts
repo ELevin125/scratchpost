@@ -26,15 +26,17 @@ export const revealArmed = StateField.define<boolean>({
   update: (armed, tr) => armed || tr.annotation(Transaction.userEvent) !== undefined
 })
 
-// Every line holding a cursor or a selection endpoint. A selection spanning
-// lines 3 to 7 reveals 3 and 7 only. See MARKDOWN_SPEC.md, "Cursor reveal".
+// Every line a cursor sits on or a selection covers: a selection from line 3
+// to line 7 reveals all five, so a selection is never part raw and part
+// rendered (5.1). See MARKDOWN_SPEC.md, "Cursor reveal".
 // States without revealArmed (tests) always reveal.
 export function revealedLines(state: EditorState): Set<number> {
   const lines = new Set<number>()
   if (state.field(revealArmed, false) === false) return lines
   for (const range of state.selection.ranges) {
-    lines.add(state.doc.lineAt(range.anchor).number)
-    lines.add(state.doc.lineAt(range.head).number)
+    const first = state.doc.lineAt(range.from).number
+    const last = state.doc.lineAt(range.to).number
+    for (let n = first; n <= last; n++) lines.add(n)
   }
   return lines
 }

@@ -52,7 +52,7 @@ export function Picker({ items, placeholder, ariaLabel, onPick, onClose, create 
     } else if (event.key === 'ArrowUp' && count > 0) {
       event.preventDefault()
       setSelected((index - 1 + count) % count)
-    } else if (event.key === 'Enter' && results[index]) {
+    } else if ((event.key === 'Enter' || event.key === 'Tab') && results[index]) {
       event.preventDefault()
       onPick(results[index])
     } else if (event.key === 'Escape') {

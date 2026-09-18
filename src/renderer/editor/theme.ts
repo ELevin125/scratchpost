@@ -127,14 +127,19 @@ export const editorTheme = EditorView.theme({
     display: 'inline-block',
     width: '2ch',
     height: '1em',
+    // The drawn box is small, so the clickable area grows by its padding and
+    // shrinks back by the same margin: easy to hit, same layout (5.1).
+    boxSizing: 'content-box',
+    padding: '7px 6px',
+    margin: '-7px -6px',
     verticalAlign: '-0.125em',
     cursor: 'pointer'
   },
   '.cm-checkbox::before': {
     content: '""',
     position: 'absolute',
-    left: '0',
-    top: '0.075em',
+    left: '6px',
+    top: 'calc(7px + 0.075em)',
     width: '0.85em',
     height: '0.85em',
     boxSizing: 'border-box',
@@ -148,8 +153,8 @@ export const editorTheme = EditorView.theme({
   '.cm-checkbox-done::after': {
     content: '""',
     position: 'absolute',
-    left: '0.3em',
-    top: '0.2em',
+    left: 'calc(6px + 0.3em)',
+    top: 'calc(7px + 0.2em)',
     width: '0.22em',
     height: '0.42em',
     borderRight: '1.5px solid var(--chip-ink)',

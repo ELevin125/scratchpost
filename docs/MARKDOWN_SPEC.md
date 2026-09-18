@@ -124,9 +124,9 @@ A user pasting a table into a note should get a table back out of the file.
 
 The rule that makes live preview usable:
 
-> Syntax characters are hidden **unless** the line contains a cursor or a
-> selection endpoint. On such a line, all syntax is revealed and the line is
-> styled but not collapsed.
+> Syntax characters are hidden **unless** the line holds a cursor or is
+> covered by a selection. On such a line, all syntax is revealed and the line
+> is styled but not collapsed.
 
 Worked example, with `|` as the cursor:
 
@@ -137,10 +137,16 @@ Worked example, with `|` as the cursor:
 
 Details:
 
-- "Contains a cursor" means any cursor or selection endpoint on that line
-  number, including a collapsed selection.
+- "Holds a cursor" means any cursor on that line, including a collapsed
+  selection.
 - With multiple cursors, every line containing one is revealed.
-- A selection spanning lines 3 to 7 reveals lines 3 and 7 only, not 4 to 6.
+- A selection spanning lines 3 to 7 reveals all five: a selection is never part
+  raw and part rendered (D43). Selecting the whole note shows all of its
+  syntax.
+- A revealed line carries characters the rendered one hides, so a line near the
+  right edge can wrap while you are on it and unwrap when you leave. Short of
+  reserving space for hidden syntax, which would leave gaps everywhere, there
+  is nothing to be done about it.
 - Reveal changes visibility, never layout beyond the reflow it causes. Heading
   size does not change when revealed.
 - A note opens **fully rendered**. Nothing reveals until the user acts in that

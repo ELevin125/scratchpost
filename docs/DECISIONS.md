@@ -965,6 +965,20 @@ the idle body, and a bigger cat.
 
 ---
 
+## D43 — A selection reveals every line it covers
+
+**Decision:** reveal follows the whole selection, not just its ends (5.3),
+replacing the D12 rule that revealed the first and last line only.
+
+A part-raw, part-rendered selection reads as a glitch: the middle lines sit
+rendered while the ends show their markers. Revealing everything the selection
+covers is one consistent state, at the cost of `Ctrl+A` showing the note's
+whole syntax, which is at least honest about what is selected.
+
+Cursors are unchanged: a cursor reveals its own line.
+
+---
+
 ## Open questions
 
 Not yet decided. Do not guess; raise them.
