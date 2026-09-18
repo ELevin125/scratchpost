@@ -127,17 +127,6 @@ export const livePreview = ViewPlugin.fromClass(
           return true
         }
 
-        // A label filters this note down to its own lines (5.5). The word
-        // itself always filters, revealed or not, so a label never sometimes
-        // takes the click and sometimes the cursor; the brackets around it are
-        // ordinary text, so clicking those still puts the cursor in.
-        const label = target.closest<HTMLElement>('.cm-label')?.dataset.label
-        if (label) {
-          event.preventDefault()
-          applyLabelFilter(view, labelFilterOf(view.state) === label ? null : label)
-          return true
-        }
-
         // A tag filters the tree. On a revealed line a click edits instead,
         // as with links.
         const tag = target.closest<HTMLElement>('.cm-hashtag')?.dataset.tag
@@ -159,6 +148,18 @@ export const livePreview = ViewPlugin.fromClass(
           return true
         }
         return false
+      },
+      // A label filters this note down to its own lines (5.5). It answers on
+      // mouseup with nothing selected, so a label always acts the same whether
+      // or not its line is revealed, while dragging a selection across one
+      // still selects. Its brackets are ordinary text for editing the word.
+      mouseup(event, view) {
+        const target = event.target
+        if (event.button !== 0 || !(target instanceof HTMLElement)) return false
+        const label = target.closest<HTMLElement>('.cm-label')?.dataset.label
+        if (!label || !view.state.selection.main.empty) return false
+        applyLabelFilter(view, labelFilterOf(view.state) === label ? null : label)
+        return true
       }
     }
   }

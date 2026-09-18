@@ -64,7 +64,9 @@ Every note quietly keeps its own history on this computer. Click the clock at th
 
 ### Tabs
 
-Close a tab and `Ctrl+Shift+T` brings it back. Pin one if you want it to stay at the left, safe from **Close all tabs**. A note you keep returning to can also be pinned to the top of the notes list, whichever folder is open: right-click it and choose **Pin note to notes panel**. When you're finished with a note, archive it and Scratchpost moves it into an `archive` folder instead of throwing it away.
+Select a few lines and press `Ctrl+Shift+N` to move them into a note of their own; the right-click menu can copy them instead.
+
+Close a tab and `Ctrl+Shift+T` brings it back. Pin one if you want it to stay at the left, safe from **Close all tabs**. A note you keep returning to can also be pinned to the top of the notes list, whichever folder is open: right-click it and choose **Pin note to notes panel**. When you're finished with a note, archive it and Scratchpost moves it into an `archive` folder instead of throwing it away. Settings can also do that for you, for notes you haven't touched in a month or more.
 
 ### Working with other programs
 

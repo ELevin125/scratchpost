@@ -82,6 +82,7 @@ const NOTE_EXTENSION = /\.(md|markdown|txt)$/i
 const LISTING_REFRESH_MS = 500
 const SNAPSHOT_EVERY_MS = 5 * 60 * 1000
 const RECENT_WRITES = 8
+const MAX_AUTO_ARCHIVE = 200 // per launch, so a long-forgotten folder never stalls
 const NO_KEYBINDINGS: Record<string, string> = {}
 const PARTY_WORDS = ['parrotparty', 'parrot party']
 
@@ -765,7 +766,9 @@ export function App() {
       ...(hasSelection
         ? [
             { label: 'Cut', hint: 'Ctrl+X', divider: Boolean(label), run: clipboard('cut') },
-            { label: 'Copy', hint: 'Ctrl+C', run: clipboard('copy') }
+            { label: 'Copy', hint: 'Ctrl+C', run: clipboard('copy') },
+            run('note.fromSelectionMove'),
+            run('note.fromSelectionCopy')
           ]
         : []),
       { label: 'Paste', hint: 'Ctrl+V', divider: Boolean(label) && !hasSelection, run: paste },
@@ -1093,6 +1096,50 @@ export function App() {
 
   const closeMenu = useCallback(() => setMenu(null), [])
 
+  // --- Auto-archive (5.8, D45) ---
+  // Once per launch, and only when switched on: scratch notes nobody has
+  // touched for a while move into archive/. Open and pinned notes stay, and
+  // the toast says what moved.
+
+  const autoArchived = useRef(false)
+  const autoArchiveDays = folder.settings?.autoArchiveDays ?? 0
+  useEffect(() => {
+    if (restoring || autoArchived.current || autoArchiveDays === 0) return
+    autoArchived.current = true
+    void (async () => {
+      const dir = await scratchDirRef.current.catch(() => null)
+      if (!dir) return
+      const entries = await api.listFolder(dir).catch(() => [])
+      const cutoff = Date.now() - autoArchiveDays * 24 * 60 * 60 * 1000
+      const open = new Set(tabsRef.current.tabs.map((tab) => tab.path))
+      const pinned = new Set(pinnedNotesRef.current)
+      const stale = entries
+        .filter(
+          (entry) =>
+            !entry.isDir &&
+            !isArchivedPath(entry.path) &&
+            entry.modified !== null &&
+            entry.modified < cutoff &&
+            !open.has(entry.path) &&
+            !pinned.has(entry.path)
+        )
+        .slice(0, MAX_AUTO_ARCHIVE)
+      let moved = 0
+      for (const entry of stale) {
+        try {
+          await api.archiveFile(entry.path)
+          moved++
+        } catch {
+          // A note that can't move is left where it is.
+        }
+      }
+      if (moved > 0) {
+        setNotice(`archived ${moved} ${moved === 1 ? 'note' : 'notes'} untouched for ${autoArchiveDays} days`)
+        void refreshFolder()
+      }
+    })()
+  }, [restoring, autoArchiveDays, refreshFolder])
+
   // --- Welcome note ---
   // Offered once, on a first launch with nothing to restore and no notes yet.
   // The flag is set first, so a failure never retries on every launch. See D30.
@@ -1197,6 +1244,29 @@ export function App() {
         if (path) setNotePinned(path, pinned)
       },
       openShortcuts: () => setOverlay('shortcuts'),
+      // The selected lines become a note of their own (5.7). The file is
+      // written at once, since the user asked for a note, not a blank tab.
+      selectionToNote: (move) => {
+        const view = viewRef.current
+        if (!view) return
+        const { from, to } = view.state.selection.main
+        const text = view.state.sliceDoc(from, to)
+        if (text.trim() === '') return
+        void (async () => {
+          try {
+            const dir = await scratchDirRef.current
+            const path = await api.createNote(dir)
+            await api.writeFile(path, text, NEW_NOTE_META)
+            if (move) {
+              view.dispatch({ changes: { from, to, insert: '' }, userEvent: 'delete.selection' })
+            }
+            await openPath(path)
+            void refreshFolder()
+          } catch (err) {
+            setNotice(`couldn't make a note: ${errorMessage(err)}`)
+          }
+        })()
+      },
       renameLabelAtCursor: () => {
         const view = viewRef.current
         const word = view ? labelAt(view.state, view.state.selection.main.head) : null
@@ -1234,6 +1304,7 @@ export function App() {
       activeNotePinned: tab?.path ? pinnedNotesRef.current.includes(tab.path) : false,
       labelAtCursor: viewRef.current ? labelAt(viewRef.current.state, viewRef.current.state.selection.main.head) : null,
       labelFiltered: viewRef.current ? labelFilterOf(viewRef.current.state) !== null : false,
+      hasSelection: viewRef.current ? viewRef.current.state.selection.ranges.some((r) => !r.empty) : false,
       tabCount: tabsRef.current.tabs.length,
       actions: actionsRef.current!
     }
@@ -1557,6 +1628,8 @@ export function App() {
           onCatSpot={(spot) => void folder.persist({ catSpot: spot })}
           labels={folder.settings.labels}
           onLabels={(labels) => void folder.persist({ labels })}
+          autoArchiveDays={autoArchiveDays}
+          onAutoArchiveDays={(days) => void folder.persist({ autoArchiveDays: days })}
           onShortcuts={() => setOverlay('shortcuts')}
           onCat={(on) => void folder.persist({ cat: on })}
           onPickScratch={() => void pickScratchDir()}

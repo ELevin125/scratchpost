@@ -1005,6 +1005,31 @@ editing a label in place (too easy to half-rename a note).
 
 ---
 
+## D45 — Notes from a selection, and archiving by age
+
+**Decision:** two ways notes move around on their own (5.7, 5.8).
+
+- **Move or copy a selection to a new note** (`Ctrl+Shift+N` to move, the
+  palette or the right-click menu for either). The file is written straight
+  away rather than waiting for a keystroke, since the user asked for a note,
+  not a blank tab. Moving removes the selection from the old note as an
+  ordinary undoable edit.
+- **Auto-archive** is a setting, **off by default**: never, 30 days, 90 days or
+  a year. Once per launch, scratch notes whose files are older than that move
+  into `archive/` beside them, using the same archive as the manual command, so
+  nothing is deleted and nothing is overwritten. Open notes and notes pinned to
+  the panel are left alone, at most 200 notes move per launch, and a toast says
+  how many went.
+
+Silence would be wrong for something that moves files, so it always reports;
+the notes panel's "Show all" still lists the archive.
+
+**Rejected:** archiving on a timer while the app runs (surprising mid-session),
+deleting old notes (the trash is the user's call), and reading "untouched" from
+anything other than the file's own modified time.
+
+---
+
 ## Open questions
 
 Not yet decided. Do not guess; raise them.

@@ -339,8 +339,10 @@ links, labels, then notes.
 - [x] **5.5 Click a label to see only the lines that carry it.** See D44.
 - [x] **5.6 Rename a label** in the note, across the folder, and in your list.
   See D44.
-- [ ] **5.7 Move a selection into a new note.**
-- [ ] **5.8 Auto-archive old notes.**
+- [x] **5.7 Move a selection into a new note:** `Ctrl+Shift+N` moves it, the
+  palette and right-click menu also copy. See D45.
+- [x] **5.8 Auto-archive old notes:** off by default; 30, 90 or 365 days, at
+  launch, skipping open and pinned notes. See D45.
 
 ---
 

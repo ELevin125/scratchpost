@@ -50,6 +50,7 @@ export interface AppActions {
   openHistory(): void
   openLabels(): void
   renameLabelAtCursor(): void
+  selectionToNote(move: boolean): void
   clearLabelFilter(): void
   openShortcuts(): void
   pinNoteActive(pinned: boolean): void
@@ -65,6 +66,7 @@ export interface CommandContext {
   activeNotePinned: boolean // the active note is pinned in the notes panel (4.7)
   labelAtCursor: string | null // the label the cursor sits in, if any (5.6)
   labelFiltered: boolean // the note is filtered to one label (5.5)
+  hasSelection: boolean // something is selected in the note (5.7)
   tabCount: number
   actions: AppActions
 }
@@ -109,6 +111,19 @@ const hasTab = (ctx: CommandContext) => ctx.view !== null
 export const commands: readonly Command[] = [
   { id: 'palette.open', label: 'Command palette', shortcut: 'Ctrl+Shift+P', run: (ctx) => ctx.actions.openPalette() },
   { id: 'note.new', label: 'New note', shortcut: 'Ctrl+N', run: (ctx) => ctx.actions.newNote() },
+  {
+    id: 'note.fromSelectionCopy',
+    label: 'Copy selection to a new note',
+    run: (ctx) => ctx.actions.selectionToNote(false),
+    when: (ctx) => ctx.hasSelection
+  },
+  {
+    id: 'note.fromSelectionMove',
+    label: 'Move selection to a new note',
+    shortcut: 'Ctrl+Shift+N',
+    run: (ctx) => ctx.actions.selectionToNote(true),
+    when: (ctx) => ctx.hasSelection
+  },
   { id: 'note.welcome', label: 'Open welcome note', run: (ctx) => ctx.actions.openWelcome() },
   { id: 'file.open', label: 'Open file…', shortcut: 'Ctrl+O', run: (ctx) => ctx.actions.openFile() },
   { id: 'switcher.open', label: 'Quick switcher', shortcut: 'Ctrl+P', run: (ctx) => ctx.actions.openSwitcher() },

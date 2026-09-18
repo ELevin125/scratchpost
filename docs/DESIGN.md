@@ -111,6 +111,12 @@ numbered list. Right-clicking outside the selection moves the cursor there
 first, so word commands act on the clicked word. Every entry is a registry
 command with its shortcut shown (4.9).
 
+### Archiving by age
+
+Off unless switched on in Settings (never, 30 days, 90 days, a year). At
+launch, scratch notes untouched for that long move into `archive/`, except
+notes that are open or pinned; a toast says how many moved (5.8, D45).
+
 ### Pinned notes
 
 "Pin note to notes panel" (right-click a note or its pill, or the palette)

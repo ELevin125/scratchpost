@@ -1781,3 +1781,8 @@ kbd {
 .cm-hidden-lines:hover {
   color: var(--ink);
 }
+
+.setting-note.setting-wide {
+  margin: 0 4px 4px;
+  padding: 0 4px;
+}

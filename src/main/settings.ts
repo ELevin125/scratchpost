@@ -15,6 +15,7 @@ const DEFAULT_FONT_SIZE = 13
 const MAX_PINNED_NOTES = 30
 const CAT_SPOTS = ['dock', 'top', 'date', 'corner', 'tags'] as const
 const MAX_LABELS = 50
+const AUTO_ARCHIVE_DAYS = [0, 30, 90, 365]
 const MAX_KEYBINDINGS = 200
 const COMMAND_ID = /^[a-z][A-Za-z0-9.]{0,40}$/
 const SHORTCUT = /^(?:(?:Ctrl|Shift|Alt|Meta)\+)*[^+\s]{1,12}$/
@@ -59,6 +60,7 @@ export function sanitizeSettings(value: unknown): Settings {
         )
         .slice(0, MAX_KEYBINDINGS)
     ),
+    autoArchiveDays: AUTO_ARCHIVE_DAYS.includes(raw.autoArchiveDays as number) ? (raw.autoArchiveDays as number) : 0,
     labels: Array.isArray(raw.labels)
       ? [...new Set(raw.labels.filter((w): w is string => typeof w === 'string' && LABEL_WORD.test(w)))].slice(
           0,

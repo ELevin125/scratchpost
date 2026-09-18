@@ -17,6 +17,7 @@ interface SettingsPanelProps {
   cat: boolean
   catSpot: CatSpot
   labels: string[]
+  autoArchiveDays: number
   scratchDir: string // the folder in use, custom or default
   customScratch: boolean // false when the default folder is in use
   onTheme: (theme: ThemeSettings) => void
@@ -24,6 +25,7 @@ interface SettingsPanelProps {
   onCat: (on: boolean) => void
   onCatSpot: (spot: CatSpot) => void
   onLabels: (labels: string[]) => void
+  onAutoArchiveDays: (days: number) => void
   onShortcuts: () => void
   onPickScratch: () => void
   onDefaultScratch: () => void
@@ -34,6 +36,13 @@ const MODES: { value: ThemeSettings['mode']; label: string }[] = [
   { value: 'system', label: 'System' },
   { value: 'light', label: 'Light' },
   { value: 'dark', label: 'Dark' }
+]
+
+const AUTO_ARCHIVE: { days: number; label: string; title: string }[] = [
+  { days: 0, label: 'Never', title: 'Nothing is archived on its own' },
+  { days: 30, label: '30 days', title: 'After a month without changes' },
+  { days: 90, label: '90 days', title: 'After three months without changes' },
+  { days: 365, label: 'A year', title: 'After a year without changes' }
 ]
 
 const CAT_SPOTS: { value: CatSpot; label: string; title: string }[] = [
@@ -54,6 +63,7 @@ export function SettingsPanel({
   cat,
   catSpot,
   labels,
+  autoArchiveDays,
   scratchDir,
   customScratch,
   onTheme,
@@ -61,6 +71,7 @@ export function SettingsPanel({
   onCat,
   onCatSpot,
   onLabels,
+  onAutoArchiveDays,
   onShortcuts,
   onPickScratch,
   onDefaultScratch,
@@ -284,6 +295,31 @@ export function SettingsPanel({
 
         <section className="settings-section">
           <h3>Notes</h3>
+          <div className="setting">
+            <span className="setting-label" id="setting-auto-archive">
+              Archive old notes
+            </span>
+            <div className="segmented" role="radiogroup" aria-labelledby="setting-auto-archive">
+              {AUTO_ARCHIVE.map((option) => (
+                <button
+                  key={option.days}
+                  id={`setting-auto-archive-${option.days}`}
+                  role="radio"
+                  aria-checked={autoArchiveDays === option.days}
+                  title={option.title}
+                  className={autoArchiveDays === option.days ? 'on' : undefined}
+                  onClick={() => onAutoArchiveDays(option.days)}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <p className="setting-note setting-wide">
+            At launch, scratch notes you haven't touched in that long move into an <code>archive</code> folder. Open
+            and pinned notes stay put.
+          </p>
+
           <div className="setting setting-stack">
             <span className="setting-label">Scratch folder</span>
             <span className="setting-path" title={scratchDir}>

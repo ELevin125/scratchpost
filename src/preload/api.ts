@@ -69,6 +69,8 @@ export interface Settings {
   // Rebound shortcuts: command id to shortcut, '' for none (4.12).
   keybindings: Record<string, string>
   labels: string[] // the label picker's list, see 4.10
+  // Archive scratch notes untouched for this many days, at launch; 0 is off (5.8).
+  autoArchiveDays: number
   pinnedNotes: string[] // absolute paths, shown atop the notes panel in any folder (4.7)
 }
 

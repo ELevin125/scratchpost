@@ -206,6 +206,7 @@ interface Settings {
   catSpot: 'dock' | 'top' | 'date' | 'corner' | 'tags' // where Bean sits (D42)
   keybindings: Record<string, string> // rebound shortcuts, '' for none (D41)
   labels: string[] // the label picker's own list (4.10)
+  autoArchiveDays: number // 0, 30, 90 or 365; archive old scratch notes at launch (D45)
   pinnedNotes: string[] // absolute paths, atop the notes panel (4.7)
 }
 interface OpenRequest {

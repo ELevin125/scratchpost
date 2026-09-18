@@ -23,6 +23,7 @@ const DEFAULT_SETTINGS: Settings = {
   catSpot: 'dock',
   keybindings: {},
   labels: [],
+  autoArchiveDays: 0,
   pinnedNotes: []
 }
 
