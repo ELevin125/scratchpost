@@ -80,6 +80,12 @@ export interface HistoryEntry {
   lines: number
 }
 
+// What a folder-wide label rename changed (5.6).
+export interface LabelRename {
+  files: number
+  failed: string[]
+}
+
 export interface ScratchpostAPI {
   readFile(path: string): Promise<FilePayload>
   writeFile(path: string, content: string, meta: FileMeta): Promise<void>
@@ -100,6 +106,8 @@ export interface ScratchpostAPI {
   historySnapshot(path: string, text: string): Promise<void>
   historyList(path: string): Promise<HistoryEntry[]> // newest first
   historyRead(path: string, id: string): Promise<string>
+  // Renames [from] to [to] in every note in the folder; see D44.
+  renameLabel(folder: string, from: string, to: string): Promise<LabelRename>
   showInFolder(path: string): Promise<void> // reveal in the file manager
   listFolder(path: string): Promise<FolderEntry[]> // recursive walk; see D25
   searchFolder(path: string, query: string): Promise<SearchHit[]> // see D27

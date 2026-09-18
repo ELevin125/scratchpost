@@ -56,6 +56,8 @@ Notes live in `Documents/Scratchpost` unless you move them in Settings. `Ctrl+O`
 
 Write #ideas and Scratchpost treats it as a tag, gathering every note that mentions it so you can find them together. Write [urgent] or [maybe] and you get a small coloured label that stays in this note and means nothing anywhere else. They look similar, but they do different jobs.
 
+Click a label to hide everything else in the note, which is handy for a long list of [bug] and [idea] lines, and click it again to bring the rest back. Right-click one to rename it, here or in every note at once.
+
 ### History
 
 Every note quietly keeps its own history on this computer. Click the clock at the bottom to look through older versions and see which lines changed, then bring one back if you want it. Changed your mind? `Ctrl+Z` undoes a restore like any other edit.

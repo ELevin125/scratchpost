@@ -56,3 +56,49 @@ export function tagHue(word: string): number {
   }
   return (hash >>> 0) % 360
 }
+
+// Every label on a line, lowercased. Used to filter a note's lines (5.5).
+export function labelsOnLine(line: string): Set<string> {
+  return new Set(findLabels(line).map((match) => tagKey(match.word)))
+}
+
+// Spans of inline code on a line, so a label inside backticks is left alone.
+function codeSpans(line: string): [number, number][] {
+  const spans: [number, number][] = []
+  const fence = /(`+)(?:[^`]|(?!\1)`)*\1/g
+  for (const match of line.matchAll(fence)) spans.push([match.index, match.index + match[0].length])
+  return spans
+}
+
+const FENCE = /^\s*(```|~~~)/
+
+// Renames `[from]` to `[to]` everywhere in a text, matching case-insensitively
+// and leaving everything else alone (5.6): code keeps its brackets, and so
+// does every other word. Returns null when nothing changes, so a file with no
+// mention of the label is never rewritten.
+export function renameLabelInText(text: string, from: string, to: string): string | null {
+  const wanted = tagKey(from)
+  let changed = false
+  let inFence = false
+  const lines = text.split('\n').map((line) => {
+    if (FENCE.test(line)) {
+      inFence = !inFence
+      return line
+    }
+    if (inFence) return line
+    const code = codeSpans(line)
+    const matches = findLabels(line).filter(
+      (match) => tagKey(match.word) === wanted && !code.some(([start, end]) => match.from >= start && match.to <= end)
+    )
+    if (matches.length === 0) return line
+    changed = true
+    let out = ''
+    let at = 0
+    for (const match of matches) {
+      out += line.slice(at, match.from) + `[${to}]`
+      at = match.to
+    }
+    return out + line.slice(at)
+  })
+  return changed ? lines.join('\n') : null
+}

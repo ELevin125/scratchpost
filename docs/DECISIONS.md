@@ -979,6 +979,29 @@ Cursors are unchanged: a cursor reveals its own line.
 
 ---
 
+## D44 — Labels filter and rename
+
+**Decision:** labels get the two actions they were missing (5.5, 5.6).
+
+- **Click a label** and the note shows only the lines carrying it. Runs of
+  other lines collapse into a "12 lines" marker; clicking one, the bar above
+  the note, or the same label again brings everything back. The filter is a
+  view state, not an edit: the file, history and undo never see it, and each
+  tab keeps its own.
+- **Rename a label** from the right-click menu or the palette, in this note as
+  one undoable edit, or in every note in the folder, which main rewrites file
+  by file through the usual atomic write. A label kept in Settings can be
+  renamed there at the same time.
+- **Both use one rule**, `renameLabelInText` in `shared/tags.ts`: labels match
+  case-insensitively, and labels inside inline code or a fenced block are left
+  alone, so renaming never touches code.
+
+**Rejected:** filtering across the folder (that is what tags are for), a
+separate results panel (the note itself is the results), and renaming by
+editing a label in place (too easy to half-rename a note).
+
+---
+
 ## Open questions
 
 Not yet decided. Do not guess; raise them.

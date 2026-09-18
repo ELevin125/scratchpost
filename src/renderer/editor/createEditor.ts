@@ -6,6 +6,7 @@ import { drawSelection, EditorView, keymap, type ViewUpdate } from '@codemirror/
 import { Autolink, Strikethrough, TaskList } from '@lezer/markdown'
 import { codeHighlighting, codeLanguages } from './codeLanguages'
 import { revealArmed } from './decorations'
+import { labelFiltering } from './labelFilter'
 import { listKeymap } from './lists'
 import { livePreview } from './livePreview'
 import { renumberLists } from './renumber'
@@ -38,6 +39,7 @@ export function editorExtensions(onUpdate: (update: ViewUpdate) => void): Extens
     markdown({ extensions: [TaskList, Strikethrough, Autolink], addKeymap: false, codeLanguages }),
     codeHighlighting,
     revealArmed,
+    labelFiltering,
     livePreview,
     renumberLists,
     listKeymap,

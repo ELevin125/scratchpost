@@ -1712,3 +1712,68 @@ kbd {
 .tags-wrap .tags-panel {
   max-height: none;
 }
+
+/* Label filter and rename (5.5, 5.6) */
+
+.note-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 20px 0 40px;
+  padding: 6px 6px 6px 14px;
+  color: var(--ink);
+  background: var(--raised);
+  border-radius: 999px;
+}
+
+.note-filter span {
+  flex: 1;
+  min-width: 12ch;
+}
+
+.note-filter button {
+  padding: 5px 12px;
+  border-radius: 999px;
+}
+
+.note-filter .secondary:hover {
+  background: var(--sunken);
+}
+
+.label-pill {
+  padding: 1px 8px;
+  font: 12px var(--font-mono);
+  color: hsl(var(--tag-hue) var(--tag-saturation) var(--tag-lightness));
+  background: hsl(var(--tag-hue) var(--tag-saturation) var(--tag-lightness) / 0.14);
+  border-radius: 999px;
+}
+
+.overlay.label-dialog {
+  width: min(460px, calc(100% - 32px));
+  padding-bottom: 10px;
+}
+
+.label-dialog .setting {
+  padding: 4px 16px;
+}
+
+.label-actions {
+  padding: 8px 16px 4px;
+}
+
+/* Lines hidden by a label filter, in place of each run. */
+.cm-hidden-lines {
+  margin: 4px 40px 4px 0;
+  padding: 2px 12px;
+  font: 11px var(--font-mono);
+  color: var(--soft);
+  background: var(--sunken);
+  border-radius: 8px;
+  cursor: pointer;
+  width: fit-content;
+}
+
+.cm-hidden-lines:hover {
+  color: var(--ink);
+}

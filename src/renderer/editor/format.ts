@@ -1,3 +1,4 @@
+import { findLabels, renameLabelInText } from '../../shared/tags'
 import {
   EditorSelection,
   type EditorState,
@@ -107,6 +108,27 @@ export function insertLabel(word: string): StateCommand {
       return { changes: { from: pos, insert }, range: EditorSelection.cursor(pos + insert.length) }
     })
     dispatch(done(state, tr))
+    return true
+  }
+}
+
+// The label the position sits in, if any (5.6).
+export function labelAt(state: EditorState, pos: number): string | null {
+  const line = state.doc.lineAt(pos)
+  const at = pos - line.from
+  for (const match of findLabels(line.text)) {
+    if (at >= match.from && at <= match.to) return match.word
+  }
+  return null
+}
+
+// Renames every `[from]` in the document to `[to]`, as one undoable edit,
+// under the same rules main uses for the whole folder.
+export function renameLabelHere(from: string, to: string): StateCommand {
+  return ({ state, dispatch }) => {
+    const next = renameLabelInText(state.doc.toString(), from, to)
+    if (next === null) return false
+    dispatch(done(state, { changes: { from: 0, to: state.doc.length, insert: next } }))
     return true
   }
 }

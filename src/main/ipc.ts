@@ -12,6 +12,7 @@ import { join } from 'node:path'
 import type { FileMeta } from '../preload/api'
 import { isExternalUrl } from './external'
 import { HistoryStore } from './fs/history'
+import { renameLabelInFolder } from './fs/labels'
 import { listFolder } from './fs/list'
 import { archiveNote, createNote, deleteIfEmpty, isNoteFile, renameNote, unarchiveNote } from './fs/note'
 import { readTextFile } from './fs/read'
@@ -120,6 +121,15 @@ export function registerIpc(): void {
     assertString(path, 'path')
     assertString(id, 'id')
     return history.read(path, id)
+  })
+
+  // Labels are plain text inside notes, so this is a folder-wide rewrite; see
+  // D44. The renderer flushes its own edits first.
+  ipcMain.handle('renameLabel', (_event, folder: unknown, from: unknown, to: unknown) => {
+    assertString(folder, 'folder')
+    assertString(from, 'from')
+    assertString(to, 'to')
+    return renameLabelInFolder(folder, from, to)
   })
 
   ipcMain.handle('showInFolder', (_event, path: unknown) => {

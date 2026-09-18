@@ -49,6 +49,8 @@ export interface AppActions {
   unarchiveActive(): void
   openHistory(): void
   openLabels(): void
+  renameLabelAtCursor(): void
+  clearLabelFilter(): void
   openShortcuts(): void
   pinNoteActive(pinned: boolean): void
 }
@@ -61,6 +63,8 @@ export interface CommandContext {
   activePinned: boolean
   activeArchived: boolean // the active note sits in an archive folder
   activeNotePinned: boolean // the active note is pinned in the notes panel (4.7)
+  labelAtCursor: string | null // the label the cursor sits in, if any (5.6)
+  labelFiltered: boolean // the note is filtered to one label (5.5)
   tabCount: number
   actions: AppActions
 }
@@ -228,6 +232,18 @@ export const commands: readonly Command[] = [
   { id: 'format.code', label: 'Inline code', shortcut: 'Ctrl+E', ...editorCommand(toggleMarker('`')) },
   { id: 'format.link', label: 'Link', shortcut: 'Ctrl+K', ...editorCommand(insertLink) },
   { id: 'label.insert', label: 'Insert label…', shortcut: 'Ctrl+L', run: (ctx) => ctx.actions.openLabels(), when: hasTab },
+  {
+    id: 'label.rename',
+    label: 'Rename label…',
+    run: (ctx) => ctx.actions.renameLabelAtCursor(),
+    when: (ctx) => ctx.labelAtCursor !== null
+  },
+  {
+    id: 'label.clearFilter',
+    label: 'Show every line again',
+    run: (ctx) => ctx.actions.clearLabelFilter(),
+    when: (ctx) => ctx.labelFiltered
+  },
   { id: 'heading.1', label: 'Heading 1', shortcut: 'Ctrl+1', ...editorCommand(setHeading(1)) },
   { id: 'heading.2', label: 'Heading 2', shortcut: 'Ctrl+2', ...editorCommand(setHeading(2)) },
   { id: 'heading.3', label: 'Heading 3', shortcut: 'Ctrl+3', ...editorCommand(setHeading(3)) },

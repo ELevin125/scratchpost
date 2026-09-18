@@ -1,6 +1,6 @@
 import { EditorSelection, type EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import type { FileMeta, FolderEntry, OpenRequest, SearchHit, WatchEvent } from '../../preload/api'
 import { countTasks, replaceDocSpec, type EditorStats, type TaskCount } from '../editor/createEditor'
 import { TAG_CLICK_EVENT } from '../editor/livePreview'
@@ -15,10 +15,13 @@ import { EmptyState } from './EmptyState'
 import { FileTree } from './FileTree'
 import { FolderMenu } from './FolderMenu'
 import { HistoryPanel } from './HistoryPanel'
+import { LabelDialog, type LabelRenameRequest } from './LabelDialog'
 import { ShortcutsPanel } from './ShortcutsPanel'
 import { Picker, type PickerItem } from './Picker'
 import { findLabels, tagHue, tagKey } from '../../shared/tags'
-import { insertLabel, labelWord } from '../editor/format'
+import { insertLabel, labelAt, labelWord, renameLabelHere } from '../editor/format'
+import { applyLabelFilter, LABEL_FILTER_EVENT, labelFilterOf } from '../editor/labelFilter'
+import { renameLabelInText } from '../../shared/tags'
 import { linkForPaste } from '../editor/typing'
 import { NoteHeader } from './NoteHeader'
 import { QuickSwitcher } from './QuickSwitcher'
@@ -85,7 +88,7 @@ const PARTY_WORDS = ['parrotparty', 'parrot party']
 // Ctrl+Shift+T remembers this many closed tabs.
 const MAX_CLOSED = 20
 
-type Overlay = 'palette' | 'switcher' | 'search' | 'folders' | 'rename' | 'colours' | 'settings' | 'history' | 'labels' | 'shortcuts'
+type Overlay = 'palette' | 'switcher' | 'search' | 'folders' | 'rename' | 'colours' | 'settings' | 'history' | 'labels' | 'shortcuts' | 'renameLabel'
 
 // A note that changed on disk while it had unsaved edits, or was deleted.
 type External = 'conflict' | 'deleted'
@@ -145,6 +148,9 @@ export function App() {
   // recent-first order are current without re-reading the folder.
   const [savedAt, setSavedAt] = useState<Record<string, number>>({})
   const [party, setParty] = useState(false) // typing "parrot party" toggles rainbow text
+  // The label each tab is filtered to (5.5), and the label being renamed (5.6).
+  const [labelFilters, setLabelFilters] = useState<Record<string, string | null>>({})
+  const [renamingLabel, setRenamingLabel] = useState<string | null>(null)
 
   const buffers = useRef<Buffers>({ states: new Map(), initial: new Map(), scroll: new Map() }).current
   const metas = useRef(new Map<string, FileMeta>()).current
@@ -739,14 +745,30 @@ export function App() {
       )
     }
     const run = (id: string) => menuItem(id, () => runById(id))
+    const label = pos === null ? null : labelAt(view.state, pos)
     const items: MenuItem[] = [
+      ...(label
+        ? [
+            {
+              label: `Show only ${label} lines`,
+              run: () => filterByLabel(labelFilterOf(view.state) === label ? null : label)
+            },
+            {
+              label: `Rename ${label}…`,
+              run: () => {
+                setRenamingLabel(label)
+                setOverlay('renameLabel')
+              }
+            }
+          ]
+        : []),
       ...(hasSelection
         ? [
-            { label: 'Cut', hint: 'Ctrl+X', run: clipboard('cut') },
+            { label: 'Cut', hint: 'Ctrl+X', divider: Boolean(label), run: clipboard('cut') },
             { label: 'Copy', hint: 'Ctrl+C', run: clipboard('copy') }
           ]
         : []),
-      { label: 'Paste', hint: 'Ctrl+V', run: paste },
+      { label: 'Paste', hint: 'Ctrl+V', divider: Boolean(label) && !hasSelection, run: paste },
       { ...run('format.bold'), divider: true },
       run('format.italic'),
       run('format.strike'),
@@ -1015,6 +1037,60 @@ export function App() {
     return () => window.removeEventListener(TAG_CLICK_EVENT, onTag)
   }, [refreshFolder])
 
+  // The editor owns the filter; this keeps the bar above the note in step.
+  useEffect(() => {
+    const onFilter = (event: Event) => {
+      const id = tabsRef.current.activeId
+      if (!id) return
+      setLabelFilters((prev) => ({ ...prev, [id]: (event as CustomEvent<string | null>).detail }))
+    }
+    window.addEventListener(LABEL_FILTER_EVENT, onFilter)
+    return () => window.removeEventListener(LABEL_FILTER_EVENT, onFilter)
+  }, [])
+
+  const filterByLabel = (word: string | null) => {
+    const view = viewRef.current
+    if (view) applyLabelFilter(view, word)
+  }
+
+  // Renaming a label: in this note as an undoable edit, or across the folder
+  // through main, which rewrites the files (D44).
+  const renameLabel = async ({ from, to, scope, inList }: LabelRenameRequest) => {
+    setOverlay(null)
+    setRenamingLabel(null)
+    if (inList) {
+      const labels = folder.settings?.labels ?? []
+      void folder.persist({ labels: labels.map((word) => (word.toLowerCase() === from.toLowerCase() ? to : word)) })
+    }
+    const view = viewRef.current
+    if (scope === 'note') {
+      if (view) {
+        renameLabelHere(from, to)(view)
+        view.focus()
+      }
+    } else {
+      const root = folder.root
+      if (!root) return
+      // Pending edits land first, so main never rewrites a stale file.
+      await autosave.flushAll()
+      try {
+        const { files, failed } = await api.renameLabel(root, from, to)
+        setNotice(
+          files === 0
+            ? `no notes mention ${from}`
+            : `renamed ${from} to ${to} in ${files} ${files === 1 ? 'note' : 'notes'}` +
+                (failed.length > 0 ? `, ${failed.length} couldn't be changed` : '')
+        )
+        void refreshFolder()
+      } catch (err) {
+        setNotice(`couldn't rename ${from}: ${errorMessage(err)}`)
+        return
+      }
+    }
+    // Keep a filter on the old name pointing at the new one.
+    if (view && labelFilterOf(view.state)?.toLowerCase() === from.toLowerCase()) applyLabelFilter(view, to)
+  }
+
   const closeMenu = useCallback(() => setMenu(null), [])
 
   // --- Welcome note ---
@@ -1121,6 +1197,14 @@ export function App() {
         if (path) setNotePinned(path, pinned)
       },
       openShortcuts: () => setOverlay('shortcuts'),
+      renameLabelAtCursor: () => {
+        const view = viewRef.current
+        const word = view ? labelAt(view.state, view.state.selection.main.head) : null
+        if (!word) return
+        setRenamingLabel(word)
+        setOverlay('renameLabel')
+      },
+      clearLabelFilter: () => filterByLabel(null),
       openLabels: () => {
         if (viewRef.current) setOverlay('labels')
       },
@@ -1148,6 +1232,8 @@ export function App() {
       activePinned: Boolean(tab?.pinned),
       activeArchived: tab?.path ? isArchivedPath(tab.path) : false,
       activeNotePinned: tab?.path ? pinnedNotesRef.current.includes(tab.path) : false,
+      labelAtCursor: viewRef.current ? labelAt(viewRef.current.state, viewRef.current.state.selection.main.head) : null,
+      labelFiltered: viewRef.current ? labelFilterOf(viewRef.current.state) !== null : false,
       tabCount: tabsRef.current.tabs.length,
       actions: actionsRef.current!
     }
@@ -1322,6 +1408,19 @@ export function App() {
             />
           )}
           {beanAt('corner')}
+          {active && labelFilters[active.id] && (
+            <div className="note-filter" role="status">
+              <span>
+                Showing lines with{' '}
+                <span className="label-pill" style={{ '--tag-hue': tagHue(labelFilters[active.id]!) } as CSSProperties}>
+                  {labelFilters[active.id]}
+                </span>
+              </span>
+              <button className="secondary" onClick={() => filterByLabel(null)}>
+                Show all
+              </button>
+            </div>
+          )}
           {active && external[active.id] === 'conflict' && (
             <div className="note-conflict" role="alert">
               <span>This note changed on disk while you had unsaved edits.</span>
@@ -1498,6 +1597,18 @@ export function App() {
           keybindings={keybindings}
           onChange={(next) => void folder.persist({ keybindings: next })}
           onClose={closeOverlay}
+        />
+      )}
+      {overlay === 'renameLabel' && renamingLabel && (
+        <LabelDialog
+          label={renamingLabel}
+          folderName={contextName}
+          inList={(folder.settings?.labels ?? []).some((word) => word.toLowerCase() === renamingLabel.toLowerCase())}
+          onSubmit={(request) => void renameLabel(request)}
+          onClose={() => {
+            setRenamingLabel(null)
+            closeOverlay()
+          }}
         />
       )}
       {menu && <ContextMenu {...menu} onClose={closeMenu} />}

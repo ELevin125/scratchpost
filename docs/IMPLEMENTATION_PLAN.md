@@ -336,8 +336,9 @@ links, labels, then notes.
 - [x] **5.3 A selection reveals every line it covers.** See D43.
 - [x] **5.4 A pasted link is clickable:** a URL on its own renders and opens
   like a markdown link, through GFM autolinking.
-- [ ] **5.5 Click a label to see only the lines that carry it.**
-- [ ] **5.6 Rename a label** in the note, across the folder, and in your list.
+- [x] **5.5 Click a label to see only the lines that carry it.** See D44.
+- [x] **5.6 Rename a label** in the note, across the folder, and in your list.
+  See D44.
 - [ ] **5.7 Move a selection into a new note.**
 - [ ] **5.8 Auto-archive old notes.**
 

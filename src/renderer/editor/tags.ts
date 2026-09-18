@@ -33,7 +33,10 @@ export function decorateTags(ctx: Context, from: number, to: number): void {
       const start = line.from + match.from
       const end = line.from + match.to
       if (inVerbatim(ctx, start)) continue
-      const pill = Decoration.mark({ class: 'cm-label', attributes: hueStyle(match.word) })
+      const pill = Decoration.mark({
+        class: 'cm-label',
+        attributes: { ...hueStyle(match.word), 'data-label': match.word }
+      })
       ctx.add(`label:${start}`, pill.range(start + 1, end - 1))
       if (!ctx.revealedAt(start)) {
         ctx.add(`label-open:${start}`, hidden.range(start, start + 1))

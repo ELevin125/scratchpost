@@ -17,6 +17,7 @@ import {
 } from './blocks'
 import { toggleTaskAt } from './checkbox'
 import { revealedLines, type Context } from './decorations'
+import { applyLabelFilter, labelFilterOf } from './labelFilter'
 import { decorateInline } from './inline'
 import { decorateTags } from './tags'
 
@@ -123,6 +124,15 @@ export const livePreview = ViewPlugin.fromClass(
           const spec = toggleTaskAt(view.state, view.posAtDOM(target))
           if (spec) view.dispatch(spec)
           event.preventDefault()
+          return true
+        }
+
+        // A label filters this note down to its own lines (5.5). On a revealed
+        // line a click edits instead, as with tags and links.
+        const label = target.closest<HTMLElement>('.cm-label')?.dataset.label
+        if (label && !revealedLines(view.state).has(view.state.doc.lineAt(view.posAtDOM(target)).number)) {
+          event.preventDefault()
+          applyLabelFilter(view, labelFilterOf(view.state) === label ? null : label)
           return true
         }
 
