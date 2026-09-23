@@ -24,6 +24,7 @@ const DEFAULT_SETTINGS: Settings = {
   keybindings: {},
   labels: [],
   autoArchiveDays: 0,
+  noteColumns: 80,
   pinnedNotes: []
 }
 

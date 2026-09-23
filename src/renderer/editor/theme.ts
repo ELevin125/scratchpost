@@ -15,7 +15,14 @@ export const editorTheme = EditorView.theme({
   '.cm-scroller': { fontFamily: 'var(--font-mono)', lineHeight: '1.75' },
   // Capped at 80 characters (D33), so notes hard-wrapped at 80 never wrap
   // twice; the bottom room keeps the last line clear of the dock.
-  '.cm-content': { maxWidth: 'calc(80ch + 80px)', padding: '18px 40px 140px', caretColor: 'var(--ink)' },
+  '.cm-content': {
+    // Width in characters is a setting (5.9); the column is centred so the
+    // space around it is even and never reads as a mis-wrapped line.
+    maxWidth: 'calc(var(--note-columns, 80) * 1ch + 80px)',
+    marginInline: 'auto',
+    padding: '18px 40px 140px',
+    caretColor: 'var(--ink)'
+  },
   // No default line padding, so hanging indents in ch line up exactly.
   '.cm-line': { padding: '0' },
   '.cm-cursor, .cm-dropCursor': { borderLeftColor: 'var(--ink)' },
@@ -54,7 +61,7 @@ export const editorTheme = EditorView.theme({
     gap: '6px 8px',
     // Two rows as wide as the text column (Plex Mono is 0.6em per character):
     // find, its buttons and close; then replace, its buttons and the options.
-    maxWidth: 'min(100%, calc(var(--note-size) * 48 + 80px))',
+    maxWidth: 'min(100%, calc(var(--note-columns, 80) * var(--note-size) * 0.6 + 80px))',
     boxSizing: 'border-box',
     padding: '10px 40px 6px',
     fontFamily: 'var(--font-sans)',

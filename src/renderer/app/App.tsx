@@ -1,8 +1,8 @@
-import { EditorSelection, type EditorState } from '@codemirror/state'
+import { EditorSelection, type ChangeSet, type EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import type { FileMeta, FolderEntry, OpenRequest, SearchHit, WatchEvent } from '../../preload/api'
-import { countTasks, replaceDocSpec, type EditorStats, type TaskCount } from '../editor/createEditor'
+import { countTasks, replaceDocSpec, updateTaskCount, type EditorStats, type TaskCount } from '../editor/createEditor'
 import { TAG_CLICK_EVENT } from '../editor/livePreview'
 import { applyTheme, tintTheme, type ThemeMode } from '../themes'
 import { ColourMenu } from './ColourMenu'
@@ -208,12 +208,14 @@ export function App() {
   }, [theme, themeMode])
 
   const fontSize = folder.settings?.fontSize ?? 13
+  const noteColumns = folder.settings?.noteColumns ?? 80
   const catOn = folder.settings?.cat ?? true
   const catSpot = folder.settings?.catSpot ?? 'dock'
   useEffect(() => {
     document.documentElement.style.setProperty('--note-size', `${fontSize}px`)
+    document.documentElement.style.setProperty('--note-columns', String(noteColumns))
     viewRef.current?.requestMeasure()
-  }, [fontSize])
+  }, [fontSize, noteColumns])
 
   // Saves read tabs from this ref, not render state, so a path set by
   // createNote is visible to the very next save.
@@ -371,10 +373,12 @@ export function App() {
   // The cat notices typing, a finished checklist and "meow" (3.9).
   const taskCounts = useRef(new Map<string, TaskCount>()).current
   const tellCat = useCallback(
-    (id: string, state: EditorState, previous: EditorState) => {
+    (id: string, state: EditorState, previous: EditorState, changes: ChangeSet) => {
       signalCat('typing')
-      const count = countTasks(state.doc)
+      // The whole note is counted once per tab; after that only the lines a
+      // change touched are read, so a long note costs no more than a short one.
       const before = taskCounts.get(id) ?? countTasks(previous.doc)
+      const count = updateTaskCount(before, changes, previous.doc, state.doc)
       taskCounts.set(id, count)
       if (before.open > 0 && count.open === 0 && count.done > before.done) signalCat('checklist')
       const head = state.selection.main.head
@@ -390,11 +394,11 @@ export function App() {
   )
 
   const onDocChange = useCallback(
-    (id: string, state: EditorState, previous: EditorState) => {
+    (id: string, state: EditorState, previous: EditorState, changes: ChangeSet) => {
       const line = firstContentLine(state.doc.iterLines())
       setFirstLines((prev) => (prev[id] === line ? prev : { ...prev, [id]: line }))
       if (reloading.current) return // loaded from disk; nothing to save
-      tellCat(id, state, previous)
+      tellCat(id, state, previous, changes)
       const tab = tabsRef.current.tabs.find((t) => t.id === id)
       autosave.schedule(id, !tab?.path)
     },
@@ -992,6 +996,12 @@ export function App() {
     autosave.schedule(id, true)
   }
 
+  const historyUsage = useCallback(() => api.historyUsage(), [])
+  const clearHistory = useCallback(async () => {
+    snapshotted.clear()
+    await api.historyClear().catch((err) => setNotice(`couldn't clear the history: ${errorMessage(err)}`))
+  }, [snapshotted])
+
   // History panel data for the active note. Restoring is an ordinary edit, so
   // Ctrl+Z undoes it; the text it replaces is snapshotted first.
   const historyPath = tabsState.tabs.find((t) => t.id === tabsState.activeId)?.path ?? null
@@ -1469,6 +1479,7 @@ export function App() {
             .join(' ')}
           onContextMenu={openEditorMenu}
         >
+          <div className="note-column">
           {active && (
             <NoteHeader
               meta={meta}
@@ -1478,7 +1489,6 @@ export function App() {
               onDate={beanAt('date')}
             />
           )}
-          {beanAt('corner')}
           {active && labelFilters[active.id] && (
             <div className="note-filter" role="status">
               <span>
@@ -1511,6 +1521,8 @@ export function App() {
               </button>
             </div>
           )}
+          </div>
+          {beanAt('corner')}
           <Editor
             activeId={activeId}
             openIds={tabs.map((tab) => tab.id)}
@@ -1628,9 +1640,13 @@ export function App() {
           onCatSpot={(spot) => void folder.persist({ catSpot: spot })}
           labels={folder.settings.labels}
           onLabels={(labels) => void folder.persist({ labels })}
+          noteColumns={noteColumns}
+          onNoteColumns={(columns) => void folder.persist({ noteColumns: columns })}
           autoArchiveDays={autoArchiveDays}
           onAutoArchiveDays={(days) => void folder.persist({ autoArchiveDays: days })}
           onShortcuts={() => setOverlay('shortcuts')}
+          historyUsage={historyUsage}
+          onClearHistory={clearHistory}
           onCat={(on) => void folder.persist({ cat: on })}
           onPickScratch={() => void pickScratchDir()}
           onDefaultScratch={() => void changeScratchDir(null)}

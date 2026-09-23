@@ -1,4 +1,4 @@
-import { StateEffect, StateField, type EditorState, type Range } from '@codemirror/state'
+import { StateEffect, StateField, type EditorState, type Range, type Text, type Transaction } from '@codemirror/state'
 import { Decoration, EditorView, WidgetType, type DecorationSet } from '@codemirror/view'
 import { labelsOnLine, tagKey } from '../../shared/tags'
 
@@ -84,11 +84,35 @@ function filterDecorations(state: EditorState): DecorationSet {
   return Decoration.set(ranges, true)
 }
 
+// Whether a change could move a line in or out of the filter: only then is the
+// whole note walked again. Typing inside a line that already matches, which is
+// what happens most while filtered, just maps what is already there.
+function membershipChanged(tr: Transaction, word: string): boolean {
+  const wanted = tagKey(word)
+  const has = (doc: Text, from: number, to: number) => {
+    const first = doc.lineAt(Math.min(from, doc.length)).number
+    const last = doc.lineAt(Math.min(to, doc.length)).number
+    const lines: boolean[] = []
+    for (const text of doc.iterLines(first, last + 1)) lines.push(labelsOnLine(text).has(wanted))
+    return lines
+  }
+  let changed = false
+  tr.changes.iterChanges((fromA, toA, fromB, toB) => {
+    if (changed) return
+    const before = has(tr.startState.doc, fromA, toA)
+    const after = has(tr.state.doc, fromB, toB)
+    changed = before.length !== after.length || before.some((match, i) => match !== after[i])
+  })
+  return changed
+}
+
 const filterDecorationsField = StateField.define<DecorationSet>({
   create: filterDecorations,
   update(value, tr) {
-    if (!tr.docChanged && !tr.effects.some((effect) => effect.is(setLabelFilter))) return value.map(tr.changes)
-    return filterDecorations(tr.state)
+    const word = labelFilterOf(tr.state)
+    if (tr.effects.some((effect) => effect.is(setLabelFilter))) return filterDecorations(tr.state)
+    if (!tr.docChanged || word === null) return value.map(tr.changes)
+    return membershipChanged(tr, word) ? filterDecorations(tr.state) : value.map(tr.changes)
   },
   provide: (field) => EditorView.decorations.from(field)
 })

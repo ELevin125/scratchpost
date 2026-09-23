@@ -74,7 +74,7 @@ Scratchpost watches your notes on disk. Change one somewhere else and it reloads
 
 ## Make it yours
 
-`Ctrl+,` opens Settings, where you can switch between light and dark, pick the colour everything else is built from, change the note text size and choose where new notes are kept. If a shortcut sits wrong under your fingers, **Keyboard shortcuts** will change it.
+`Ctrl+,` opens Settings, where you can switch between light and dark, pick the colour everything else is built from, set how wide and how large the text is, and choose where new notes are kept. If a shortcut sits wrong under your fingers, **Keyboard shortcuts** will change it.
 
 The cat is called Bean. Click for a purr, or use Settings to move Bean somewhere else, or turn Bean off if you'd rather write alone.
 

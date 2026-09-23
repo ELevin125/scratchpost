@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import type { HistoryUsage } from '../../preload/api'
 import type { Settings } from '../../preload/api'
 import { tagHue } from '../../shared/tags'
 import { labelWord } from '../editor/format'
@@ -18,6 +19,7 @@ interface SettingsPanelProps {
   catSpot: CatSpot
   labels: string[]
   autoArchiveDays: number
+  noteColumns: number
   scratchDir: string // the folder in use, custom or default
   customScratch: boolean // false when the default folder is in use
   onTheme: (theme: ThemeSettings) => void
@@ -26,7 +28,10 @@ interface SettingsPanelProps {
   onCatSpot: (spot: CatSpot) => void
   onLabels: (labels: string[]) => void
   onAutoArchiveDays: (days: number) => void
+  onNoteColumns: (columns: number) => void
   onShortcuts: () => void
+  historyUsage: () => Promise<HistoryUsage>
+  onClearHistory: () => Promise<void>
   onPickScratch: () => void
   onDefaultScratch: () => void
   onClose: () => void
@@ -36,6 +41,18 @@ const MODES: { value: ThemeSettings['mode']; label: string }[] = [
   { value: 'system', label: 'System' },
   { value: 'light', label: 'Light' },
   { value: 'dark', label: 'Dark' }
+]
+
+const formatBytes = (bytes: number): string => {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
+  return `${(bytes / 1024 / 1024).toFixed(bytes < 10 * 1024 * 1024 ? 1 : 0)} MB`
+}
+
+const NOTE_WIDTHS: { columns: number; label: string; title: string }[] = [
+  { columns: 80, label: '80', title: '80 characters a line, the default' },
+  { columns: 100, label: '100', title: '100 characters a line' },
+  { columns: 999, label: 'Full', title: 'As wide as the window' }
 ]
 
 const AUTO_ARCHIVE: { days: number; label: string; title: string }[] = [
@@ -64,6 +81,7 @@ export function SettingsPanel({
   catSpot,
   labels,
   autoArchiveDays,
+  noteColumns,
   scratchDir,
   customScratch,
   onTheme,
@@ -72,13 +90,29 @@ export function SettingsPanel({
   onCatSpot,
   onLabels,
   onAutoArchiveDays,
+  onNoteColumns,
   onShortcuts,
+  historyUsage,
+  onClearHistory,
   onPickScratch,
   onDefaultScratch,
   onClose
 }: SettingsPanelProps) {
   const panel = useRef<HTMLDivElement>(null)
   const [newLabel, setNewLabel] = useState('')
+  // What the local history is using, and a two-step clear (5.10).
+  const [usage, setUsage] = useState<HistoryUsage | null>(null)
+  const [confirmClear, setConfirmClear] = useState(false)
+  useEffect(() => {
+    let live = true
+    historyUsage().then(
+      (result) => live && setUsage(result),
+      () => live && setUsage(null)
+    )
+    return () => {
+      live = false
+    }
+  }, [historyUsage])
   const addLabel = () => {
     const word = labelWord(newLabel)
     if (!word) return
@@ -209,6 +243,27 @@ export function SettingsPanel({
           </div>
 
           <div className="setting">
+            <span className="setting-label" id="setting-width">
+              Text width
+            </span>
+            <div className="segmented" role="radiogroup" aria-labelledby="setting-width">
+              {NOTE_WIDTHS.map((option) => (
+                <button
+                  key={option.columns}
+                  id={`setting-width-${option.columns}`}
+                  role="radio"
+                  aria-checked={noteColumns === option.columns}
+                  title={option.title}
+                  className={noteColumns === option.columns ? 'on' : undefined}
+                  onClick={() => onNoteColumns(option.columns)}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="setting">
             <label className="setting-label" htmlFor="setting-cat">
               {CAT_NAME}, the cat
             </label>
@@ -256,6 +311,57 @@ export function SettingsPanel({
               Change shortcuts…
             </button>
           </div>
+        </section>
+
+        <section className="settings-section">
+          <h3>History</h3>
+          <div className="setting">
+            <span className="setting-label">On this computer</span>
+            <span className="setting-value setting-usage">
+              {usage === null
+                ? '—'
+                : usage.versions === 0
+                  ? 'nothing saved yet'
+                  : `${formatBytes(usage.bytes)} · ${usage.versions} versions of ${usage.notes} ${
+                      usage.notes === 1 ? 'note' : 'notes'
+                    }`}
+            </span>
+          </div>
+          <div className="setting">
+            <span className="setting-label">Older versions</span>
+            <div className="setting-actions">
+              {confirmClear ? (
+                <>
+                  <button
+                    id="setting-history-clear-confirm"
+                    className="pill-button danger"
+                    onClick={() => {
+                      setConfirmClear(false)
+                      void onClearHistory().then(() => setUsage({ bytes: 0, versions: 0, notes: 0 }))
+                    }}
+                  >
+                    Delete every version
+                  </button>
+                  <button className="text-button" onClick={() => setConfirmClear(false)}>
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <button
+                  id="setting-history-clear"
+                  className="pill-button"
+                  disabled={usage !== null && usage.versions === 0}
+                  onClick={() => setConfirmClear(true)}
+                >
+                  <Icon name="history" size={16} />
+                  Clear history
+                </button>
+              )}
+            </div>
+          </div>
+          <p className="setting-note setting-wide">
+            Versions are pruned as they age and capped at 200 MB. Clearing them leaves your notes alone.
+          </p>
         </section>
 
         <section className="settings-section">

@@ -28,6 +28,8 @@ const api: ScratchpostAPI = {
       ipcRenderer.removeListener('openPaths', listener)
     }
   },
+  historyUsage: () => ipcRenderer.invoke('historyUsage'),
+  historyClear: () => ipcRenderer.invoke('historyClear'),
   renameLabel: (folder, from, to) => ipcRenderer.invoke('renameLabel', folder, from, to),
   historySnapshot: (path, text) => ipcRenderer.invoke('historySnapshot', path, text),
   historyList: (path) => ipcRenderer.invoke('historyList', path),

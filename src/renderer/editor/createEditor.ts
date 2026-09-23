@@ -1,7 +1,14 @@
 import { history, standardKeymap } from '@codemirror/commands'
 import { markdown } from '@codemirror/lang-markdown'
 import { closeSearchPanel, search } from '@codemirror/search'
-import { EditorSelection, EditorState, type Extension, type Text, type TransactionSpec } from '@codemirror/state'
+import {
+  EditorSelection,
+  EditorState,
+  type ChangeSet,
+  type Extension,
+  type Text,
+  type TransactionSpec
+} from '@codemirror/state'
 import { drawSelection, EditorView, keymap, type ViewUpdate } from '@codemirror/view'
 import { Autolink, Strikethrough, TaskList } from '@lezer/markdown'
 import { codeHighlighting, codeLanguages } from './codeLanguages'
@@ -74,13 +81,52 @@ export interface TaskCount {
 
 const TASK_LINE = /^\s*(?:[-*+]|\d{1,9}[.)])\s+\[([ xX])\](?:\s|$)/
 
-// Checkboxes in a note, for the cat's "checklist finished" hop (3.9).
+// Checkboxes in a note, for the cat's "checklist finished" hop (3.9). Walks
+// the whole note, so it runs once per tab; updateTaskCount keeps it current.
 export function countTasks(doc: Text): TaskCount {
   const count: TaskCount = { open: 0, done: 0 }
   for (const line of doc.iterLines()) {
     const match = TASK_LINE.exec(line)
     if (match) count[match[1] === ' ' ? 'open' : 'done']++
   }
+  return count
+}
+
+// Whole lines touched by a change, merged so a line is never counted twice.
+function touchedLines(doc: Text, ranges: [number, number][]): [number, number][] {
+  const lines = ranges
+    .map(([from, to]) => [doc.lineAt(Math.min(from, doc.length)).from, doc.lineAt(Math.min(to, doc.length)).to] as [number, number])
+    .sort((a, b) => a[0] - b[0])
+  const merged: [number, number][] = []
+  for (const range of lines) {
+    const last = merged.at(-1)
+    if (last && range[0] <= last[1] + 1) last[1] = Math.max(last[1], range[1])
+    else merged.push([...range])
+  }
+  return merged
+}
+
+function countIn(doc: Text, ranges: [number, number][], sign: 1 | -1, into: TaskCount): void {
+  for (const [from, to] of ranges) {
+    for (const line of doc.iterLines(doc.lineAt(from).number, doc.lineAt(to).number + 1)) {
+      const match = TASK_LINE.exec(line)
+      if (match) into[match[1] === ' ' ? 'open' : 'done'] += sign
+    }
+  }
+}
+
+// The count after a change, from the count before it, reading only the lines
+// the change touched: typing in a long note costs the same as in a short one.
+export function updateTaskCount(before: TaskCount, changes: ChangeSet, from: Text, to: Text): TaskCount {
+  const old: [number, number][] = []
+  const now: [number, number][] = []
+  changes.iterChanges((fromA, toA, fromB, toB) => {
+    old.push([fromA, toA])
+    now.push([fromB, toB])
+  })
+  const count = { ...before }
+  countIn(from, touchedLines(from, old), -1, count)
+  countIn(to, touchedLines(to, now), 1, count)
   return count
 }
 

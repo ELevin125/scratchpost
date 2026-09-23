@@ -344,6 +344,13 @@ links, labels, then notes.
 - [x] **5.8 Auto-archive old notes:** off by default; 30, 90 or 365 days, at
   launch, skipping open and pinned notes. See D45.
 
+- [x] **5.9 The note is centred, and its width is a setting.** See D46.
+- [x] **5.10 History in Settings:** what the local history holds, and a
+  two-step button to throw it away. Notes are untouched.
+- [x] **5.11 Less work per keystroke:** the checklist count and the label
+  filter now read only the lines a change touched, instead of the whole note.
+  On a 20,000-line note the count went from 1.8ms to 0.01ms per change.
+
 ---
 
 ## Milestone 4 — After first use

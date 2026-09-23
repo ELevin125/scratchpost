@@ -132,6 +132,10 @@ export function registerIpc(): void {
     return renameLabelInFolder(folder, from, to)
   })
 
+  ipcMain.handle('historyUsage', () => history.usage())
+
+  ipcMain.handle('historyClear', () => history.clear())
+
   ipcMain.handle('showInFolder', (_event, path: unknown) => {
     assertString(path, 'path')
     shell.showItemInFolder(path)

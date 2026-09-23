@@ -1030,6 +1030,26 @@ anything other than the file's own modified time.
 
 ---
 
+## D46 — The note sits in the middle
+
+**Decision:** the text column is centred in the note panel, and its width is a
+setting: 80 characters (the default, from D33), 100, or the full width (5.9).
+
+Capping the line length was right, but left-aligning the capped column in a
+wide window piles all the empty space on one side, and the author read it as a
+wrapping bug rather than a choice. Centring makes the same cap read as
+deliberate. The note header and the bars above the note share the column, so
+they line up with the text rather than hugging the panel edge.
+
+Width lives in `settings.json` as `noteColumns`, applied as the
+`--note-columns` custom property, so the editor, the header and the bars all
+take it from one place.
+
+**Rejected:** a free slider (every value looks the same at a glance), and
+dropping the cap entirely.
+
+---
+
 ## Open questions
 
 Not yet decided. Do not guess; raise them.

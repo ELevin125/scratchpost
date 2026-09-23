@@ -158,6 +158,8 @@ interface ScratchpostAPI {
   historySnapshot(path: string, text: string): Promise<void> // local versions; see D38
   historyList(path: string): Promise<HistoryEntry[]> // newest first
   historyRead(path: string, id: string): Promise<string>
+  historyUsage(): Promise<HistoryUsage> // size of the store, for Settings (5.10)
+  historyClear(): Promise<void> // deletes every version; notes are untouched
   showInFolder(path: string): Promise<void> // reveal in the file manager
   listFolder(path: string): Promise<FolderEntry[]> // recursive walk; see D25
   searchFolder(path: string, query: string): Promise<SearchHit[]> // see D27
@@ -206,6 +208,7 @@ interface Settings {
   catSpot: 'dock' | 'top' | 'date' | 'corner' | 'tags' // where Bean sits (D42)
   keybindings: Record<string, string> // rebound shortcuts, '' for none (D41)
   labels: string[] // the label picker's own list (4.10)
+  noteColumns: number // characters a line: 80, 100, or 999 for full width (D46)
   autoArchiveDays: number // 0, 30, 90 or 365; archive old scratch notes at launch (D45)
   pinnedNotes: string[] // absolute paths, atop the notes panel (4.7)
 }

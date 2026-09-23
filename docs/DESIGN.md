@@ -111,6 +111,12 @@ numbered list. Right-clicking outside the selection moves the cursor there
 first, so word commands act on the clicked word. Every entry is a registry
 command with its shortcut shown (4.9).
 
+### History in Settings
+
+Settings says what the local history holds ("7.0 MB · 214 versions of 48
+notes") and has a two-step "Clear history" button. Clearing deletes versions
+only; the notes stay where they are (5.10).
+
 ### Archiving by age
 
 Off unless switched on in Settings (never, 30 days, 90 days, a year). At
@@ -298,7 +304,9 @@ See D33 for why, and `THEMING.md` for the tokens.
   the right.
 - Below it, the notes and tags panels on the left (240px) and the note panel
   filling the rest, with the dock floating at its bottom.
-- Note text is capped at 80 characters, left-aligned in the note panel.
+- Note text is capped at 80 characters by default, centred in the note panel,
+  with 100 and full width in Settings (D46). The note header and the bars above
+  the note share that column.
 
 ### Typography
 

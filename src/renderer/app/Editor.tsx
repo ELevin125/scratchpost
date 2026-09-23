@@ -1,4 +1,4 @@
-import type { EditorState } from '@codemirror/state'
+import type { ChangeSet, EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import { useEffect, useMemo, useRef } from 'react'
 import {
@@ -21,7 +21,7 @@ interface EditorProps {
   buffers: Buffers
   viewRef: { current: EditorView | null } // lets commands reach the view
   onStats: (stats: EditorStats) => void
-  onDocChange: (id: string, state: EditorState, before: EditorState) => void
+  onDocChange: (id: string, state: EditorState, before: EditorState, changes: ChangeSet) => void
   onViewChange: () => void // cursor moved or scrolled; the session needs saving
 }
 
@@ -57,7 +57,7 @@ export function Editor({
         if (!id) return
         buffers.states.set(id, update.state)
         if (update.docChanged || update.selectionSet) callbacks.current.onStats(statsFor(update.state))
-        if (update.docChanged) callbacks.current.onDocChange(id, update.state, update.startState)
+        if (update.docChanged) callbacks.current.onDocChange(id, update.state, update.startState, update.changes)
         if (update.selectionSet) callbacks.current.onViewChange()
       }),
     [buffers]

@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises'
 import { isAbsolute, join } from 'node:path'
-import type { HistoryEntry } from '../../preload/api'
+import type { HistoryEntry, HistoryUsage } from '../../preload/api'
 
 // Local version history (3.6, D38). Snapshots live on this machine only, in
 // <userData>/history/<note id>/<time>-<words>-<lines>.md, with meta.json
@@ -128,6 +128,34 @@ export class HistoryStore {
         await rm(source, { recursive: true, force: true })
       }
       await writeFile(join(target, 'meta.json'), JSON.stringify({ path: to }))
+    })
+  }
+
+  // What the store holds, for the line in Settings (5.10).
+  usage(): Promise<HistoryUsage> {
+    return serial(async () => {
+      const ids = await readdir(this.root).catch(() => [] as string[])
+      let bytes = 0
+      let versions = 0
+      let notes = 0
+      for (const id of ids) {
+        const dir = join(this.root, id)
+        const entries = await this.entries(dir)
+        if (entries.length === 0) continue
+        notes++
+        versions += entries.length
+        for (const entry of entries) {
+          bytes += (await stat(join(dir, `${entry.id}.md`)).catch(() => null))?.size ?? 0
+        }
+      }
+      return { bytes, versions, notes }
+    })
+  }
+
+  // Throws the lot away; the notes themselves are untouched.
+  clear(): Promise<void> {
+    return serial(async () => {
+      await rm(this.root, { recursive: true, force: true })
     })
   }
 

@@ -71,6 +71,7 @@ export interface Settings {
   labels: string[] // the label picker's list, see 4.10
   // Archive scratch notes untouched for this many days, at launch; 0 is off (5.8).
   autoArchiveDays: number
+  noteColumns: number // characters per line, 80, 100 or 999 for the full width (5.9)
   pinnedNotes: string[] // absolute paths, shown atop the notes panel in any folder (4.7)
 }
 
@@ -80,6 +81,13 @@ export interface HistoryEntry {
   time: number
   words: number
   lines: number
+}
+
+// What the local history store holds (5.10).
+export interface HistoryUsage {
+  bytes: number
+  versions: number
+  notes: number
 }
 
 // What a folder-wide label rename changed (5.6).
@@ -108,6 +116,8 @@ export interface ScratchpostAPI {
   historySnapshot(path: string, text: string): Promise<void>
   historyList(path: string): Promise<HistoryEntry[]> // newest first
   historyRead(path: string, id: string): Promise<string>
+  historyUsage(): Promise<HistoryUsage> // what the store holds, for Settings
+  historyClear(): Promise<void> // throws every version away; notes are untouched
   // Renames [from] to [to] in every note in the folder; see D44.
   renameLabel(folder: string, from: string, to: string): Promise<LabelRename>
   showInFolder(path: string): Promise<void> // reveal in the file manager
