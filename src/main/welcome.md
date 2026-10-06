@@ -6,6 +6,8 @@ This is a plain-text scratchpad that happens to understand Markdown. Click on th
 
 ## Try these
 
+[%]
+
 * [ ] Click this box to tick it, or press `Ctrl+Enter` on its line
 * [ ] Press `Ctrl+P` and jump straight to a note by name
 * [ ] Press `Ctrl+Shift+F` to search across all your notes
@@ -14,6 +16,7 @@ This is a plain-text scratchpad that happens to understand Markdown. Click on th
 * [ ] Select a word, then paste a URL to turn it into a link
 * [ ] Select a word and press `Ctrl+B`, or right-click it for more formatting
 * [ ] Press `Ctrl+L` to add a label like [idea]; set your usual labels in Settings
+* [ ] Click the bar above this list: it's `[%]` on a line of its own, counting these boxes
 
 ## Markdown, without the ceremony
 
@@ -31,7 +34,7 @@ Lists work normally, nested ones too:
 
 * [x] Checked things stay checked
 
-Put `[%]` on a line of its own, above or below a checklist, and it turns into a progress bar for that list. Right-click a list to tick or untick all of it at once.
+Right-click a list to tick or untick all of it at once.
 
 You rarely have to type the syntax yourself. `Ctrl+B` and `Ctrl+I` cover bold and italic, `Ctrl+1` to `Ctrl+3` make headings, and `Ctrl+Shift+8`, `Ctrl+Shift+9` or `Ctrl+Shift+7` turn whatever you're on into a bullet list, a checklist or a numbered list.
 
@@ -46,6 +49,17 @@ console.log("hello, Scratchpost");
 
 JavaScript, TypeScript, JSON, Python, CSS, HTML and shell are all included.
 
+## Scratchpost's own syntax
+
+Four things here aren't Markdown, and no other editor will know what they mean. Typed out, they look like this:
+
+* `[word]` is a label: a coloured pill that marks a line in this note. One word, no spaces.
+* `#word` is a tag: every note that uses it is gathered under that tag in the Tags panel.
+* `[%]` on a line of its own is a progress bar for the checklist right below it, or the one right above.
+* A sum followed by `=` gets its answer written in: `12 * (3 + 4) =` becomes `12 * (3 + 4) = 84`. If you didn't want it, `Ctrl+Z` takes the answer away.
+
+Everything else is ordinary Markdown, so your notes read fine anywhere.
+
 ## Notes are just files
 
 A new note becomes a file the moment you start typing, and its first line becomes the filename, so there's nothing to fill in before you write. Press `F2` later if it deserves a better name. Open a note, never type in it, and nothing is left behind.
@@ -59,10 +73,6 @@ Notes live in `Documents/Scratchpost` unless you move them in Settings. `Ctrl+O`
 Write #ideas and Scratchpost treats it as a tag, gathering every note that mentions it so you can find them together. Write [urgent] or [maybe] and you get a small coloured label that stays in this note and means nothing anywhere else. They look similar, but they do different jobs.
 
 Click a label to hide everything else in the note, which is handy for a long list of [bug] and [idea] lines, and click it again to bring the rest back. Right-click one to rename it, here or in every note at once, or to give it a colour of your choosing when the one it was dealt doesn't suit it.
-
-### Sums
-
-Type a sum and then `=`, and the answer is written in for you: try it after 12 * (3 + 4). If you didn't want it, `Ctrl+Z` takes it away.
 
 ### Headings
 
