@@ -353,6 +353,30 @@ links, labels, then notes.
 
 ---
 
+## Milestone 6 — Another bunch of tweaks
+
+From the author's third list (2026-10-06): two bugs, then checklists, the
+outline, sums and label colours.
+
+- [x] **6.1 Progress bar for a checklist:** `[%]` on a line of its own draws a
+  bar and a count for the checklist beside it. See D48.
+- [x] **6.2 Tick all, untick all:** in the right-click menu and the palette,
+  for the list around the cursor or the selected lines. See D48.
+- [x] **6.3 100 characters is the default width.** See D47.
+- [x] **6.4 Headings in the left column:** the open note's headings, between
+  the notes and the tags; click one to jump to it. See D50.
+- [x] **6.5 Saves survive a locked file on Windows:** the rename that finishes
+  a save waits and tries again when another program holds the file, and a
+  save that still fails retries by itself. See D51.
+- [x] **6.6 Selections show inside code:** code blocks and inline code no
+  longer cover the selection drawn behind them.
+- [x] **6.7 Sums answer themselves:** typing `=` after `12 * (3 + 4)` writes
+  `84`. See D52.
+- [x] **6.8 Label colours you choose:** a word can be given one of eight named
+  colours, from its right-click menu or Settings. See D49.
+
+---
+
 ## Milestone 4 — After first use
 
 From the author's list after a day of real use (2026-09-17). Bugs first, then

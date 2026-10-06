@@ -1,5 +1,5 @@
 import { syntaxTree } from '@codemirror/language'
-import type { EditorState, Range } from '@codemirror/state'
+import { StateEffect, type EditorState, type Range } from '@codemirror/state'
 import {
   Decoration,
   ViewPlugin,
@@ -19,15 +19,21 @@ import { toggleTaskAt } from './checkbox'
 import { revealedLines, type Context } from './decorations'
 import { applyLabelFilter, labelFilterOf } from './labelFilter'
 import { decorateInline } from './inline'
+import { decorateProgress } from './progress'
 import { decorateTags } from './tags'
 
 // Live preview. Syntax is hidden except on lines holding a cursor or selection
 // endpoint; see MARKDOWN_SPEC.md, "Cursor reveal". Only visible ranges are
-// walked. The decorations themselves live in blocks.ts, inline.ts and tags.ts.
+// walked. The decorations themselves live in blocks.ts, inline.ts, tags.ts and
+// progress.ts.
 
 // Fired on window with the lowercased tag when a rendered #tag is clicked;
 // App filters the file tree by it. See D34.
 export const TAG_CLICK_EVENT = 'scratchpost:tag'
+
+// Dispatched when something the decorations read from outside the editor
+// changes (a label's chosen colour), so they are built again.
+export const repaintPreview = StateEffect.define<null>()
 
 // Rendered as plain text: nothing inside is decorated.
 const UNSUPPORTED_BLOCKS = new Set(['CodeBlock', 'HTMLBlock', 'Table'])
@@ -88,6 +94,7 @@ export function buildDecorations(
       }
     })
     decorateTags(ctx, from, to)
+    decorateProgress(ctx, from, to)
   }
   return Decoration.set(decorations, true)
 }
@@ -105,6 +112,7 @@ export const livePreview = ViewPlugin.fromClass(
         update.docChanged ||
         update.viewportChanged ||
         update.selectionSet ||
+        update.transactions.some((tr) => tr.effects.some((effect) => effect.is(repaintPreview))) ||
         syntaxTree(update.startState) !== syntaxTree(update.state)
       ) {
         this.decorations = buildDecorations(update.state, update.view.visibleRanges)

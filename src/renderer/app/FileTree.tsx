@@ -28,6 +28,7 @@ interface FileTreeProps {
   onTagFilter: (tag: string | null) => void
   pinned: FolderEntry[] // pinned notes, from any folder (4.7)
   onTags?: ReactNode // Bean, when it sits on the tags panel (D42)
+  outline?: ReactNode // the open note's headings (6.4)
 }
 
 // The scratch folder shows this many recent notes until "Show all".
@@ -36,8 +37,8 @@ const RECENT_COUNT = 6
 // The hue rides on a custom property; the colour is built in global.css.
 const hueStyle = (tag: string) => ({ '--tag-hue': tagHue(tag) }) as CSSProperties
 
-// The left column (D33): a notes panel for the folder context and a tags
-// panel below it. The scratch folder opens on its most recent notes; other
+// The left column (D33): a notes panel for the folder context, the open
+// note's headings, and a tags panel below them. The scratch folder opens on its most recent notes; other
 // folders show their tree. Toggled with Ctrl+Shift+B. App keys this by folder, so
 // expansion resets on switch; App owns the tag filter and clears it then too.
 export function FileTree({
@@ -55,7 +56,8 @@ export function FileTree({
   tagFilter,
   onTagFilter,
   pinned,
-  onTags
+  onTags,
+  outline
 }: FileTreeProps) {
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set())
   const [showAll, setShowAll] = useState(false)
@@ -233,6 +235,8 @@ export function FileTree({
           </button>
         )}
       </section>
+
+      {outline}
 
       {listing && !listing.error && (
         <div className="tags-wrap">

@@ -3,7 +3,9 @@ import { EditorView } from '@codemirror/view'
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import type { FileMeta, FolderEntry, OpenRequest, SearchHit, WatchEvent } from '../../preload/api'
 import { countTasks, replaceDocSpec, updateTaskCount, type EditorStats, type TaskCount } from '../editor/createEditor'
-import { TAG_CLICK_EVENT } from '../editor/livePreview'
+import { countBoxes, tasksInScope } from '../editor/checklist'
+import { repaintPreview, TAG_CLICK_EVENT } from '../editor/livePreview'
+import { headingIndexAt, headingsOf, sameHeadings, type Heading } from '../editor/outline'
 import { applyTheme, tintTheme, type ThemeMode } from '../themes'
 import { ColourMenu } from './ColourMenu'
 import { CommandPalette } from './CommandPalette'
@@ -15,15 +17,17 @@ import { EmptyState } from './EmptyState'
 import { FileTree } from './FileTree'
 import { FolderMenu } from './FolderMenu'
 import { HistoryPanel } from './HistoryPanel'
+import { LabelColourMenu } from './LabelColourMenu'
 import { LabelDialog, type LabelRenameRequest } from './LabelDialog'
 import { ShortcutsPanel } from './ShortcutsPanel'
 import { Picker, type PickerItem } from './Picker'
-import { findLabels, tagHue, tagKey } from '../../shared/tags'
+import { findLabels, setChosenHues, tagHue, tagKey } from '../../shared/tags'
 import { insertLabel, labelAt, labelWord, renameLabelHere } from '../editor/format'
 import { applyLabelFilter, LABEL_FILTER_EVENT, labelFilterOf } from '../editor/labelFilter'
 import { renameLabelInText } from '../../shared/tags'
 import { linkForPaste } from '../editor/typing'
 import { NoteHeader } from './NoteHeader'
+import { Outline } from './Outline'
 import { QuickSwitcher } from './QuickSwitcher'
 import { RenameDialog } from './RenameDialog'
 import { SearchPanel } from './SearchPanel'
@@ -82,14 +86,16 @@ const NOTE_EXTENSION = /\.(md|markdown|txt)$/i
 const LISTING_REFRESH_MS = 500
 const SNAPSHOT_EVERY_MS = 5 * 60 * 1000
 const RECENT_WRITES = 8
+const OUTLINE_DELAY_MS = 200 // after the last keystroke, before headings are read again
 const MAX_AUTO_ARCHIVE = 200 // per launch, so a long-forgotten folder never stalls
 const NO_KEYBINDINGS: Record<string, string> = {}
+const NO_LABEL_COLOURS: Record<string, number> = {}
 const PARTY_WORDS = ['parrotparty', 'parrot party']
 
 // Ctrl+Shift+T remembers this many closed tabs.
 const MAX_CLOSED = 20
 
-type Overlay = 'palette' | 'switcher' | 'search' | 'folders' | 'rename' | 'colours' | 'settings' | 'history' | 'labels' | 'shortcuts' | 'renameLabel'
+type Overlay = 'palette' | 'switcher' | 'search' | 'folders' | 'rename' | 'colours' | 'settings' | 'history' | 'labels' | 'shortcuts' | 'renameLabel' | 'labelColour'
 
 // A note that changed on disk while it had unsaved edits, or was deleted.
 type External = 'conflict' | 'deleted'
@@ -152,6 +158,8 @@ export function App() {
   // The label each tab is filtered to (5.5), and the label being renamed (5.6).
   const [labelFilters, setLabelFilters] = useState<Record<string, string | null>>({})
   const [renamingLabel, setRenamingLabel] = useState<string | null>(null)
+  const [colouringLabel, setColouringLabel] = useState<string | null>(null) // the label being given a colour (6.8)
+  const [headings, setHeadings] = useState<Heading[]>([]) // the active note's (6.4)
 
   const buffers = useRef<Buffers>({ states: new Map(), initial: new Map(), scroll: new Map() }).current
   const metas = useRef(new Map<string, FileMeta>()).current
@@ -208,9 +216,23 @@ export function App() {
   }, [theme, themeMode])
 
   const fontSize = folder.settings?.fontSize ?? 13
-  const noteColumns = folder.settings?.noteColumns ?? 80
+  const noteColumns = folder.settings?.noteColumns ?? 100
   const catOn = folder.settings?.cat ?? true
   const catSpot = folder.settings?.catSpot ?? 'dock'
+
+  // Colours chosen for label and tag words (6.8, D49). Set on every render,
+  // before anything asks for a hue; the open note is repainted when they change.
+  const labelColours = folder.settings?.labelColours ?? NO_LABEL_COLOURS
+  setChosenHues(labelColours)
+  useEffect(() => {
+    viewRef.current?.dispatch({ effects: repaintPreview.of(null) })
+  }, [labelColours])
+  const setLabelColour = (word: string, hue: number | null) => {
+    const next = { ...labelColours }
+    if (hue === null) delete next[tagKey(word)]
+    else next[tagKey(word)] = hue
+    void folder.persist({ labelColours: next })
+  }
   useEffect(() => {
     document.documentElement.style.setProperty('--note-size', `${fontSize}px`)
     document.documentElement.style.setProperty('--note-columns', String(noteColumns))
@@ -393,16 +415,42 @@ export function App() {
     [taskCounts]
   )
 
+  // --- Outline (6.4) ---
+  // The active note's headings, for the left column. Reading them walks the
+  // whole note, so it waits for a pause in typing and is skipped while the
+  // column is closed.
+  const treeOpenRef = useRef(treeOpen)
+  const outlineTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const readOutline = useCallback(() => {
+    clearTimeout(outlineTimer.current)
+    const id = tabsRef.current.activeId
+    const state = id ? buffers.states.get(id) : undefined
+    const lines = state ? state.doc.iterLines() : ((id && buffers.initial.get(id)?.doc.split('\n')) || [])
+    const next = treeOpenRef.current ? headingsOf(lines) : []
+    setHeadings((prev) => (sameHeadings(prev, next) ? prev : next))
+  }, [buffers])
+  const scheduleOutline = useCallback(() => {
+    if (!treeOpenRef.current) return
+    clearTimeout(outlineTimer.current)
+    outlineTimer.current = setTimeout(readOutline, OUTLINE_DELAY_MS)
+  }, [readOutline])
+  useEffect(() => {
+    treeOpenRef.current = treeOpen
+    readOutline()
+  }, [tabsState.activeId, treeOpen, readOutline])
+  useEffect(() => () => clearTimeout(outlineTimer.current), [])
+
   const onDocChange = useCallback(
     (id: string, state: EditorState, previous: EditorState, changes: ChangeSet) => {
       const line = firstContentLine(state.doc.iterLines())
       setFirstLines((prev) => (prev[id] === line ? prev : { ...prev, [id]: line }))
+      scheduleOutline()
       if (reloading.current) return // loaded from disk; nothing to save
       tellCat(id, state, previous, changes)
       const tab = tabsRef.current.tabs.find((t) => t.id === id)
       autosave.schedule(id, !tab?.path)
     },
-    [autosave, tellCat]
+    [autosave, tellCat, scheduleOutline]
   )
 
   useEffect(() => {
@@ -751,6 +799,13 @@ export function App() {
     }
     const run = (id: string) => menuItem(id, () => runById(id))
     const label = pos === null ? null : labelAt(view.state, pos)
+    // Tick all and untick all, for the selected lines or the list clicked in.
+    const boxes = countBoxes(tasksInScope(view.state))
+    const ticks = [
+      ...(boxes.open > 0 ? [run('checkbox.tickAll')] : []),
+      ...(boxes.done > 0 ? [run('checkbox.untickAll')] : [])
+    ].map((item, i) => ({ ...item, divider: i === 0 && Boolean(label) }))
+    const above = Boolean(label) || ticks.length > 0 // something sits above the clipboard items
     const items: MenuItem[] = [
       ...(label
         ? [
@@ -764,18 +819,26 @@ export function App() {
                 setRenamingLabel(label)
                 setOverlay('renameLabel')
               }
+            },
+            {
+              label: `Colour of ${label}…`,
+              run: () => {
+                setColouringLabel(label)
+                setOverlay('labelColour')
+              }
             }
           ]
         : []),
+      ...ticks,
       ...(hasSelection
         ? [
-            { label: 'Cut', hint: 'Ctrl+X', divider: Boolean(label), run: clipboard('cut') },
+            { label: 'Cut', hint: 'Ctrl+X', divider: above, run: clipboard('cut') },
             { label: 'Copy', hint: 'Ctrl+C', run: clipboard('copy') },
             run('note.fromSelectionMove'),
             run('note.fromSelectionCopy')
           ]
         : []),
-      { label: 'Paste', hint: 'Ctrl+V', divider: Boolean(label) && !hasSelection, run: paste },
+      { label: 'Paste', hint: 'Ctrl+V', divider: above && !hasSelection, run: paste },
       { ...run('format.bold'), divider: true },
       run('format.italic'),
       run('format.strike'),
@@ -1061,6 +1124,22 @@ export function App() {
     return () => window.removeEventListener(LABEL_FILTER_EVENT, onFilter)
   }, [])
 
+  // Jumps to a heading from the outline: the cursor goes to the end of its
+  // line and the heading scrolls to the top. A label filter might be hiding
+  // it, so that is lifted first.
+  const jumpToHeading = (heading: Heading) => {
+    const view = viewRef.current
+    if (!view) return
+    if (labelFilterOf(view.state) !== null) applyLabelFilter(view, null)
+    const line = view.state.doc.line(Math.min(heading.line, view.state.doc.lines))
+    view.dispatch({
+      selection: { anchor: line.to },
+      effects: EditorView.scrollIntoView(line.from, { y: 'start', yMargin: 18 }),
+      userEvent: 'select'
+    })
+    view.focus()
+  }
+
   const filterByLabel = (word: string | null) => {
     const view = viewRef.current
     if (view) applyLabelFilter(view, word)
@@ -1075,6 +1154,9 @@ export function App() {
       const labels = folder.settings?.labels ?? []
       void folder.persist({ labels: labels.map((word) => (word.toLowerCase() === from.toLowerCase() ? to : word)) })
     }
+    // A colour chosen for the old word follows it to the new one.
+    const chosen = labelColours[tagKey(from)]
+    if (chosen !== undefined && labelColours[tagKey(to)] === undefined) setLabelColour(to, chosen)
     const view = viewRef.current
     if (scope === 'note') {
       if (view) {
@@ -1284,6 +1366,13 @@ export function App() {
         setRenamingLabel(word)
         setOverlay('renameLabel')
       },
+      colourLabelAtCursor: () => {
+        const view = viewRef.current
+        const word = view ? labelAt(view.state, view.state.selection.main.head) : null
+        if (!word) return
+        setColouringLabel(word)
+        setOverlay('labelColour')
+      },
       clearLabelFilter: () => filterByLabel(null),
       openLabels: () => {
         if (viewRef.current) setOverlay('labels')
@@ -1315,6 +1404,12 @@ export function App() {
       labelAtCursor: viewRef.current ? labelAt(viewRef.current.state, viewRef.current.state.selection.main.head) : null,
       labelFiltered: viewRef.current ? labelFilterOf(viewRef.current.state) !== null : false,
       hasSelection: viewRef.current ? viewRef.current.state.selection.ranges.some((r) => !r.empty) : false,
+      // A getter: this runs on every key press, and only the tick-all commands
+      // ask for it.
+      get checklist() {
+        const boxes = viewRef.current ? tasksInScope(viewRef.current.state) : []
+        return boxes.length > 0 ? countBoxes(boxes) : null
+      },
       tabCount: tabsRef.current.tabs.length,
       actions: actionsRef.current!
     }
@@ -1462,6 +1557,11 @@ export function App() {
             tagFilter={tagFilter}
             onTagFilter={setTagFilter}
             onTags={beanAt('tags')}
+            outline={
+              active && (
+                <Outline headings={headings} current={headingIndexAt(headings, stats.line)} onJump={jumpToHeading} />
+              )
+            }
             pinned={pinnedNotes.map((path) => ({
               path,
               name: fileName(path),
@@ -1640,6 +1740,8 @@ export function App() {
           onCatSpot={(spot) => void folder.persist({ catSpot: spot })}
           labels={folder.settings.labels}
           onLabels={(labels) => void folder.persist({ labels })}
+          labelColours={labelColours}
+          onLabelColour={setLabelColour}
           noteColumns={noteColumns}
           onNoteColumns={(columns) => void folder.persist({ noteColumns: columns })}
           autoArchiveDays={autoArchiveDays}
@@ -1696,6 +1798,21 @@ export function App() {
           onSubmit={(request) => void renameLabel(request)}
           onClose={() => {
             setRenamingLabel(null)
+            closeOverlay()
+          }}
+        />
+      )}
+      {overlay === 'labelColour' && colouringLabel && (
+        <LabelColourMenu
+          word={colouringLabel}
+          current={labelColours[tagKey(colouringLabel)] ?? null}
+          onPick={(hue) => {
+            setLabelColour(colouringLabel, hue)
+            setColouringLabel(null)
+            closeOverlay()
+          }}
+          onClose={() => {
+            setColouringLabel(null)
             closeOverlay()
           }}
         />

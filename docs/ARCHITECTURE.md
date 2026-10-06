@@ -61,7 +61,7 @@ src/
     welcome.md            the welcome note's text, the in-app tutorial (D30)
     fs/
       read.ts             readFile with encoding + EOL + BOM detection
-      write.ts            atomic write, preserving EOL and BOM
+      write.ts            atomic write, preserving EOL and BOM; waits out a locked file on Windows (D51)
       list.ts             directory walk for tree and switcher
       scan.ts             batched text reads for search and the tag index
       search.ts           folder-wide content search
@@ -78,6 +78,7 @@ src/
     app/
       TopBar.tsx          open-note pills, find field, new note (D33)
       FileTree.tsx        notes panel and tags panel
+      Outline.tsx         the open note's headings, between them (D50)
       NoteHeader.tsx      folder, edited time, words, save problems, date
       Dock.tsx            floating tool buttons, from the command registry
       Toast.tsx           notices that aren't about saving
@@ -87,6 +88,7 @@ src/
       QuickSwitcher.tsx
       FolderMenu.tsx      scratch folder, recents, open folder
       ColourMenu.tsx      theme seed hues
+      LabelColourMenu.tsx the named hues a label can be given (D49)
       SettingsPanel.tsx   mode, colour, note text size, scratch folder (3.4)
       Picker.tsx          shared overlay behind palette, switcher and menus
       SearchPanel.tsx
@@ -113,10 +115,14 @@ src/
       inline.ts           emphasis, strong, strikethrough, inline code, links
       decorations.ts      shared reveal logic and helpers
       checkbox.ts         checkbox widget and toggle
+      checklist.ts        whole checklists: finding, counting, tick all (D48)
+      progress.ts         the `[%]` progress bar (D48)
+      outline.ts          a note's headings, read from its text (D50)
       tags.ts             [label] pills and #tag words (D34)
       lists.ts            Enter continuation, Tab indent and outdent
       renumber.ts         keeps numbered lists counting up after edits
-      typing.ts           auto-closing pairs, pasting a URL as a link (D32)
+      typing.ts           auto-closing pairs, pasting a URL as a link (D32), sums (D52)
+      math.ts             the arithmetic behind sums (D52)
       codeLanguages.ts    bundled languages and classes for code highlighting
       keymap.ts           bindings, sourced from the command registry
       theme.ts            CM6 theme built from theme tokens
@@ -208,7 +214,8 @@ interface Settings {
   catSpot: 'dock' | 'top' | 'date' | 'corner' | 'tags' // where Bean sits (D42)
   keybindings: Record<string, string> // rebound shortcuts, '' for none (D41)
   labels: string[] // the label picker's own list (4.10)
-  noteColumns: number // characters a line: 80, 100, or 999 for full width (D46)
+  labelColours: Record<string, number> // hues chosen for words, lowercased (D49)
+  noteColumns: number // characters a line: 80, 100 (default), or 999 for full width (D46, D47)
   autoArchiveDays: number // 0, 30, 90 or 365; archive old scratch notes at launch (D45)
   pinnedNotes: string[] // absolute paths, atop the notes panel (4.7)
 }

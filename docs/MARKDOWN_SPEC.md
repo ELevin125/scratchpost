@@ -17,6 +17,7 @@ Every fixture below has a corresponding test.
 | Numbered | `1. text` | number shown, counts up automatically (see "List numbering"), hanging indent |
 | Checkbox, open | `- [ ] text` | empty square icon |
 | Checkbox, done | `- [x] text` | filled check icon in `--chip`, text struck through in `--soft` |
+| Progress bar | `[%]` on its own line | a bar and a count for the checklist beside it (see "Checklists") |
 | Label | `[word]` | rounded pill, brackets hidden (see "Labels and tags") |
 | Tag | `#word` | coloured text, `#` kept, clickable (see "Labels and tags") |
 | Emphasis | `*text*` / `_text_` | italic, markers hidden |
@@ -246,7 +247,10 @@ A tag is `#` followed by a word, where:
   label, from the right-click menu or the palette, changes it in the note or
   in every note in the folder, skipping code (5.6).
 - Colour: a stable hash of the word picks a hue from 0 to 359; the theme
-  supplies saturation and lightness. See `THEMING.md` and D16.
+  supplies saturation and lightness. See `THEMING.md` and D16. A word can be
+  given one of eight named colours instead, from a label's right-click menu,
+  the palette or Settings; the label and the tag of that word both follow it
+  (D49).
 - Neither renders inside fenced, indented or inline code, HTML, or URLs.
 
 ### Indexing
@@ -328,6 +332,34 @@ from the list's start. See D22.
 `Ctrl+Enter`, a click on the rendered checkbox, or the toggle command flips
 `- [ ]` to `- [x]` and back. Clicking the checkbox does not move the cursor.
 
+## Checklists
+
+A checklist is a whole list, nested items included. Only boxes that render
+count: bullet items, outside quotes and code. See D48.
+
+- **Tick all checkboxes** and **Untick all checkboxes** (right-click menu and
+  palette) act on the list around the cursor, or with a selection on the boxes
+  on the selected lines. Each is one undoable edit, and is only offered when
+  there is a box it would change.
+- **`[%]` on a line of its own** renders as a progress bar with a count, `3/7`,
+  for the checklist beside it. Which list:
+  1. the list that starts right after it, blank lines allowed;
+  2. else the list that ends right before it;
+  3. else the list it is typed inside. A line typed straight under a list with
+     no blank line is part of that list's last item, so of the lists around
+     it, the innermost one that starts no further right than the `[%]`.
+- With no checklist beside it the bar is empty and reads `no checklist`.
+- The three characters show while the cursor is on the line, like all other
+  syntax. Inside a quote or code, `[%]` is plain text.
+
+```
+[%] / - [x] a / - [ ] b            → bar at 1/2, above the list
+- [x] a / - [ ] b / [%]            → bar at 1/2, below the list
+- [ ] p / "  [%]" / "  - [x] c"    → bar at 1/1, for the nested list
+- [x] p / "  - [ ] c" / [%]        → bar at 1/2, for the whole list
+> [%]                              → plain text
+```
+
 ## Formatting
 
 Commands in the registry (4.8–4.11), from shortcuts, the palette and the
@@ -384,6 +416,29 @@ Single cursor only; with several cursors, typing is plain. See D32.
 - Typing `(`, `[`, `` ` `` or `*` with a selection on one line wraps it and
   keeps it selected, so `*` twice makes it bold.
 
+### Sums
+
+Typing `=` after an arithmetic expression writes the answer after it. See D52.
+
+- The expression is the longest one that ends at the cursor: numbers,
+  `+ - * / ^`, parentheses, and `×`, `÷`, `−` as typed by some keyboards. It
+  needs at least one operation, so `3 =` and `x = 3` are left alone.
+- A word stops it, so in `total: 3 * 4 =` only `3 * 4` is worked out. A list
+  marker, a number glued to a word (`item2`) and a date (`2026-10-06`) are not
+  part of a sum.
+- `%` after a number is a percentage, and of the amount before it when added
+  or subtracted: `200 * 15% =` is `30`, `200 + 10% =` is `220`. Between two
+  numbers it is the remainder: `10 % 3 =` is `1`.
+- `1,200` is read as 1200. A leading minus counts when attached: `-3 * 4`.
+- The answer has up to twelve significant digits, so `0.1 + 0.2 =` is `0.3`.
+  Nothing is written for a division by zero or a number of fifteen digits or
+  more.
+- A space before the `=` puts one after it too: `2 + 2 =` gives `2 + 2 = 4`,
+  `2+2=` gives `2+2=4`.
+- Only where the rest of the line is empty, whitespace or closing punctuation,
+  never in code, and with one cursor.
+- The answer is its own undo step: `Ctrl+Z` removes it and leaves the `=`.
+
 ### Fixtures
 
 ```
@@ -399,6 +454,11 @@ Single cursor only; with several cursors, typing is plain. See D32.
 "(|)"      + Backspace     →  "|"
 "**|**"    + Backspace     →  "*|"
 "a [word] b" selected, type "**"  →  "a **word** b", "word" still selected
+"2 + 2 |"       + type "="  →  "2 + 2 = 4|"
+"cost: 3*(4+5)|" + type "=" →  "cost: 3*(4+5)=27|"
+"- 200 + 10%|"  + type "="  →  "- 200 + 10%=220|"
+"x |"           + type "="  →  "x =|"
+"2026-10-06|"   + type "="  →  "2026-10-06=|"
 ```
 
 ## File handling

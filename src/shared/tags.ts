@@ -46,9 +46,22 @@ export function findTags(line: string): WordMatch[] {
 // Case-insensitive: #Urgent and #urgent are one tag, with one colour.
 export const tagKey = (word: string): string => word.toLowerCase()
 
+// Hues chosen for particular words (6.8), keyed by lowercased word. The
+// renderer sets these from settings before anything asks for a hue; main
+// never does, and never needs a colour.
+let chosenHues: Readonly<Record<string, number>> = {}
+export function setChosenHues(map: Readonly<Record<string, number>>): void {
+  chosenHues = map
+}
+
+// The hue a word is shown in: the one chosen for it, else the seeded one.
+export function tagHue(word: string): number {
+  return chosenHues[tagKey(word)] ?? seededHue(word)
+}
+
 // FNV-1a over the lowercased word, mapped to a hue from 0 to 359. Stable across
 // runs and machines, so a word keeps its colour. See D16.
-export function tagHue(word: string): number {
+export function seededHue(word: string): number {
   let hash = 0x811c9dc5
   for (const ch of tagKey(word)) {
     hash ^= ch.codePointAt(0)!

@@ -69,9 +69,12 @@ export interface Settings {
   // Rebound shortcuts: command id to shortcut, '' for none (4.12).
   keybindings: Record<string, string>
   labels: string[] // the label picker's list, see 4.10
+  // Hues chosen for words, lowercased word to 0..359; other words keep the
+  // hue seeded from their text (6.8). Covers the label and the tag of that word.
+  labelColours: Record<string, number>
   // Archive scratch notes untouched for this many days, at launch; 0 is off (5.8).
   autoArchiveDays: number
-  noteColumns: number // characters per line, 80, 100 or 999 for the full width (5.9)
+  noteColumns: number // characters per line: 80, 100 (the default) or 999 for the full width (5.9)
   pinnedNotes: string[] // absolute paths, shown atop the notes panel in any folder (4.7)
 }
 

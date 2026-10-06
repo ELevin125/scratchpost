@@ -11,6 +11,8 @@ import { findNext, findPrevious, openSearchPanel, selectNextOccurrence } from '@
 import type { StateCommand } from '@codemirror/state'
 import type { EditorView } from '@codemirror/view'
 import { toggleTasksAtSelection } from '../../editor/checkbox'
+import { setTasks } from '../../editor/checklist'
+import type { TaskCount } from '../../editor/createEditor'
 import { insertLink, setHeading, setListKind, toggleMarker } from '../../editor/format'
 import { formatShortcut, matchesShortcut, type KeyEventLike } from './shortcuts'
 
@@ -50,6 +52,7 @@ export interface AppActions {
   openHistory(): void
   openLabels(): void
   renameLabelAtCursor(): void
+  colourLabelAtCursor(): void
   selectionToNote(move: boolean): void
   clearLabelFilter(): void
   openShortcuts(): void
@@ -67,6 +70,9 @@ export interface CommandContext {
   labelAtCursor: string | null // the label the cursor sits in, if any (5.6)
   labelFiltered: boolean // the note is filtered to one label (5.5)
   hasSelection: boolean // something is selected in the note (5.7)
+  // The boxes "tick all" would act on: the selected lines, or the list around
+  // the cursor (6.2). Null when there are none. Read lazily; it walks the list.
+  checklist: TaskCount | null
   tabCount: number
   actions: AppActions
 }
@@ -238,6 +244,18 @@ export const commands: readonly Command[] = [
     ...editorCommand(selectNextOccurrence)
   },
   { id: 'checkbox.toggle', label: 'Toggle checkbox', shortcut: 'Ctrl+Enter', ...editorCommand(toggleTasksAtSelection) },
+  {
+    id: 'checkbox.tickAll',
+    label: 'Tick all checkboxes',
+    ...editorCommand(setTasks(true)),
+    when: (ctx) => (ctx.checklist?.open ?? 0) > 0
+  },
+  {
+    id: 'checkbox.untickAll',
+    label: 'Untick all checkboxes',
+    ...editorCommand(setTasks(false)),
+    when: (ctx) => (ctx.checklist?.done ?? 0) > 0
+  },
   { id: 'date.insert', label: 'Insert date', ...editorCommand(insertDate) },
 
   // Formatting (4.8, 4.10, 4.11)
@@ -251,6 +269,12 @@ export const commands: readonly Command[] = [
     id: 'label.rename',
     label: 'Rename label…',
     run: (ctx) => ctx.actions.renameLabelAtCursor(),
+    when: (ctx) => ctx.labelAtCursor !== null
+  },
+  {
+    id: 'label.colour',
+    label: 'Change label colour…',
+    run: (ctx) => ctx.actions.colourLabelAtCursor(),
     when: (ctx) => ctx.labelAtCursor !== null
   },
   {

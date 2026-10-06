@@ -128,6 +128,10 @@ There is no fixed palette. A stable hash of the word picks a hue from 0 to
 and tag chips use the same colour at low alpha as their background. See D16
 and D34.
 
+A word can be given one of eight named hues instead (`labelHues` in
+`themes/index.ts`), kept in `settings.json`; only the hue changes, so a chosen
+colour keeps the theme's contrast like any other. See D49.
+
 ## Code highlighting
 
 Fenced code in a bundled language uses five classes (see `MARKDOWN_SPEC.md`).

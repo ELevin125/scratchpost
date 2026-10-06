@@ -490,7 +490,7 @@ kbd {
 .note-column {
   flex-shrink: 0;
   width: 100%;
-  max-width: calc(var(--note-columns, 80) * var(--note-size) * 0.6 + 80px);
+  max-width: calc(var(--note-columns, 100) * var(--note-size) * 0.6 + 80px);
   margin-inline: auto;
 }
 
@@ -1588,6 +1588,35 @@ kbd {
   border-radius: 999px;
 }
 
+.label-chip .label-chip-word {
+  padding: 3px 4px 3px 0;
+  font: inherit;
+  border-radius: 0;
+}
+
+.label-chip .label-chip-word:hover {
+  text-decoration: underline;
+  background: none;
+}
+
+.label-colours {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.swatch-button.auto {
+  width: auto;
+  padding: 0 12px;
+  font-size: 12px;
+  color: var(--soft);
+}
+
+.swatch-button.auto.on {
+  color: var(--ink);
+}
+
 .label-chip button:hover {
   background: hsl(var(--tag-hue) var(--tag-saturation) var(--tag-lightness) / 0.2);
 }
@@ -1721,6 +1750,23 @@ kbd {
 
 .tags-wrap .tags-panel {
   max-height: none;
+}
+
+/* The open note's headings (6.4): a panel between the notes and the tags. */
+
+.outline-panel {
+  flex: 0 1 auto;
+  max-height: 32%;
+  padding: 12px 8px 8px;
+}
+
+.outline-panel .panel-title {
+  margin: 0 4px 6px;
+}
+
+.outline-panel .rows {
+  min-height: 0;
+  overflow-y: auto;
 }
 
 /* Label filter and rename (5.5, 5.6) */

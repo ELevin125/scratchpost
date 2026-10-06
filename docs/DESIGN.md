@@ -302,11 +302,12 @@ See D33 for why, and `THEMING.md` for the tokens.
 - A tinted ground with a soft glow, 10px of it around and between everything.
 - Top bar: open-note pills, then the find field and a round new-note button on
   the right.
-- Below it, the notes and tags panels on the left (240px) and the note panel
-  filling the rest, with the dock floating at its bottom.
-- Note text is capped at 80 characters by default, centred in the note panel,
-  with 100 and full width in Settings (D46). The note header and the bars above
-  the note share that column.
+- Below it, the notes, headings and tags panels on the left (240px) and the
+  note panel filling the rest, with the dock floating at its bottom. The
+  headings panel lists the open note's headings (D50).
+- Note text is capped at 100 characters by default, centred in the note panel,
+  with 80 and full width in Settings (D46, D47). The note header and the bars
+  above the note share that column.
 
 ### Typography
 

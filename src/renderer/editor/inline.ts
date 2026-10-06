@@ -12,6 +12,9 @@ const styles: Record<string, { mark: Decoration; syntax: string }> = {
 }
 
 const inlineCode = Decoration.mark({ class: 'cm-inline-code' })
+// Inline code's tint would cover the selection drawn behind the text, so the
+// selected part of it is painted as selection-over-tint instead.
+const selectedCode = Decoration.mark({ class: 'cm-inline-code-selected' })
 
 function hideMarks(ctx: Context, node: SyntaxNode, name: string): void {
   for (let child = node.firstChild; child; child = child.nextSibling) {
@@ -25,6 +28,11 @@ function decorateInlineCode(ctx: Context, node: SyntaxNode): void {
   const close = node.lastChild
   if (open?.name !== 'CodeMark' || close?.name !== 'CodeMark' || open.from === close.from) return
   if (open.to < close.from) ctx.add(`inline-code:${node.from}`, inlineCode.range(open.to, close.from))
+  for (const range of ctx.state.selection.ranges) {
+    const from = Math.max(range.from, open.to)
+    const to = Math.min(range.to, close.from)
+    if (from < to) ctx.add(`inline-code-selected:${from}`, selectedCode.range(from, to))
+  }
   hideMarks(ctx, node, 'CodeMark')
 }
 

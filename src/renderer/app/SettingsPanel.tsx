@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import type { HistoryUsage } from '../../preload/api'
 import type { Settings } from '../../preload/api'
-import { tagHue } from '../../shared/tags'
+import { tagHue, tagKey } from '../../shared/tags'
 import { labelWord } from '../editor/format'
-import { seeds } from '../themes'
+import { labelHues, seeds } from '../themes'
 import { CAT_NAME, type CatSpot } from './Cat'
 import { Icon } from './Icon'
 
@@ -27,6 +27,8 @@ interface SettingsPanelProps {
   onCat: (on: boolean) => void
   onCatSpot: (spot: CatSpot) => void
   onLabels: (labels: string[]) => void
+  labelColours: Record<string, number> // hues chosen for words, lowercased (6.8)
+  onLabelColour: (word: string, hue: number | null) => void
   onAutoArchiveDays: (days: number) => void
   onNoteColumns: (columns: number) => void
   onShortcuts: () => void
@@ -50,8 +52,8 @@ const formatBytes = (bytes: number): string => {
 }
 
 const NOTE_WIDTHS: { columns: number; label: string; title: string }[] = [
-  { columns: 80, label: '80', title: '80 characters a line, the default' },
-  { columns: 100, label: '100', title: '100 characters a line' },
+  { columns: 80, label: '80', title: '80 characters a line' },
+  { columns: 100, label: '100', title: '100 characters a line, the default' },
   { columns: 999, label: 'Full', title: 'As wide as the window' }
 ]
 
@@ -89,6 +91,8 @@ export function SettingsPanel({
   onCat,
   onCatSpot,
   onLabels,
+  labelColours,
+  onLabelColour,
   onAutoArchiveDays,
   onNoteColumns,
   onShortcuts,
@@ -100,6 +104,7 @@ export function SettingsPanel({
 }: SettingsPanelProps) {
   const panel = useRef<HTMLDivElement>(null)
   const [newLabel, setNewLabel] = useState('')
+  const [colouring, setColouring] = useState<string | null>(null) // the label whose colours are showing
   // What the local history is using, and a two-step clear (5.10).
   const [usage, setUsage] = useState<HistoryUsage | null>(null)
   const [confirmClear, setConfirmClear] = useState(false)
@@ -113,6 +118,7 @@ export function SettingsPanel({
       live = false
     }
   }, [historyUsage])
+  const chosenHue = (word: string): number | null => labelColours[tagKey(word)] ?? null
   const addLabel = () => {
     const word = labelWord(newLabel)
     if (!word) return
@@ -368,12 +374,20 @@ export function SettingsPanel({
           <h3>Labels</h3>
           <div className="setting setting-stack">
             <p className="setting-note">
-              Offered first by Insert label (Ctrl+L) and the right-click menu, in every note.
+              Offered first by Insert label (Ctrl+L) and the right-click menu, in every note. Click one to choose its
+              colour.
             </p>
             <div className="label-list">
               {labels.map((word) => (
                 <span key={word} className="label-chip" style={{ '--tag-hue': tagHue(word) } as CSSProperties}>
-                  {word}
+                  <button
+                    className="label-chip-word"
+                    title={`Colour of ${word}`}
+                    aria-expanded={colouring === word}
+                    onClick={() => setColouring(colouring === word ? null : word)}
+                  >
+                    {word}
+                  </button>
                   <button aria-label={`Remove ${word}`} title="Remove" onClick={() => onLabels(labels.filter((l) => l !== word))}>
                     <Icon name="x" size={12} />
                   </button>
@@ -396,6 +410,37 @@ export function SettingsPanel({
                 onBlur={addLabel}
               />
             </div>
+            {colouring !== null && labels.includes(colouring) && (
+              <div className="label-colours" role="radiogroup" aria-label={`Colour of ${colouring}`}>
+                <span className="label-pill" style={{ '--tag-hue': tagHue(colouring) } as CSSProperties}>
+                  {colouring}
+                </span>
+                <div className="swatches">
+                  <button
+                    role="radio"
+                    aria-checked={chosenHue(colouring) === null}
+                    title="Automatic, from the word"
+                    className={chosenHue(colouring) === null ? 'swatch-button auto on' : 'swatch-button auto'}
+                    onClick={() => onLabelColour(colouring, null)}
+                  >
+                    Auto
+                  </button>
+                  {labelHues.map((colour) => (
+                    <button
+                      key={colour.hue}
+                      role="radio"
+                      aria-checked={chosenHue(colouring) === colour.hue}
+                      aria-label={colour.name}
+                      title={colour.name}
+                      className={chosenHue(colouring) === colour.hue ? 'swatch-button on' : 'swatch-button'}
+                      onClick={() => onLabelColour(colouring, colour.hue)}
+                    >
+                      <span className="swatch" style={hueStyle(colour.hue)} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </section>
 

@@ -15,6 +15,19 @@ export const seeds: { name: string; hue: number }[] = [
   { name: 'Moss', hue: 95 }
 ]
 
+// The hues a label or tag can be given in place of its seeded one (6.8).
+// Saturation and lightness still come from the theme, as for every label.
+export const labelHues: { name: string; hue: number }[] = [
+  { name: 'Red', hue: 2 },
+  { name: 'Orange', hue: 28 },
+  { name: 'Yellow', hue: 50 },
+  { name: 'Green', hue: 135 },
+  { name: 'Teal', hue: 175 },
+  { name: 'Blue', hue: 215 },
+  { name: 'Purple', hue: 270 },
+  { name: 'Pink', hue: 325 }
+]
+
 export const DEFAULT_SEED = 172
 export const DEFAULT_MODE: ThemeMode = 'dark'
 

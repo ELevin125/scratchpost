@@ -13,12 +13,12 @@ export const editorTheme = EditorView.theme({
   },
   '&.cm-focused': { outline: 'none' },
   '.cm-scroller': { fontFamily: 'var(--font-mono)', lineHeight: '1.75' },
-  // Capped at 80 characters (D33), so notes hard-wrapped at 80 never wrap
-  // twice; the bottom room keeps the last line clear of the dock.
+  // Capped at 100 characters unless the setting says otherwise (D47); the
+  // bottom room keeps the last line clear of the dock.
   '.cm-content': {
     // Width in characters is a setting (5.9); the column is centred so the
     // space around it is even and never reads as a mis-wrapped line.
-    maxWidth: 'calc(var(--note-columns, 80) * 1ch + 80px)',
+    maxWidth: 'calc(var(--note-columns, 100) * 1ch + 80px)',
     marginInline: 'auto',
     padding: '18px 40px 140px',
     caretColor: 'var(--ink)'
@@ -48,6 +48,10 @@ export const editorTheme = EditorView.theme({
   '.cm-strong': { fontWeight: '700', color: 'var(--ink)' },
   '.cm-strike': { textDecoration: 'line-through' },
   '.cm-inline-code': { backgroundColor: 'var(--sunken)', borderRadius: '4px' },
+  '.cm-inline-code-selected': {
+    backgroundImage: 'linear-gradient(var(--selection), var(--selection))',
+    backgroundColor: 'var(--sunken)'
+  },
   '.cm-link': { color: 'var(--chip)', textDecoration: 'underline', cursor: 'pointer' },
 
   // Find bar (2.12). Selectors carry extra classes to outrank CodeMirror's
@@ -61,7 +65,7 @@ export const editorTheme = EditorView.theme({
     gap: '6px 8px',
     // Two rows as wide as the text column (Plex Mono is 0.6em per character):
     // find, its buttons and close; then replace, its buttons and the options.
-    maxWidth: 'min(100%, calc(var(--note-columns, 80) * var(--note-size) * 0.6 + 80px))',
+    maxWidth: 'min(100%, calc(var(--note-columns, 100) * var(--note-size) * 0.6 + 80px))',
     boxSizing: 'border-box',
     padding: '10px 40px 6px',
     fontFamily: 'var(--font-sans)',
@@ -110,11 +114,25 @@ export const editorTheme = EditorView.theme({
 
   // Block constructs
   '.cm-quote': { borderLeft: '2px solid var(--line)', paddingLeft: '12px' },
+  // The tint is painted beneath the selection layer (which sits at z-index
+  // -1), not as the line's own background: that would cover the selection, so
+  // selected code would show no highlight except around the block's corners.
   // The shadow fills the sub-pixel gap fractional line heights leave between
   // tinted lines, which otherwise shows as faint stripes.
-  '.cm-code-block': { backgroundColor: 'var(--sunken)', boxShadow: '0 1px 0 var(--sunken)', paddingInline: '12px' },
+  '.cm-code-block': { position: 'relative', paddingInline: '12px' },
+  '.cm-code-block::before': {
+    content: '""',
+    position: 'absolute',
+    inset: '0',
+    zIndex: '-2',
+    backgroundColor: 'var(--sunken)',
+    boxShadow: '0 1px 0 var(--sunken)',
+    borderRadius: 'inherit',
+    pointerEvents: 'none'
+  },
   '.cm-code-first': { borderTopLeftRadius: '12px', borderTopRightRadius: '12px' },
-  '.cm-code-last': { borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px', boxShadow: 'none' },
+  '.cm-code-last': { borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' },
+  '.cm-code-last::before': { boxShadow: 'none' },
   // Highlighting (2.21). Scoped to code block lines; see codeLanguages.ts.
   '.cm-code-block .cm-code-keyword': { color: 'var(--ink)', fontWeight: '500' },
   '.cm-code-block .cm-code-string': { color: 'var(--code-string)' },
@@ -127,6 +145,26 @@ export const editorTheme = EditorView.theme({
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat'
   },
+
+  // The progress bar a `[%]` line draws for its checklist (6.1).
+  '.cm-progress': { display: 'inline-flex', alignItems: 'center', gap: '1.5ch', verticalAlign: 'middle' },
+  '.cm-progress-track': {
+    display: 'inline-block',
+    width: '24ch',
+    maxWidth: '50vw',
+    height: '0.5em',
+    overflow: 'hidden',
+    backgroundColor: 'var(--sunken)',
+    borderRadius: '999px'
+  },
+  '.cm-progress-fill': {
+    display: 'block',
+    height: '100%',
+    backgroundColor: 'var(--chip)',
+    borderRadius: '999px'
+  },
+  '.cm-progress-count': { fontSize: `${11 / 13}em`, color: 'var(--soft)' },
+  '.cm-progress-full .cm-progress-count': { color: 'var(--ink)' },
 
   // 2ch wide, matching CHECKBOX_COLS in checkbox.ts. Square corners.
   '.cm-checkbox': {

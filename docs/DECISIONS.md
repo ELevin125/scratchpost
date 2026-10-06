@@ -1050,6 +1050,116 @@ dropping the cap entirely.
 
 ---
 
+## D47 — 100 characters is the default width
+
+**Decision:** a new install shows notes 100 characters wide (6.3). D46 made
+the width a setting and kept 80 as the default; after using both, the author
+keeps 100. The setting and its three choices are unchanged.
+
+A `settings.json` that already holds a width keeps it: a saved 80 can't be
+told apart from a chosen 80, so nothing is migrated.
+
+---
+
+## D48 — Checklists: a progress bar and tick all
+
+**Decision:** a checklist can be treated as a whole (6.1, 6.2).
+
+- **`[%]` on a line of its own** draws a progress bar and a count, `3/7`, for
+  the checklist beside it: the list right below, else the one right above,
+  else the list it is typed inside. Nested items count. Like every other
+  syntax it shows as typed while the cursor is on its line. The bar is a view;
+  nothing is written to the note.
+- **Tick all checkboxes** and **Untick all checkboxes**, in the right-click
+  menu and the palette, act on the whole list around the cursor, nested items
+  included, or with a selection on the boxes on the selected lines. One
+  undoable edit each.
+
+`[%]` was picked because it cannot be a label (a label starts with a letter or
+digit), so the picker, the label filter and a folder-wide rename never mistake
+it for one, and because it reads as what it is in any other editor.
+
+**Rejected:** `[progress]` (it is a valid label, and renaming that label would
+rewrite every bar), a bar that counts everything under a heading (the author
+asked for one per checklist), and writing the count into the file.
+
+---
+
+## D49 — Label colours can be chosen
+
+**Decision:** a word can be given one of eight named colours in place of the
+one its text seeds (6.8): red, orange, yellow, green, teal, blue, purple, pink,
+or back to automatic. Right-click a label and pick **Colour of …**, or click a
+label in Settings. It lives in `settings.json` as `labelColours`, keyed by the
+lowercased word, and covers the label and the tag of that word everywhere they
+are drawn. Saturation and lightness still come from the theme (D16).
+
+The seeded colours stay the default; this is for the handful of words where
+the hash lands badly, a `[bug]` that comes out green, or two labels that land
+on the same hue.
+
+**Rejected:** marking the colour in the note, either a one-character prefix
+for red and green or hidden text that reseeds the hash. Both were the author's
+suggestions. They put colour into every occurrence, so existing notes would
+keep the wrong colour until each label was retyped, the label picker would
+need to know about them, and filter and rename would have to see through
+them. Declaring it once fixes every note at once and leaves the files as
+plain `[bug]`. The cost is that the choice is per machine, like every other
+setting.
+
+---
+
+## D50 — The open note's headings sit in the left column
+
+**Decision:** a Headings panel between the notes and the tags lists the open
+note's headings, indented by level, with the one the cursor is under marked
+(6.4). Clicking one moves the cursor there and scrolls it to the top; a label
+filter that might be hiding it is lifted first. A note without headings has no
+panel.
+
+Headings are read from the text by rule (`#` to `######`, outside fenced
+code), not from the syntax tree, which is only complete for the part of a long
+note that has been on screen. Reading waits for a pause in typing and stops
+while the column is closed, in keeping with 5.11.
+
+**Rejected:** a second sidebar on the right (the left column already holds
+what you navigate by), and a setting to hide the panel (closing the column
+does that).
+
+---
+
+## D51 — A locked file is not a failed save
+
+**Decision:** on Windows the rename that ends an atomic write is tried again
+for about a second and a half when it fails with `EPERM`, `EACCES` or `EBUSY`
+(6.5). A virus scanner, the search indexer or a sync client opens a file the
+moment it appears, and Windows refuses to rename over a file another program
+holds; a new note's first save, straight after the empty file is created, hit
+exactly that. Writes stay tmp-then-rename; nothing is ever written in place.
+
+A save that still fails is retried by the autosave, three times at growing
+intervals, so the status line clears without another keystroke.
+
+---
+
+## D52 — Sums answer themselves
+
+**Decision:** typing `=` after an arithmetic expression writes the answer
+after it (6.7): `12 * (3 + 4) =` becomes `12 * (3 + 4) = 84`. It is a typing
+helper like the auto-closing pairs (D32), with the same limits: one cursor,
+not in code, nothing but whitespace or closing punctuation after the cursor.
+The answer is ordinary text, and one undo takes it away again, leaving the `=`.
+
+The rules are in `MARKDOWN_SPEC.md`, "Sums". In short: `+ - * / ^ %` and
+parentheses, with at least one operation, taking the longest expression that
+ends at the cursor, so words, list markers and dates are left alone.
+
+**Rejected:** showing the answer without writing it (it would vanish in every
+other editor, and couldn't be copied), functions, units and variables (a
+calculator, not a notepad), and a setting to turn it off (undo is one key).
+
+---
+
 ## Open questions
 
 Not yet decided. Do not guess; raise them.

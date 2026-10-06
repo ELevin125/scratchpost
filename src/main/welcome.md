@@ -31,6 +31,8 @@ Lists work normally, nested ones too:
 
 * [x] Checked things stay checked
 
+Put `[%]` on a line of its own, above or below a checklist, and it turns into a progress bar for that list. Right-click a list to tick or untick all of it at once.
+
 You rarely have to type the syntax yourself. `Ctrl+B` and `Ctrl+I` cover bold and italic, `Ctrl+1` to `Ctrl+3` make headings, and `Ctrl+Shift+8`, `Ctrl+Shift+9` or `Ctrl+Shift+7` turn whatever you're on into a bullet list, a checklist or a numbered list.
 
 ### Code gets a little help
@@ -56,7 +58,15 @@ Notes live in `Documents/Scratchpost` unless you move them in Settings. `Ctrl+O`
 
 Write #ideas and Scratchpost treats it as a tag, gathering every note that mentions it so you can find them together. Write [urgent] or [maybe] and you get a small coloured label that stays in this note and means nothing anywhere else. They look similar, but they do different jobs.
 
-Click a label to hide everything else in the note, which is handy for a long list of [bug] and [idea] lines, and click it again to bring the rest back. Right-click one to rename it, here or in every note at once.
+Click a label to hide everything else in the note, which is handy for a long list of [bug] and [idea] lines, and click it again to bring the rest back. Right-click one to rename it, here or in every note at once, or to give it a colour of your choosing when the one it was dealt doesn't suit it.
+
+### Sums
+
+Type a sum and then `=`, and the answer is written in for you: try it after 12 * (3 + 4). If you didn't want it, `Ctrl+Z` takes it away.
+
+### Headings
+
+A note with headings gets a list of them in the left column. Click one to jump straight to it.
 
 ### History
 

@@ -4,6 +4,10 @@ export type SaveEvent = { kind: 'slow' } | { kind: 'ok' } | { kind: 'error'; mes
 
 export const SAVE_DELAY_MS = 400
 export const SLOW_SAVE_MS = 500
+// A failed save tries again by itself, a little later each time, so a file
+// that was only locked for a moment is saved without another keystroke.
+export const RETRY_SAVE_MS = 2000
+export const MAX_SAVE_RETRIES = 3
 
 // Electron prefixes errors thrown in IPC handlers; the status bar wants the cause.
 const ipcPrefix = /^Error invoking remote method '[^']+': (Error: )?/
@@ -18,6 +22,7 @@ export class Autosave {
   private timers = new Map<string, ReturnType<typeof setTimeout>>()
   private chains = new Map<string, Promise<boolean>>()
   private failed = new Set<string>()
+  private retries = new Map<string, number>()
   private readonly save: (id: string) => Promise<void>
   private readonly onEvent: (id: string, event: SaveEvent) => void
   private readonly delay: number
@@ -58,11 +63,13 @@ export class Autosave {
       try {
         await this.save(id)
         this.failed.delete(id)
+        this.retries.delete(id)
         this.onEvent(id, { kind: 'ok' })
         return true
       } catch (err) {
         this.failed.add(id)
         this.onEvent(id, { kind: 'error', message: errorMessage(err) })
+        this.retryLater(id)
         return false
       } finally {
         clearTimeout(slow)
@@ -73,6 +80,17 @@ export class Autosave {
       if (this.chains.get(id) === run) this.chains.delete(id)
     })
     return run
+  }
+
+  private retryLater(id: string): void {
+    const tries = (this.retries.get(id) ?? 0) + 1
+    this.retries.set(id, tries)
+    // An edit made meanwhile has already scheduled its own save.
+    if (tries > MAX_SAVE_RETRIES || this.timers.has(id)) return
+    this.timers.set(
+      id,
+      setTimeout(() => void this.flush(id), RETRY_SAVE_MS * tries)
+    )
   }
 
   // True while the tab has edits that may not be on disk: a save is waiting,
@@ -91,5 +109,6 @@ export class Autosave {
     clearTimeout(this.timers.get(id))
     this.timers.delete(id)
     this.failed.delete(id)
+    this.retries.delete(id)
   }
 }

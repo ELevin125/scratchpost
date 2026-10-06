@@ -1,3 +1,4 @@
+import { isolateHistory } from '@codemirror/commands'
 import { syntaxTree } from '@codemirror/language'
 import {
   EditorSelection,
@@ -11,9 +12,11 @@ import {
 } from '@codemirror/state'
 import { EditorView, keymap } from '@codemirror/view'
 import type { SyntaxNode } from '@lezer/common'
+import { expressionAtEnd, formatNumber } from './math'
 
-// Typing helpers (2.20, D32): auto-closing pairs and pasting a URL onto a
-// selection. See MARKDOWN_SPEC.md, "Typing helpers" and "Copy and paste".
+// Typing helpers (2.20, D32): auto-closing pairs, pasting a URL onto a
+// selection, and sums that answer themselves (6.7). See MARKDOWN_SPEC.md,
+// "Typing helpers", "Sums" and "Copy and paste".
 // Single cursor only; with several cursors typing is plain.
 
 const PAIRS: Record<string, string> = { '(': ')', '[': ']', '`': '`' }
@@ -120,11 +123,35 @@ export function wrapSelection(state: EditorState, ch: string): TransactionSpec |
   })
 }
 
+// What typing `=` at pos adds after it: the answer to the sum that ends just
+// before the cursor, with a space if the sum was written with one. Null when
+// there is no sum there, in code, or in the middle of a line.
+export function answerAt(state: EditorState, pos: number): string | null {
+  if (!CLOSES_BEFORE.test(state.sliceDoc(pos, pos + 1)) || inCode(state, pos)) return null
+  const before = state.sliceDoc(state.doc.lineAt(pos).from, pos)
+  const sum = expressionAtEnd(before)
+  const answer = sum && formatNumber(sum.value)
+  return answer ? (/[ \t]$/.test(before) ? ' ' : '') + answer : null
+}
+
 const typingHandler = EditorView.inputHandler.of((view, from, to, text) => {
   const { state } = view
   if (view.composing || state.readOnly || text.length !== 1 || state.selection.ranges.length !== 1) return false
   const { main } = state.selection
   if (main.from !== from || main.to !== to) return false
+  const answer = text === '=' && main.empty ? answerAt(state, from) : null
+  if (answer !== null) {
+    // Two steps, so one undo takes the answer away and leaves what was typed.
+    view.dispatch(input({ changes: { from, insert: '=' }, selection: EditorSelection.cursor(from + 1) }))
+    view.dispatch({
+      changes: { from: from + 1, insert: answer },
+      selection: EditorSelection.cursor(from + 1 + answer.length),
+      annotations: isolateHistory.of('before'),
+      scrollIntoView: true,
+      userEvent: 'input.complete'
+    })
+    return true
+  }
   const spec = main.empty ? typeAt(state, from, text) : wrapSelection(state, text)
   if (!spec) return false
   view.dispatch(spec)
