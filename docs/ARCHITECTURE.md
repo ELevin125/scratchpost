@@ -116,7 +116,7 @@ src/
       decorations.ts      shared reveal logic and helpers
       checkbox.ts         checkbox widget and toggle
       checklist.ts        whole checklists: finding, counting, tick all (D48)
-      progress.ts         the `[%]` progress bar (D48)
+      progress.ts         the `[%]` and `[%%]` progress bar (D48)
       outline.ts          a note's headings, read from its text (D50)
       tags.ts             [label] pills and #tag words (D34)
       lists.ts            Enter continuation, Tab indent and outdent

@@ -1642,6 +1642,7 @@ export function App() {
           <Dock
             groups={[
               [
+                { command: 'note.new', icon: 'plus' },
                 { command: 'tree.toggle', icon: 'notes', pressed: treeOpen },
                 { command: 'search.open', icon: 'search' },
                 ...(active?.path ? [{ command: 'file.history', icon: 'history' as const }] : []),

@@ -1070,6 +1070,10 @@ told apart from a chosen 80, so nothing is migrated.
   else the list it is typed inside. Nested items count. Like every other
   syntax it shows as typed while the cursor is on its line. The bar is a view;
   nothing is written to the note.
+- **`[%%]`** draws the same bar with a percentage, `43%`. Doubling the
+  character rather than adding a word keeps it out of label territory and
+  makes the pair easy to remember; which one to use is a matter of which
+  number the author wants to read at a glance.
 - **Tick all checkboxes** and **Untick all checkboxes**, in the right-click
   menu and the palette, act on the whole list around the cursor, nested items
   included, or with a selection on the boxes on the selected lines. One

@@ -17,6 +17,7 @@ This is a plain-text scratchpad that happens to understand Markdown. Click on th
 * [ ] Select a word and press `Ctrl+B`, or right-click it for more formatting
 * [ ] Press `Ctrl+L` to add a label like [idea]; set your usual labels in Settings
 * [ ] Click the bar above this list: it's `[%]` on a line of its own, counting these boxes
+* [ ] Add a second one and type `[%%]` instead to see the same count as a percentage
 
 ## Markdown, without the ceremony
 
@@ -55,7 +56,7 @@ Four things here aren't Markdown, and no other editor will know what they mean. 
 
 * `[word]` is a label: a coloured pill that marks a line in this note. One word, no spaces.
 * `#word` is a tag: every note that uses it is gathered under that tag in the Tags panel.
-* `[%]` on a line of its own is a progress bar for the checklist right below it, or the one right above.
+* `[%]` on a line of its own is a progress bar for the checklist right below it, or the one right above. `[%%]` is the same bar counting in percent.
 * A sum followed by `=` gets its answer written in: `12 * (3 + 4) =` becomes `12 * (3 + 4) = 84`. If you didn't want it, `Ctrl+Z` takes the answer away.
 
 Everything else is ordinary Markdown, so your notes read fine anywhere.

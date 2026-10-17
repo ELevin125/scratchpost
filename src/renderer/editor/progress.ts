@@ -3,26 +3,28 @@ import { countBoxes, isPlainAt, listBeside, taskBoxes } from './checklist'
 import type { Context } from './decorations'
 
 // `[%]` on a line of its own draws a progress bar for the checklist beside it
-// (6.1). The bar is a view of the list's boxes; nothing is written to the
+// (6.1), counting its boxes as `3/7`; `[%%]` draws the same bar as a
+// percentage. The bar is a view of the list's boxes; nothing is written to the
 // note. See MARKDOWN_SPEC.md, "Checklists".
 
-const PROGRESS_LINE = /^([ \t]*)\[%\][ \t]*$/
+const PROGRESS_LINE = /^([ \t]*)\[(%{1,2})\][ \t]*$/
 
 // Drawn in CSS (theme.ts), so no colour lives here.
 class ProgressWidget extends WidgetType {
   constructor(
     readonly done: number,
-    readonly total: number
+    readonly total: number,
+    readonly percent: boolean
   ) {
     super()
   }
 
   eq(other: ProgressWidget): boolean {
-    return other.done === this.done && other.total === this.total
+    return other.done === this.done && other.total === this.total && other.percent === this.percent
   }
 
   toDOM(): HTMLElement {
-    const { done, total } = this
+    const { done, total, percent } = this
     const bar = document.createElement('span')
     bar.className = total > 0 && done === total ? 'cm-progress cm-progress-full' : 'cm-progress'
     bar.setAttribute('role', 'progressbar')
@@ -38,7 +40,8 @@ class ProgressWidget extends WidgetType {
 
     const count = bar.appendChild(document.createElement('span'))
     count.className = 'cm-progress-count'
-    count.textContent = total === 0 ? 'no checklist' : `${done}/${total}`
+    count.textContent =
+      total === 0 ? 'no checklist' : percent ? `${Math.round((done / total) * 100)}%` : `${done}/${total}`
     return bar
   }
 }
@@ -49,13 +52,13 @@ export function decorateProgress(ctx: Context, from: number, to: number): void {
     const line = state.doc.lineAt(pos)
     pos = line.to + 1
     const match = PROGRESS_LINE.exec(line.text)
-    // On a revealed line the three characters show, like any other syntax.
+    // On a revealed line the marker shows, like any other syntax.
     if (!match || ctx.revealedAt(line.from)) continue
     const start = line.from + match[1].length
     if (isPlainAt(state, start)) continue
     const list = listBeside(state, start)
     const { open, done } = list ? countBoxes(taskBoxes(state, list.from, list.to)) : { open: 0, done: 0 }
-    const widget = Decoration.replace({ widget: new ProgressWidget(done, open + done) })
-    ctx.add(`progress:${start}`, widget.range(start, start + 3))
+    const widget = Decoration.replace({ widget: new ProgressWidget(done, open + done, match[2].length === 2) })
+    ctx.add(`progress:${start}`, widget.range(start, start + match[2].length + 2))
   }
 }

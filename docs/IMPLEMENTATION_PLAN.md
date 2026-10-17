@@ -377,6 +377,25 @@ outline, sums and label colours.
 
 ---
 
+## Milestone 7 — The fourth list
+
+From the author's fourth list (2026-10-17). The four small ones first, then
+the dock.
+
+- [x] **7.1 New note in the dock:** `note.new` joins the dock as the first
+  icon.
+- [x] **7.2 A percentage bar:** `[%%]` draws the `[%]` bar with a percentage
+  instead of a count. See D48.
+- [x] **7.3 Find bar centred:** the find bar is centred over the text column
+  rather than pinned to the left of the window.
+- [x] **7.4 Heading leaves the cursor after the `#`:** `Ctrl+1` to `Ctrl+3`
+  and the list shortcuts map the cursor past the marker they insert, which on
+  a blank line used to leave it in front.
+- [ ] **7.5 Choose what sits in the dock:** the dockable commands carry their
+  own icon, and Settings turns them on and off.
+
+---
+
 ## Milestone 4 — After first use
 
 From the author's list after a day of real use (2026-09-17). Bugs first, then

@@ -17,7 +17,7 @@ Every fixture below has a corresponding test.
 | Numbered | `1. text` | number shown, counts up automatically (see "List numbering"), hanging indent |
 | Checkbox, open | `- [ ] text` | empty square icon |
 | Checkbox, done | `- [x] text` | filled check icon in `--chip`, text struck through in `--soft` |
-| Progress bar | `[%]` on its own line | a bar and a count for the checklist beside it (see "Checklists") |
+| Progress bar | `[%]` or `[%%]` on its own line | a bar with a count or a percentage for the checklist beside it (see "Checklists") |
 | Label | `[word]` | rounded pill, brackets hidden (see "Labels and tags") |
 | Tag | `#word` | coloured text, `#` kept, clickable (see "Labels and tags") |
 | Emphasis | `*text*` / `_text_` | italic, markers hidden |
@@ -342,15 +342,17 @@ count: bullet items, outside quotes and code. See D48.
   on the selected lines. Each is one undoable edit, and is only offered when
   there is a box it would change.
 - **`[%]` on a line of its own** renders as a progress bar with a count, `3/7`,
-  for the checklist beside it. Which list:
+  for the checklist beside it. **`[%%]`** renders the same bar with a
+  percentage, `43%`, rounded to whole numbers. Which list:
   1. the list that starts right after it, blank lines allowed;
   2. else the list that ends right before it;
   3. else the list it is typed inside. A line typed straight under a list with
      no blank line is part of that list's last item, so of the lists around
      it, the innermost one that starts no further right than the `[%]`.
-- With no checklist beside it the bar is empty and reads `no checklist`.
-- The three characters show while the cursor is on the line, like all other
-  syntax. Inside a quote or code, `[%]` is plain text.
+- With no checklist beside it the bar is empty and reads `no checklist`, in
+  both forms.
+- The marker shows while the cursor is on the line, like all other syntax.
+  Inside a quote or code, it is plain text.
 
 ```
 [%] / - [x] a / - [ ] b            → bar at 1/2, above the list
@@ -358,6 +360,7 @@ count: bullet items, outside quotes and code. See D48.
 - [ ] p / "  [%]" / "  - [x] c"    → bar at 1/1, for the nested list
 - [x] p / "  - [ ] c" / [%]        → bar at 1/2, for the whole list
 > [%]                              → plain text
+[%%] / - [x] a / - [ ] b           → bar at 50%, above the list
 ```
 
 ## Formatting

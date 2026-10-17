@@ -63,9 +63,11 @@ export const editorTheme = EditorView.theme({
     flexWrap: 'wrap',
     alignItems: 'center',
     gap: '6px 8px',
-    // Two rows as wide as the text column (Plex Mono is 0.6em per character):
-    // find, its buttons and close; then replace, its buttons and the options.
+    // Two rows over the text column, and centred with it (Plex Mono is 0.6em
+    // per character): find, its buttons and close; then replace, its buttons
+    // and the options.
     maxWidth: 'min(100%, calc(var(--note-columns, 100) * var(--note-size) * 0.6 + 80px))',
+    marginInline: 'auto',
     boxSizing: 'border-box',
     padding: '10px 40px 6px',
     fontFamily: 'var(--font-sans)',

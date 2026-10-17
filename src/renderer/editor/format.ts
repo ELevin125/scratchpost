@@ -151,17 +151,21 @@ function selectedLines(state: EditorState): number[] {
 const HEADING = /^(#{1,6})[ \t]+/
 
 // Sets the lines to a heading level; the same level again (or 0) makes them
-// plain text.
+// plain text. The selection is mapped forwards over the prefix: a cursor
+// sitting where the `#` goes, which is every cursor on a blank line, would
+// otherwise be left in front of it.
 export function setHeading(level: number): StateCommand {
   return ({ state, dispatch }) => {
     const lines = selectedLines(state).map((n) => state.doc.line(n))
     const all = lines.every((line) => HEADING.exec(line.text)?.[1].length === level)
-    const changes = lines.map((line) => {
-      const current = HEADING.exec(line.text)?.[0] ?? ''
-      const insert = level === 0 || all ? '' : `${'#'.repeat(level)} `
-      return { from: line.from, to: line.from + current.length, insert }
-    })
-    dispatch(done(state, { changes }))
+    const changes = state.changes(
+      lines.map((line) => {
+        const current = HEADING.exec(line.text)?.[0] ?? ''
+        const insert = level === 0 || all ? '' : `${'#'.repeat(level)} `
+        return { from: line.from, to: line.from + current.length, insert }
+      })
+    )
+    dispatch(done(state, { changes, selection: state.selection.map(changes, 1) }))
     return true
   }
 }
@@ -200,6 +204,7 @@ function listLines(state: EditorState): number[] {
 
 // Turns the lines into bullets, a checklist or a numbered list, keeping
 // indentation and ticks. Lines already of that kind go back to plain text.
+// The selection is mapped past the marker, as for headings.
 export function setListKind(kind: ListKind): StateCommand {
   return ({ state, dispatch }) => {
     const lines = listLines(state)
@@ -224,7 +229,8 @@ export function setListKind(kind: ListKind): StateCommand {
       }
       return { from: line.from, to: line.from + match[0].length, insert: prefix }
     })
-    dispatch(done(state, { changes }))
+    const change = state.changes(changes)
+    dispatch(done(state, { changes: change, selection: state.selection.map(change, 1) }))
     return true
   }
 }
