@@ -1164,6 +1164,41 @@ calculator, not a notepad), and a setting to turn it off (undo is one key).
 
 ---
 
+## D53 — The dock is the author's to arrange
+
+**Decision:** the dock's buttons are chosen in Settings (7.5). A command is
+dockable when it carries an `icon` in the registry; Settings lists those,
+turns them on and off, and orders them. The chosen ids are saved as
+`settings.dock`, and `null` there means the dock as it ships, so an upgrade
+never freezes today's set in a file.
+
+The author asked for "any command", with the open question of where the icons
+would come from. Neither answer worked. Drawing one for each of the 66
+commands means ~44 more glyphs, most of which cannot be told apart in a
+20-unit line drawing: "Move line up", "Add cursor above" and "Duplicate line"
+are the same arrow. Letting the author pick an icon from a list makes them do
+the drawing work by proxy and allows two buttons to end up the same picture.
+So the dockable set is curated instead, and it holds the commands that open a
+place or act on the note as a whole: new note, the notes panel, search, find,
+note history, open file, switch folder, insert label, insert date, archive,
+settings and the palette. The long tail stays where it already works: the
+palette, and a shortcut of the author's choosing (D41).
+
+**A docked command that doesn't apply is greyed, not dropped.** Until now
+`Note history` was simply left out when the note had no file yet, which is
+fine for a fixed dock but not for one the author arranged: buttons would shift
+under the pointer as tabs change. Hiding was traded for disabling.
+
+**Rejected:** a text pill for commands with no icon (it reads as a bug beside
+the glyphs), drag to reorder (two arrows are less code, work by keyboard, and
+the list is never long), and light/dark on the dock. The last is not stubborn:
+the two commands that exist, `theme.light` and `theme.dark`, each apply in
+only one mode, so either would vanish in the other — a real toggle needs one
+command that swaps its own icon, which is a change to make deliberately if the
+author wants it. 4.5 took light/dark off the dock for the same reason.
+
+---
+
 ## Open questions
 
 Not yet decided. Do not guess; raise them.

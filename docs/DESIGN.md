@@ -226,11 +226,13 @@ The status bar is gone (D33). Its jobs moved:
   date set large: the day a timestamp-named note was created, otherwise the
   day it last changed. The date floats beside the text column so it never
   pushes the note down, and hides when the window is too narrow for it.
-- **Dock**, floating at the bottom of the note panel: notes panel, folder
-  search, note history, open file, switch folder; then settings and the
-  command palette. Light or dark mode and the theme colour live in Settings
-  and the palette. Every button's tooltip is its command's label and
-  shortcut.
+- **Dock**, floating at the bottom of the note panel. It ships with new note,
+  notes panel, folder search, note history, open file, switch folder,
+  settings and the command palette, and Settings chooses and orders the
+  buttons from the commands that carry an icon (D53). Light or dark mode and
+  the theme colour live in Settings and the palette. Every button's tooltip is
+  its command's label and shortcut, and a button whose command doesn't apply
+  is greyed rather than dropped.
 - **Toasts**, above the dock, for notices that aren't about saving. They
   dismiss themselves.
 

@@ -6,6 +6,8 @@ import { labelWord } from '../editor/format'
 import { labelHues, seeds } from '../themes'
 import { CAT_NAME, type CatSpot } from './Cat'
 import { Icon } from './Icon'
+import { dockableCommands, DEFAULT_DOCK, shortcutOf } from './state/commands'
+import { formatShortcut } from './state/shortcuts'
 
 export const MIN_FONT_SIZE = 10
 export const MAX_FONT_SIZE = 24
@@ -20,6 +22,7 @@ interface SettingsPanelProps {
   labels: string[]
   autoArchiveDays: number
   noteColumns: number
+  dock: readonly string[] // command ids on the dock, in order (7.5)
   scratchDir: string // the folder in use, custom or default
   customScratch: boolean // false when the default folder is in use
   onTheme: (theme: ThemeSettings) => void
@@ -31,6 +34,7 @@ interface SettingsPanelProps {
   onLabelColour: (word: string, hue: number | null) => void
   onAutoArchiveDays: (days: number) => void
   onNoteColumns: (columns: number) => void
+  onDock: (ids: string[]) => void
   onShortcuts: () => void
   historyUsage: () => Promise<HistoryUsage>
   onClearHistory: () => Promise<void>
@@ -84,6 +88,7 @@ export function SettingsPanel({
   labels,
   autoArchiveDays,
   noteColumns,
+  dock,
   scratchDir,
   customScratch,
   onTheme,
@@ -95,6 +100,7 @@ export function SettingsPanel({
   onLabelColour,
   onAutoArchiveDays,
   onNoteColumns,
+  onDock,
   onShortcuts,
   historyUsage,
   onClearHistory,
@@ -119,6 +125,17 @@ export function SettingsPanel({
     }
   }, [historyUsage])
   const chosenHue = (word: string): number | null => labelColours[tagKey(word)] ?? null
+  // The dock (7.5): what is on it, in order, and what is left to add.
+  const docked = dock.map((id) => dockableCommands.find((c) => c.id === id)).filter((c) => c !== undefined)
+  const spare = dockableCommands.filter((command) => !dock.includes(command.id))
+  const moveDocked = (from: number, to: number) => {
+    const ids = docked.map((c) => c.id)
+    const [moved] = ids.splice(from, 1)
+    ids.splice(to, 0, moved)
+    onDock(ids)
+  }
+  const isDefaultDock = dock.length === DEFAULT_DOCK.length && dock.every((id, i) => id === DEFAULT_DOCK[i])
+
   const addLabel = () => {
     const word = labelWord(newLabel)
     if (!word) return
@@ -306,6 +323,83 @@ export function SettingsPanel({
               </div>
             </div>
           )}
+        </section>
+
+        <section className="settings-section">
+          <h3>Dock</h3>
+          <div className="setting setting-stack">
+            <p className="setting-note">
+              The row of buttons along the bottom of a note, in order: the top of this list is the left of the dock.
+              A button is greyed when its command doesn't apply, so the dock keeps the shape you give it.
+            </p>
+            {docked.length === 0 ? (
+              <p className="setting-note dock-empty">Nothing on the dock.</p>
+            ) : (
+              <ol className="dock-rows">
+                {docked.map((command, i) => {
+                  const shortcut = shortcutOf(command)
+                  return (
+                    <li key={command.id} className="dock-row">
+                      <Icon name={command.icon} size={16} />
+                      <span className="dock-row-label">{command.label}</span>
+                      <kbd className="dock-row-key">{shortcut ? formatShortcut(shortcut) : ''}</kbd>
+                      <span className="dock-row-actions">
+                        <button
+                          className="icon-button"
+                          title="Move up"
+                          aria-label={`Move ${command.label} up`}
+                          disabled={i === 0}
+                          onClick={() => moveDocked(i, i - 1)}
+                        >
+                          <Icon name="chevronUp" size={16} />
+                        </button>
+                        <button
+                          className="icon-button"
+                          title="Move down"
+                          aria-label={`Move ${command.label} down`}
+                          disabled={i === docked.length - 1}
+                          onClick={() => moveDocked(i, i + 1)}
+                        >
+                          <Icon name="chevronDown" size={16} />
+                        </button>
+                        <button
+                          className="icon-button"
+                          title="Take off the dock"
+                          aria-label={`Take ${command.label} off the dock`}
+                          onClick={() => onDock(dock.filter((id) => id !== command.id))}
+                        >
+                          <Icon name="x" size={14} />
+                        </button>
+                      </span>
+                    </li>
+                  )
+                })}
+              </ol>
+            )}
+            {spare.length > 0 && (
+              <div className="dock-add">
+                {spare.map((command) => (
+                  <button
+                    key={command.id}
+                    id={`setting-dock-add-${command.id}`}
+                    className="pill-button"
+                    title={`Put ${command.label} on the dock`}
+                    onClick={() => onDock([...dock, command.id])}
+                  >
+                    <Icon name={command.icon} size={16} />
+                    {command.label}
+                  </button>
+                ))}
+              </div>
+            )}
+            {!isDefaultDock && (
+              <div className="setting-actions">
+                <button id="setting-dock-reset" className="text-button" onClick={() => onDock([...DEFAULT_DOCK])}>
+                  Back to the usual dock
+                </button>
+              </div>
+            )}
+          </div>
         </section>
 
         <section className="settings-section">

@@ -11,7 +11,7 @@ import { ColourMenu } from './ColourMenu'
 import { CommandPalette } from './CommandPalette'
 import { ContextMenu, type MenuItem, type MenuState } from './ContextMenu'
 import { Cat, signalCat } from './Cat'
-import { Dock } from './Dock'
+import { Dock, type DockItem } from './Dock'
 import { Editor, type Buffers } from './Editor'
 import { EmptyState } from './EmptyState'
 import { FileTree } from './FileTree'
@@ -41,6 +41,8 @@ import {
   setShortcutOverrides,
   shortcutOf,
   commands,
+  dockCommands,
+  DEFAULT_DOCK,
   type AppActions,
   type Command,
   type CommandContext
@@ -219,6 +221,7 @@ export function App() {
   const noteColumns = folder.settings?.noteColumns ?? 100
   const catOn = folder.settings?.cat ?? true
   const catSpot = folder.settings?.catSpot ?? 'dock'
+  const dock = folder.settings?.dock ?? DEFAULT_DOCK
 
   // Colours chosen for label and tag words (6.8, D49). Set on every render,
   // before anything asks for a hue; the open note is repainted when they change.
@@ -1404,6 +1407,7 @@ export function App() {
       labelAtCursor: viewRef.current ? labelAt(viewRef.current.state, viewRef.current.state.selection.main.head) : null,
       labelFiltered: viewRef.current ? labelFilterOf(viewRef.current.state) !== null : false,
       hasSelection: viewRef.current ? viewRef.current.state.selection.ranges.some((r) => !r.empty) : false,
+      treeOpen,
       // A getter: this runs on every key press, and only the tick-all commands
       // ask for it.
       get checklist() {
@@ -1413,7 +1417,19 @@ export function App() {
       tabCount: tabsRef.current.tabs.length,
       actions: actionsRef.current!
     }
-  }, [activeTab, isScratchContext, themeMode])
+  }, [activeTab, isScratchContext, themeMode, treeOpen])
+
+  // The dock's buttons (7.5): the commands Settings chose, in its order. A
+  // command that doesn't apply is greyed rather than dropped.
+  const dockItems = (): DockItem[] => {
+    const ctx = commandContext()
+    return dockCommands(dock).map((command) => ({
+      command: command.id,
+      icon: command.icon,
+      pressed: command.pressed?.(ctx),
+      disabled: command.when ? !command.when(ctx) : false
+    }))
+  }
 
   const runCommand = (command: Command) => {
     setOverlay(null)
@@ -1639,23 +1655,7 @@ export function App() {
             ) : (
               <EmptyState onNewNote={() => runById('note.new')} cat={catOn} />
             ))}
-          <Dock
-            groups={[
-              [
-                { command: 'note.new', icon: 'plus' },
-                { command: 'tree.toggle', icon: 'notes', pressed: treeOpen },
-                { command: 'search.open', icon: 'search' },
-                ...(active?.path ? [{ command: 'file.history', icon: 'history' as const }] : []),
-                { command: 'file.open', icon: 'open' },
-                { command: 'folder.switch', icon: 'folder' }
-              ],
-              [
-                { command: 'settings.open', icon: 'settings' },
-                { command: 'palette.open', icon: 'command' }
-              ]
-            ]}
-            onRun={runById}
-          >
+          <Dock items={dockItems()} onRun={runById}>
             {beanAt('dock')}
           </Dock>
           {notice && <Toast text={notice} onDismiss={dismissNotice} />}
@@ -1745,6 +1745,8 @@ export function App() {
           onLabelColour={setLabelColour}
           noteColumns={noteColumns}
           onNoteColumns={(columns) => void folder.persist({ noteColumns: columns })}
+          dock={dock}
+          onDock={(ids) => void folder.persist({ dock: ids })}
           autoArchiveDays={autoArchiveDays}
           onAutoArchiveDays={(days) => void folder.persist({ autoArchiveDays: days })}
           onShortcuts={() => setOverlay('shortcuts')}

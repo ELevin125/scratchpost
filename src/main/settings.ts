@@ -20,6 +20,7 @@ const AUTO_ARCHIVE_DAYS = [0, 30, 90, 365]
 const NOTE_COLUMNS = [80, 100, 999]
 const DEFAULT_NOTE_COLUMNS = 100 // see D47
 const MAX_KEYBINDINGS = 200
+const MAX_DOCK = 20
 const COMMAND_ID = /^[a-z][A-Za-z0-9.]{0,40}$/
 const SHORTCUT = /^(?:(?:Ctrl|Shift|Alt|Meta)\+)*[^+\s]{1,12}$/
 const LABEL_WORD = /^[A-Za-z0-9][A-Za-z0-9._-]*$/
@@ -65,6 +66,14 @@ export function sanitizeSettings(value: unknown): Settings {
         .slice(0, MAX_KEYBINDINGS)
     ),
     noteColumns: NOTE_COLUMNS.includes(raw.noteColumns as number) ? (raw.noteColumns as number) : DEFAULT_NOTE_COLUMNS,
+    // Null, not an empty list: the renderer owns which commands ship on the
+    // dock, and an empty dock is a choice the author can make.
+    dock: Array.isArray(raw.dock)
+      ? [...new Set(raw.dock.filter((id): id is string => typeof id === 'string' && COMMAND_ID.test(id)))].slice(
+          0,
+          MAX_DOCK
+        )
+      : null,
     autoArchiveDays: AUTO_ARCHIVE_DAYS.includes(raw.autoArchiveDays as number) ? (raw.autoArchiveDays as number) : 0,
     labelColours: Object.fromEntries(
       Object.entries(typeof raw.labelColours === 'object' && raw.labelColours !== null ? raw.labelColours : {})

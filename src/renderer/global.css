@@ -576,12 +576,6 @@ kbd {
   gap: 2px;
 }
 
-.dock-group + .dock-group {
-  margin-left: 6px;
-  padding-left: 6px;
-  box-shadow: inset 1px 0 0 var(--line);
-}
-
 .dock-button {
   display: grid;
   place-items: center;
@@ -598,6 +592,15 @@ kbd {
 .dock-button.on {
   color: var(--chip-ink);
   background: var(--chip);
+}
+
+.dock-button:disabled {
+  color: var(--soft);
+  opacity: 0.4;
+}
+
+.dock-button:disabled:hover {
+  background: none;
 }
 
 .toast {
@@ -1562,6 +1565,76 @@ kbd {
 }
 
 /* Label list in Settings (4.10) */
+
+/* Choosing what sits on the dock (7.5). */
+
+.dock-rows {
+  display: grid;
+  gap: 2px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.dock-row {
+  display: grid;
+  grid-template-columns: auto 1fr 88px auto;
+  align-items: center;
+  gap: 10px;
+  padding: 3px 4px 3px 10px;
+  color: var(--soft);
+  border-radius: 10px;
+}
+
+.dock-row:hover {
+  background: var(--surface);
+}
+
+.dock-row-label {
+  overflow: hidden;
+  color: var(--body);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dock-row-key {
+  color: var(--soft);
+  text-align: right;
+}
+
+.dock-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.dock-row-actions .icon-button {
+  width: 28px;
+  height: 28px;
+}
+
+.dock-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.dock-add .pill-button {
+  padding: 6px 14px;
+  font-size: 12px;
+  color: var(--body);
+  background: var(--sunken);
+}
+
+.dock-add .pill-button:hover {
+  color: var(--chip-ink);
+  background: var(--chip);
+}
+
+.dock-empty {
+  margin-bottom: 10px;
+}
 
 .label-list {
   display: flex;

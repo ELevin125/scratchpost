@@ -14,6 +14,7 @@ import { toggleTasksAtSelection } from '../../editor/checkbox'
 import { setTasks } from '../../editor/checklist'
 import type { TaskCount } from '../../editor/createEditor'
 import { insertLink, setHeading, setListKind, toggleMarker } from '../../editor/format'
+import type { IconName } from '../Icon'
 import { formatShortcut, matchesShortcut, type KeyEventLike } from './shortcuts'
 
 // The command registry. Every user action is registered here once; the
@@ -70,6 +71,7 @@ export interface CommandContext {
   labelAtCursor: string | null // the label the cursor sits in, if any (5.6)
   labelFiltered: boolean // the note is filtered to one label (5.5)
   hasSelection: boolean // something is selected in the note (5.7)
+  treeOpen: boolean // the notes column is showing, for the dock's pressed state (7.5)
   // The boxes "tick all" would act on: the selected lines, or the list around
   // the cursor (6.2). Null when there are none. Read lazily; it walks the list.
   checklist: TaskCount | null
@@ -84,6 +86,10 @@ export interface Command {
   extraShortcuts?: string[] // also matched, never shown
   run: (ctx: CommandContext) => void
   when?: (ctx: CommandContext) => boolean
+  // An icon makes the command dockable: it can be put on the dock from
+  // Settings (7.5, D53). Commands without one live in the palette.
+  icon?: IconName
+  pressed?: (ctx: CommandContext) => boolean // drawn as a lit dock button
 }
 
 const pad = (n: number) => String(n).padStart(2, '0')
@@ -115,8 +121,14 @@ const hasFile = (ctx: CommandContext) => ctx.activePath !== null
 const hasTab = (ctx: CommandContext) => ctx.view !== null
 
 export const commands: readonly Command[] = [
-  { id: 'palette.open', label: 'Command palette', shortcut: 'Ctrl+Shift+P', run: (ctx) => ctx.actions.openPalette() },
-  { id: 'note.new', label: 'New note', shortcut: 'Ctrl+N', run: (ctx) => ctx.actions.newNote() },
+  {
+    id: 'palette.open',
+    label: 'Command palette',
+    shortcut: 'Ctrl+Shift+P',
+    icon: 'command',
+    run: (ctx) => ctx.actions.openPalette()
+  },
+  { id: 'note.new', label: 'New note', shortcut: 'Ctrl+N', icon: 'plus', run: (ctx) => ctx.actions.newNote() },
   {
     id: 'note.fromSelectionCopy',
     label: 'Copy selection to a new note',
@@ -131,11 +143,24 @@ export const commands: readonly Command[] = [
     when: (ctx) => ctx.hasSelection
   },
   { id: 'note.welcome', label: 'Open welcome note', run: (ctx) => ctx.actions.openWelcome() },
-  { id: 'file.open', label: 'Open file…', shortcut: 'Ctrl+O', run: (ctx) => ctx.actions.openFile() },
+  { id: 'file.open', label: 'Open file…', shortcut: 'Ctrl+O', icon: 'open', run: (ctx) => ctx.actions.openFile() },
   { id: 'switcher.open', label: 'Quick switcher', shortcut: 'Ctrl+P', run: (ctx) => ctx.actions.openSwitcher() },
-  { id: 'search.open', label: 'Search in folder', shortcut: 'Ctrl+Shift+F', run: (ctx) => ctx.actions.openSearch() },
-  { id: 'tree.toggle', label: 'Toggle notes panel', shortcut: 'Ctrl+Shift+B', run: (ctx) => ctx.actions.toggleTree() },
-  { id: 'folder.switch', label: 'Switch folder…', run: (ctx) => ctx.actions.openFolderMenu() },
+  {
+    id: 'search.open',
+    label: 'Search in folder',
+    shortcut: 'Ctrl+Shift+F',
+    icon: 'search',
+    run: (ctx) => ctx.actions.openSearch()
+  },
+  {
+    id: 'tree.toggle',
+    label: 'Toggle notes panel',
+    shortcut: 'Ctrl+Shift+B',
+    icon: 'notes',
+    pressed: (ctx) => ctx.treeOpen,
+    run: (ctx) => ctx.actions.toggleTree()
+  },
+  { id: 'folder.switch', label: 'Switch folder…', icon: 'folder', run: (ctx) => ctx.actions.openFolderMenu() },
   { id: 'folder.open', label: 'Open folder…', run: (ctx) => ctx.actions.openFolder() },
   { id: 'folder.parent', label: 'Open parent folder', run: (ctx) => ctx.actions.openParentFolder() },
   {
@@ -159,10 +184,10 @@ export const commands: readonly Command[] = [
   },
   { id: 'theme.colour', label: 'Change theme colour…', run: (ctx) => ctx.actions.openColours() },
   { id: 'shortcuts.open', label: 'Keyboard shortcuts…', run: (ctx) => ctx.actions.openShortcuts() },
-  { id: 'settings.open', label: 'Settings…', shortcut: 'Ctrl+,', run: (ctx) => ctx.actions.openSettings() },
+  { id: 'settings.open', label: 'Settings…', shortcut: 'Ctrl+,', icon: 'settings', run: (ctx) => ctx.actions.openSettings() },
 
   { id: 'file.rename', label: 'Rename file…', shortcut: 'F2', run: (ctx) => ctx.actions.renameActive(), when: hasFile },
-  { id: 'file.history', label: 'Note history…', run: (ctx) => ctx.actions.openHistory(), when: hasFile },
+  { id: 'file.history', label: 'Note history…', icon: 'history', run: (ctx) => ctx.actions.openHistory(), when: hasFile },
   {
     id: 'note.pin',
     label: 'Pin note to notes panel',
@@ -180,6 +205,7 @@ export const commands: readonly Command[] = [
   {
     id: 'file.archive',
     label: 'Archive note',
+    icon: 'archive',
     run: (ctx) => ctx.actions.archiveActive(),
     when: (ctx) => hasFile(ctx) && !ctx.activeArchived
   },
@@ -226,7 +252,7 @@ export const commands: readonly Command[] = [
   },
   { id: 'tab.reopen', label: 'Reopen closed tab', shortcut: 'Ctrl+Shift+T', run: (ctx) => ctx.actions.reopenClosed() },
 
-  { id: 'find.open', label: 'Find in note', shortcut: 'Ctrl+F', ...editorCommand(openSearchPanel) },
+  { id: 'find.open', label: 'Find in note', shortcut: 'Ctrl+F', icon: 'find', ...editorCommand(openSearchPanel) },
   { id: 'find.next', label: 'Find next', shortcut: 'F3', ...editorCommand(findNext) },
   { id: 'find.previous', label: 'Find previous', shortcut: 'Shift+F3', ...editorCommand(findPrevious) },
 
@@ -256,7 +282,7 @@ export const commands: readonly Command[] = [
     ...editorCommand(setTasks(false)),
     when: (ctx) => (ctx.checklist?.done ?? 0) > 0
   },
-  { id: 'date.insert', label: 'Insert date', ...editorCommand(insertDate) },
+  { id: 'date.insert', label: 'Insert date', icon: 'calendar', ...editorCommand(insertDate) },
 
   // Formatting (4.8, 4.10, 4.11)
   { id: 'format.bold', label: 'Bold', shortcut: 'Ctrl+B', ...editorCommand(toggleMarker('**')) },
@@ -264,7 +290,14 @@ export const commands: readonly Command[] = [
   { id: 'format.strike', label: 'Strikethrough', shortcut: 'Ctrl+Shift+X', ...editorCommand(toggleMarker('~~')) },
   { id: 'format.code', label: 'Inline code', shortcut: 'Ctrl+E', ...editorCommand(toggleMarker('`')) },
   { id: 'format.link', label: 'Link', shortcut: 'Ctrl+K', ...editorCommand(insertLink) },
-  { id: 'label.insert', label: 'Insert label…', shortcut: 'Ctrl+L', run: (ctx) => ctx.actions.openLabels(), when: hasTab },
+  {
+    id: 'label.insert',
+    label: 'Insert label…',
+    shortcut: 'Ctrl+L',
+    icon: 'tag',
+    run: (ctx) => ctx.actions.openLabels(),
+    when: hasTab
+  },
   {
     id: 'label.rename',
     label: 'Rename label…',
@@ -294,6 +327,39 @@ export const commands: readonly Command[] = [
 
 export function availableCommands(list: readonly Command[], ctx: CommandContext): Command[] {
   return list.filter((command) => !command.when || command.when(ctx))
+}
+
+// The dock (7.5, D53). Any command carrying an icon can sit on it; Settings
+// picks which and in what order. A command is stored by id, so a dock saved by
+// an older version keeps working and ids it no longer knows are dropped.
+
+export interface DockableCommand extends Command {
+  icon: IconName
+}
+
+const isDockable = (command: Command): command is DockableCommand => command.icon !== undefined
+
+// Every command that can be docked, in registry order: the order Settings
+// offers them in.
+export const dockableCommands: readonly DockableCommand[] = commands.filter(isDockable)
+
+// The dock as it ships, and what Reset goes back to.
+export const DEFAULT_DOCK: readonly string[] = [
+  'note.new',
+  'tree.toggle',
+  'search.open',
+  'file.history',
+  'file.open',
+  'folder.switch',
+  'settings.open',
+  'palette.open'
+]
+
+// The commands a saved dock names, in its order, ignoring anything unknown.
+export function dockCommands(ids: readonly string[]): DockableCommand[] {
+  return ids
+    .map((id) => dockableCommands.find((command) => command.id === id))
+    .filter((command): command is DockableCommand => command !== undefined)
 }
 
 // Rebound shortcuts from settings (4.12): command id to shortcut, or '' for

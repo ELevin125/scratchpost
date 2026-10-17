@@ -26,6 +26,7 @@ const DEFAULT_SETTINGS: Settings = {
   labelColours: {},
   autoArchiveDays: 0,
   noteColumns: 100,
+  dock: null,
   pinnedNotes: []
 }
 

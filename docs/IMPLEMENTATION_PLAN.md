@@ -391,8 +391,8 @@ the dock.
 - [x] **7.4 Heading leaves the cursor after the `#`:** `Ctrl+1` to `Ctrl+3`
   and the list shortcuts map the cursor past the marker they insert, which on
   a blank line used to leave it in front.
-- [ ] **7.5 Choose what sits in the dock:** the dockable commands carry their
-  own icon, and Settings turns them on and off.
+- [x] **7.5 Choose what sits in the dock:** the dockable commands carry their
+  own icon, and Settings turns them on and off and orders them. See D53.
 
 ---
 

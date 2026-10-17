@@ -75,6 +75,8 @@ export interface Settings {
   // Archive scratch notes untouched for this many days, at launch; 0 is off (5.8).
   autoArchiveDays: number
   noteColumns: number // characters per line: 80, 100 (the default) or 999 for the full width (5.9)
+  // Command ids on the dock, in order; null means the dock it ships with (7.5).
+  dock: string[] | null
   pinnedNotes: string[] // absolute paths, shown atop the notes panel in any folder (4.7)
 }
 

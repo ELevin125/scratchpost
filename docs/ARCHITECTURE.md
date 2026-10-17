@@ -80,7 +80,7 @@ src/
       FileTree.tsx        notes panel and tags panel
       Outline.tsx         the open note's headings, between them (D50)
       NoteHeader.tsx      folder, edited time, words, save problems, date
-      Dock.tsx            floating tool buttons, from the command registry
+      Dock.tsx            floating tool buttons, chosen in Settings (D53)
       Toast.tsx           notices that aren't about saving
       Icon.tsx            the one icon set
       Cat.tsx             the mascot: drawing, idle loop, random bits (D37)
@@ -212,6 +212,7 @@ interface Settings {
   fontSize: number // note text in px, 10 to 24
   cat: boolean // the mascot, on by default; see D37
   catSpot: 'dock' | 'top' | 'date' | 'corner' | 'tags' // where Bean sits (D42)
+  dock: string[] | null // command ids on the dock; null is the usual one (D53)
   keybindings: Record<string, string> // rebound shortcuts, '' for none (D41)
   labels: string[] // the label picker's own list (4.10)
   labelColours: Record<string, number> // hues chosen for words, lowercased (D49)
